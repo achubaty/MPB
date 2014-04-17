@@ -1,117 +1,147 @@
-setwd("c:/Eliot/Github/")
-read.in.raw.maps = F
-# Useful resource
-#http://www.nyu.edu/projects/politicsdatalab/workshops/GISwR.pdf
-#library(rbenchmark)
-#library(shapefiles)
-#library(maptools)
-#library(maps)
-#library(mapdata)
-#library(data.table)
-#library(rgeos)
-#
+### Useful resources:
+###   http://www.nyu.edu/projects/politicsdatalab/workshops/GISwR.pdf
 
-######################################################################################
-######################################################################################
-#   LOAD MPB DATA FROM BC AND AB, BOTH POLYGON AND POINT DATA SOURCES
+################################################################################
 
-# To read in raw maps, and save them as individual files
-if (read.in.raw.maps)  # This takes about 10 minutes
-  source("./ABM/R/import.raw.maps.r")
+### load required packages
+library(shapefiles)
+library(maptools)
+library(maps)
+library(mapdata)
+library(data.table)
+library(rgeos)
 
-# Load the precollected R files instead
-setwd("c:/Rwork/MPB")
-objects2load= c("bc", "ab", "ab.poly", "west", "west.county", "west.r", "bc.poly")
-lapply(objects2load,
-  function(x) load(file = paste("mpb.",x,".rdata",sep=""),env = globalenv()))
+### set up workspace
+num.cpus = 4
+
+maps.dir = "~/data/maps"
+work.dir = "~/GitHub/MPB"
+
+read.in.raw.maps = FALSE
+work.on.raw.maps = FALSE
+
+setwd(work.dir)
 
 
-#      # merge alberta and bc points  
-#      library(snowfall)
-#      sfInit(cpus = 4, parallel = T)
-#      sfLibrary(sp)
-#      
-#      wh.ab = na.omit(pmatch(names(bc), names(ab)))
-#      wh.bc = na.omit(pmatch(substr(names(ab),1,4), names(bc)))
-#      sfExport("bc", "ab")
-#      sfExport("wh.bc","wh.ab")
-#      bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]],all=T)
-#                          coordinates(out) <- ~ coords.x1 + coords.x2
-#                          out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees,NA))    
-#                          return(out)})
-#      sfExport("west.r")
-#      bcab = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
-#      
-#      
-#      names(bcab) = names(bc)[wh.bc]#sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
-#      rm(bc,ab)
-#      
-#      
-#      
-#      wh.ab.poly = na.omit(pmatch(substr(names(bcab),1,4), names(ab.poly)))
-#      wh.bc.poly = na.omit(pmatch(substr(names(bcab),1,4), names(bc.poly)))
-#      
-#      ab.polygon = ab.poly[wh.ab.poly]
-#      bc.polygon = bc.poly[wh.bc.poly]
-#      
-#      #areas = lapply(lapply(ab.poly.ll,slot,"polygons"),function(x) sapply(x, slot,"area")/1e4)
-#      #sapply(areas,range)
-#      
+### LOAD MPB DATA FROM BC AND AB, BOTH POLYGON AND POINT DATA SOURCES
 
+if (read.in.raw.maps) {
+  # Read in raw maps, and save them as individual files (takes ~10 mins)
+  source(file.path(work.dir, "import.raw.maps.R"))
+} else {
+  # Load the precollected R files instead
+  path = file.path(maps.dir, "MPB", "Rmaps")
+  objects2load = c("bc", "ab", "ab.poly", "west", "west.county", "west.r", "bc.poly")
+  lapply(objects2load, function(x) load(file=paste(path, "/", "mpb.", x, ".rdata", sep=""), env=globalenv()))  
+}
 
-# Convert everything to rasters @ 1km resolution.  This resolution decision is determined with the west.r rasterization above
-  library(snowfall)
-  sfInit(cpus= 6, parallel=T)
+### Convert everything to rasters @ 1km resolution.
+###   This resolution decision is determined with the `west.r` rasterization above
+
+path = file.path(maps.dir, "MPB", "Rmaps")
+
+if (work.on.raw.maps) {
+  require(snowfall)
+  
+  sfInit(cpus=num.cpus, parallel=TRUE)
   sfLibrary(raster)
-  
-  
   sfExport("west.r")
-  mpb.bc.r = stack(sfClusterApplyLB(bc, function(x) rasterize(x=x, y=west.r, field = x@data$NUM_TREES,fun="sum")))
-    names(mpb.bc.r) = names(bc)
-#  save(mpb.bc.r, file = "mpb.bc.r.rdata")
-#  load(file = "mpb.bc.r.rdata")
+  
+  mpb.bc.r = stack(sfClusterApplyLB(bc, function(x) rasterize(x=x, y=west.r, field=x@data$NUM_TREES, fun="sum")))
+  names(mpb.bc.r) = names(bc)
+  save(mpb.bc.r, file=file.path(path, "mpb.bc.r.rdata"))
 
-  mpb.ab.r = stack(sfClusterApplyLB(ab, function(x) rasterize(x=x, y=west.r, 
-    field = if(any(colnames(x@data)=="NUM_TREES")) x@data$NUM_TREES else x@data$num_trees,fun="sum")))
+  mpb.ab.r = stack(sfClusterApplyLB(ab, function(x) rasterize(x=x, y=west.r,
+                field=if(any(colnames(x@data)=="NUM_TREES")) x@data$NUM_TREES else x@data$num_trees, fun="sum")))
   names(mpb.ab.r) = sapply(names(ab), function(x) strsplit(x,"spot")[[1]])
-#  save(mpb.ab.r, file = "mpb.ab.r.rdata")
-#  load(file = "mpb.ab.r.rdata")
+  save(mpb.ab.r, file=file.path(path, "mpb.ab.r.rdata"))
+  sfStop()
+  
+  
+  
+  ### merge alberta and bc points
+  sfInit(cpus=num.cpus, parallel=TRUE)
+  sfLibrary(sp)
+  sfExport("west.r")
+  
+  wh.ab = na.omit(pmatch(names(bc), names(ab)))
+  wh.bc = na.omit(pmatch(substr(names(ab), 1, 4), names(bc)))
+  sfExport("bc", "ab")
+  sfExport("wh.bc","wh.ab")
+  bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {
+            out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]], all=TRUE)
+            coordinates(out) <- ~ coords.x1 + coords.x2
+            out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees,NA))
+            return(out)})
+  bcab = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
+    
+  names(bcab) = names(bc)[wh.bc] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
+  rm(bc, ab)
+  
+  wh.ab.poly = na.omit(pmatch(substr(names(bcab),1,4), names(ab.poly)))
+  wh.bc.poly = na.omit(pmatch(substr(names(bcab),1,4), names(bc.poly)))
+  
+  ab.polygon = ab.poly[wh.ab.poly]
+  bc.polygon = bc.poly[wh.bc.poly]
+  
+  #areas = lapply(lapply(ab.poly.ll,slot,"polygons"),function(x) sapply(x, slot,"area")/1e4)
+  #sapply(areas,range)
 
-  # for the next two, I arbitrarity picked 2000 trees per 1km squared. This NEEDS to be revisited.
-  mpb.ab.poly.r.stack = stack(sfClusterApplyLB(ab.poly, function(x) rasterize(x=x, y=west.r, field = 2000,fun="last")))
-    names(mpb.ab.poly.r.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
-  # several rasters have no values because they were in southern Alberta and the west.r doesn't cover that. The next line removes NA layers
+  save(ab.polygon, file=file.path(path, "ab.polygon.rdata"))
+  save(bc.polygon, file=file.path(path, "bc.polygon.rdata"))
+  save(bcab, file=file.path(path, "bcab.rdata"))
+  sfStop()
+
+  
+  
+  ### for the next two, Eliot arbitrarily picked 2000 trees per 1km squared.
+  ###   This NEEDS to be revisited.
+  change.res = function(x, y=west.r, field=2000, fun="last", ...) {
+    rasterize(x=x, y=y, field=field, fun=fun, ...)
+  }
+  
+  sfInit(cpus=num.cpus, parallel=TRUE)
+  sfLibrary(raster)
+  sfExport("west.r")
+  
+  mpb.ab.poly.r.stack = stack(sfClusterApplyLB(ab.poly, change.res))
+  names(mpb.ab.poly.r.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
+
+  # several rasters have no values because they were in southern Alberta: west.r` doesn't cover that.
   nas = which(sapply(1:nlayers(mpb.ab.poly.r.stack), function(x) unique(!is.na(which.min(mpb.ab.poly.r.stack[[x]])))))
-  mpb.ab.poly.r = mpb.ab.poly.r.stack[[nas]]
+  mpb.ab.poly.r = mpb.ab.poly.r.stack[[nas]] # remove the NA layers
   names(mpb.ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))[nas]
-#  save(mpb.ab.poly.r, file = "mpb.ab.poly.r.rdata")
-#  load(file = "mpb.ab.poly.r.rdata")
-  
-  mpb.bc.poly.r = stack(sfClusterApplyLB(bc.poly, function(x) rasterize(x=x, y=west.r, field = 2000,fun="last")))
+  save(mpb.ab.poly.r, file=file.path(path, "mpb.ab.poly.r.rdata"))
+
+  mpb.bc.poly.r = stack(sfClusterApplyLB(bc.poly, change.res))
   names(mpb.bc.poly.r) = names(bc.poly)
-#  save(mpb.bc.poly.r, file = "mpb.bc.poly.r.rdata")
-#  load(file = "mpb.ab.poly.r.rdata")
-  
+  save(mpb.bc.poly.r, file=file.path(path, "mpb.bc.poly.r.rdata"))
+  sfStop()
+} else {
+  load(file.path(path,"mpb.bc.r.rdata"))
+  load(file.path(path, "mpb.ab.r.rdata"))
+  load(file.path(path, "mpb.ab.poly.r.rdata"))
+  load(file.path(path, "mpb.ab.poly.r.rdata"))
+  load(file.path(path, "ab.polygon.rdata"))
+  load(file.path(path, "bc.polygon.rdata"))
+}
+
 mpb.poly.r = mpb.bc.poly.r
 mpb.bc.poly.r.us = unstack(mpb.bc.poly.r)
 mpb.ab.poly.r.us = unstack(mpb.ab.poly.r)
 mpb.poly.r.us = mpb.bc.poly.r.us
 
-wh.poly.bc =  na.omit(match(names(mpb.ab.poly.r),names(mpb.bc.poly.r)))
-wh.poly.ab =  na.omit(match(names(mpb.bc.poly.r),names(mpb.ab.poly.r)))
-mpb.poly.r.us[wh.poly.bc] = lapply(1:length(wh.poly.ab), function(x) {out = mpb.bc.poly.r.us[[wh.poly.bc[x]]]  + mpb.ab.poly.r.us[[wh.poly.ab[x]]]; return(out)})
+wh.poly.bc =  na.omit(match(names(mpb.ab.poly.r), names(mpb.bc.poly.r)))
+wh.poly.ab =  na.omit(match(names(mpb.bc.poly.r), names(mpb.ab.poly.r)))
+mpb.poly.r.us[wh.poly.bc] = lapply(1:length(wh.poly.ab), function(x) {
+                                out = mpb.bc.poly.r.us[[wh.poly.bc[x]]] + mpb.ab.poly.r.us[[wh.poly.ab[x]]]
+                                return(out)})
 mpb.poly.r = stack(mpb.poly.r.us)
 plot(mpb.poly.r)
-
-
-
-
-
 
 names(mpb.bc.r) = names(bcab)
 names(mpb.ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))
 names(mpb.bc.poly.r) = names(bc.poly)
-
 
 wh.mpb.poly.r = na.omit(pmatch(substr(names(mpb.bc.r),2,5), names(ab.poly)))
 wh.mpb.bc.r = na.omit(pmatch(substr(names(ab.poly),1,4), names(bcab)))
@@ -131,10 +161,8 @@ for (i in 1:nlayers(mpb.bc.r)) {
   }
 }
 
-
-mpb.all = lapply(mpb.all,function(x) {x[is.na(x)]<-0; return(x)})
-mpb.all = lapply(mpb.all, function(x) {x[x>0] <- log(x[x>0])+10; return(x) })
-
+mpb.all = lapply(mpb.all, function(x) { x[is.na(x)] <- 0; return(x) })
+mpb.all = lapply(mpb.all, function(x) { x[x>0] <- log(x[x>0])+10; return(x) })
 
 #latlongproj = "+
 
