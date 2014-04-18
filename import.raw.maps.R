@@ -5,44 +5,56 @@ library(snowfall)
 
 num.cpus = 4
 
-maps.dir = "~/data/maps"
-work.dir = "~/Github/MPB"
+if (Sys.info()[["sysname"]]=="Darwin") {
+  maps.dir = "~/Documents/data/maps"
+  work.dir = "~/Documents/GitHub/MPB"
+} else if (Sys.info()[["sysname"]]=="Linux") {
+  maps.dir = "~/Documents/data/maps"
+  work.dir = "~/Documents/GitHub/MPB"
+} else if (Sys.info()[["sysname"]]=="Windows") {
+  maps.dir = "~/data/maps"
+  work.dir = "~/GitHub/MPB"
+} else {
+  print("Which operating system are you using?")
+}
+setwd(work.dir)
 
 getOGR <- function(layer, dir) {
+  orig.dir = getwd()
   setwd(dir)
   readOGR(dsn=".", layer=layer)
+  setwd(orig.dir)
 }
-
-setwd(work.dir)
 
 ################################################################################
 ### PROCESS AB AND BC MAPS
 sfInit(cpus=num.cpus, parallel=TRUE)
-sfLibrary(sp)
-sfLibrary(rgdal)
-#sfLibrary(plotKML)
+  sfLibrary(sp)
+  sfLibrary(rgdal)
+  
+  ### AB maps
+  ab.files = dir(path=file.path(maps.dir, "MPB", "ab_mpb"), pattern="spot")
+  ab.dir.shp = unique(sapply(strsplit(ab.files, "\\."), function(x) x[[1]]))
+  ab = sfClusterApplyLB(ab.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "ab_mpb"))
+  names(ab) = sapply(strsplit(ab.dir.shp,"_"), function(x) x[[3]])
+  
+  ab.poly.files = dir(path=file.path(maps.dir, "MPB", "ab_mpb"), pattern="poly")
+  ab.poly.dir.shp = unique(sapply(strsplit(ab.poly.files, "\\."), function(x) x[[1]]))
+  ab.poly = sfClusterApplyLB(ab.poly.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "ab_mpb"))
+  names(ab.poly) = sapply(strsplit(ab.poly.dir.shp,"_"), function(x) x[[3]])
+  
+  ### BC maps
+  bc.files = dir(path=file.path(maps.dir, "MPB", "province_BC"), pattern="spot")
+  bc.dir.shp = unique(sapply(strsplit(bc.files, "\\."), function(x) x[[1]]))
+  bc = sfClusterApplyLB(bc.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "province_BC"))
+  names(bc) = sapply(strsplit(bc.dir.shp,"_"), function(x) x[[3]])
+  
+  bc.poly.files = dir(path=file.path(maps.dir, "MPB", "province_BC"), pattern="poly")
+  bc.poly.dir.shp = unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
+  bc.poly = sfClusterApplyLB(bc.poly.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "province_BC"))
+  names(bc.poly) = sapply(strsplit(bc.poly.dir.shp,"_"), function(x) x[[3]])
 
-### AB maps
-ab.files = dir(path=file.path(maps.dir, "MPB", "ab_mpb"), pattern="spot")
-ab.dir.shp = unique(sapply(strsplit(ab.files, "\\."), function(x) x[[1]]))
-ab = sfClusterApplyLB(ab.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "ab_mpb"))
-names(ab) = sapply(strsplit(ab.dir.shp,"_"), function(x) x[[3]])
-
-ab.poly.files = dir(path=file.path(maps.dir, "MPB", "ab_mpb"), pattern="poly")
-ab.poly.dir.shp = unique(sapply(strsplit(ab.poly.files, function(x) x[[1]]))
-ab.poly = sfClusterApplyLB(ab.poly.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "ab_mpb"))
-names(ab.poly) = sapply(strsplit(ab.poly.dir.shp,"_"), function(x) x[[3]])
-
-### BC maps
-bc.files = dir(path=file.path(maps.dir, "MPB", "province_BC"), pattern="spot")
-bc.dir.shp = unique(sapply(strsplit(bc.files, "\\."), function(x) x[[1]]))
-bc = sfClusterApplyLB(bc.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "province_BC"))
-names(bc) = sapply(strsplit(bc.dir.shp,"_"), function(x) x[[3]])
-
-bc.poly.files = dir(path=file.path(maps.dir, "MPB", "province_BC"), pattern="poly")
-bc.poly.dir.shp = unique(sapply(strsplit(dir(pattern="poly"),"\\."), function(x) x[[1]]))
-bc.poly = sfClusterApplyLB(bc.poly.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "province_BC"))
-names(bc.poly) = sapply(strsplit(bc.poly.dir.shp,"_"), function(x) x[[3]])
+sfStop()
 
 ################################################################################
 ### LOAD OTHER MAPS, PROVINCE OUTLINES, COUNTY OUTLINES, BOREAL FOREST
@@ -75,7 +87,7 @@ west.r = rasterize(west, west.empty)
 crs.boreal = CRS(proj4string(boreal))
 
 sfInit(cpus=num.cpus, parallel=TRUE)
-sfExport("crs.boreal")
+  sfExport("crs.boreal")
   ab.bor = sfClusterApplyLB(ab, spTransform, crs.boreal)
   bc.bor = sfClusterApplyLB(bc, spTransform, crs.boreal)
 sfStop()
@@ -91,7 +103,7 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   west.r.bor = projectRaster(west.r,crs=crs.boreal)
 sfStop()
 
-rm(bc.poly, bc, ab, ab.poly, west, west.county, west.r)
+rm(ab, ab.poly, bc, bc.poly, west, west.county, west.r)
 names(bc.poly.bor) = sapply(strsplit(bc.poly.dir.shp,"_"),function(x) x[[3]])
 names(ab.poly.bor) = sapply(strsplit(ab.poly.dir.shp,"_"),function(x) x[[3]])
 names(bc.bor) = sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])
@@ -107,6 +119,7 @@ west = west.bor
 west.county = west.county.bor
 rm(bc.poly.bor,ab.poly.bor,bc.bor, ab.bor,west.bor,west.county.bor,west.r.bor)
 
-setwd(file.path(work.dir))
+path = file.path(maps.dir, "MPB", "Rmaps")
 objects2save = c("bc", "bc.poly", "ab", "ab.poly", "west", "west.county", "west.r")
-lapply(objects2save, function(x) save(list=x, file=paste("mpb.", x, ".rdata", sep="")))
+lapply(objects2save, function(x) save(list=x, file=paste(path, "/", "mpb.", x, ".rdata", sep="")))
+

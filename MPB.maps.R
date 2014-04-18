@@ -4,24 +4,36 @@
 ################################################################################
 
 ### load required packages
-library(shapefiles)
+library(data.table)
 library(maptools)
 library(maps)
 library(mapdata)
-library(data.table)
 library(rgeos)
+library(shapefiles)
+library(snowfall)
 
 ### set up workspace
 num.cpus = 4
 
-maps.dir = "~/data/maps"
-work.dir = "~/GitHub/MPB"
+if (Sys.info()[["sysname"]]=="Darwin") {
+  maps.dir = "~/Documents/data/maps"
+  work.dir = "~/Documents/GitHub/MPB"
+} else if (Sys.info()[["sysname"]]=="Linux") {
+  maps.dir = "~/Documents/data/maps"
+  work.dir = "~/Documents/GitHub/MPB"
+} else if (Sys.info()[["sysname"]]=="Windows") {
+  maps.dir = "~/data/maps"
+  work.dir = "~/GitHub/MPB"
+} else {
+  print("Which operating system are you using?")
+}
+
+setwd(work.dir)
 
 read.in.raw.maps = FALSE
 work.on.raw.maps = FALSE
 
-setwd(work.dir)
-
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/newplot.R")
 
 ### LOAD MPB DATA FROM BC AND AB, BOTH POLYGON AND POINT DATA SOURCES
 
@@ -31,7 +43,7 @@ if (read.in.raw.maps) {
 } else {
   # Load the precollected R files instead
   path = file.path(maps.dir, "MPB", "Rmaps")
-  objects2load = c("bc", "ab", "ab.poly", "west", "west.county", "west.r", "bc.poly")
+  objects2load = c("bc", "ab", "ab.poly", "bc.poly", "west", "west.county", "west.r")
   lapply(objects2load, function(x) load(file=paste(path, "/", "mpb.", x, ".rdata", sep=""), env=globalenv()))  
 }
 
@@ -44,52 +56,50 @@ if (work.on.raw.maps) {
   require(snowfall)
   
   sfInit(cpus=num.cpus, parallel=TRUE)
-  sfLibrary(raster)
-  sfExport("west.r")
+    sfLibrary(raster)
+    sfExport("west.r")
+    
+    mpb.ab.r = stack(sfClusterApplyLB(ab, function(x) rasterize(x=x, y=west.r,
+                  field=if(any(colnames(x@data)=="NUM_TREES")) x@data$NUM_TREES else x@data$num_trees, fun="sum")))
+    names(mpb.ab.r) = sapply(names(ab), function(x) strsplit(x,"spot")[[1]])
+    save(mpb.ab.r, file=file.path(path, "mpb.ab.r.rdata"))
   
-  mpb.bc.r = stack(sfClusterApplyLB(bc, function(x) rasterize(x=x, y=west.r, field=x@data$NUM_TREES, fun="sum")))
-  names(mpb.bc.r) = names(bc)
-  save(mpb.bc.r, file=file.path(path, "mpb.bc.r.rdata"))
-
-  mpb.ab.r = stack(sfClusterApplyLB(ab, function(x) rasterize(x=x, y=west.r,
-                field=if(any(colnames(x@data)=="NUM_TREES")) x@data$NUM_TREES else x@data$num_trees, fun="sum")))
-  names(mpb.ab.r) = sapply(names(ab), function(x) strsplit(x,"spot")[[1]])
-  save(mpb.ab.r, file=file.path(path, "mpb.ab.r.rdata"))
+    mpb.bc.r = stack(sfClusterApplyLB(bc, function(x) rasterize(x=x, y=west.r, field=x@data$NUM_TREES, fun="sum")))
+    names(mpb.bc.r) = names(bc)
+    save(mpb.bc.r, file=file.path(path, "mpb.bc.r.rdata"))
   sfStop()
-  
-  
   
   ### merge alberta and bc points
   sfInit(cpus=num.cpus, parallel=TRUE)
-  sfLibrary(sp)
-  sfExport("west.r")
-  
-  wh.ab = na.omit(pmatch(names(bc), names(ab)))
-  wh.bc = na.omit(pmatch(substr(names(ab), 1, 4), names(bc)))
-  sfExport("bc", "ab")
-  sfExport("wh.bc","wh.ab")
-  bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {
-            out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]], all=TRUE)
-            coordinates(out) <- ~ coords.x1 + coords.x2
-            out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees,NA))
-            return(out)})
-  bcab = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
+    sfLibrary(sp)
+    sfExport("west.r")
     
-  names(bcab) = names(bc)[wh.bc] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
-  rm(bc, ab)
+    wh.ab = na.omit(pmatch(names(bc), names(ab)))
+    wh.bc = na.omit(pmatch(substr(names(ab), 1, 4), names(bc)))
+    sfExport("bc", "ab")
+    sfExport("wh.bc","wh.ab")
+    bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {
+              out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]], all=TRUE)
+              coordinates(out) <- ~ coords.x1 + coords.x2
+              out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees,NA))
+              return(out)})
+    bcab = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
+      
+    names(bcab) = names(bc)[wh.bc] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
+    rm(bc, ab)
+    
+    wh.ab.poly = na.omit(pmatch(substr(names(bcab),1,4), names(ab.poly)))
+    wh.bc.poly = na.omit(pmatch(substr(names(bcab),1,4), names(bc.poly)))
+    
+    ab.polygon = ab.poly[wh.ab.poly]
+    bc.polygon = bc.poly[wh.bc.poly]
+    
+    #areas = lapply(lapply(ab.poly.ll,slot,"polygons"),function(x) sapply(x, slot,"area")/1e4)
+    #sapply(areas,range)
   
-  wh.ab.poly = na.omit(pmatch(substr(names(bcab),1,4), names(ab.poly)))
-  wh.bc.poly = na.omit(pmatch(substr(names(bcab),1,4), names(bc.poly)))
-  
-  ab.polygon = ab.poly[wh.ab.poly]
-  bc.polygon = bc.poly[wh.bc.poly]
-  
-  #areas = lapply(lapply(ab.poly.ll,slot,"polygons"),function(x) sapply(x, slot,"area")/1e4)
-  #sapply(areas,range)
-
-  save(ab.polygon, file=file.path(path, "ab.polygon.rdata"))
-  save(bc.polygon, file=file.path(path, "bc.polygon.rdata"))
-  save(bcab, file=file.path(path, "bcab.rdata"))
+    save(ab.polygon, file=file.path(path, "ab.polygon.rdata"))
+    save(bc.polygon, file=file.path(path, "bc.polygon.rdata"))
+    save(bcab, file=file.path(path, "bcab.rdata"))
   sfStop()
 
   
@@ -112,16 +122,17 @@ if (work.on.raw.maps) {
   mpb.ab.poly.r = mpb.ab.poly.r.stack[[nas]] # remove the NA layers
   names(mpb.ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))[nas]
   save(mpb.ab.poly.r, file=file.path(path, "mpb.ab.poly.r.rdata"))
-
+  rm(mpb.ab.poly.r.stack, nas)
+  
   mpb.bc.poly.r = stack(sfClusterApplyLB(bc.poly, change.res))
   names(mpb.bc.poly.r) = names(bc.poly)
   save(mpb.bc.poly.r, file=file.path(path, "mpb.bc.poly.r.rdata"))
   sfStop()
 } else {
-  load(file.path(path,"mpb.bc.r.rdata"))
   load(file.path(path, "mpb.ab.r.rdata"))
+  load(file.path(path, "mpb.bc.r.rdata"))
   load(file.path(path, "mpb.ab.poly.r.rdata"))
-  load(file.path(path, "mpb.ab.poly.r.rdata"))
+  load(file.path(path, "mpb.bc.poly.r.rdata"))
   load(file.path(path, "ab.polygon.rdata"))
   load(file.path(path, "bc.polygon.rdata"))
 }
@@ -137,10 +148,12 @@ mpb.poly.r.us[wh.poly.bc] = lapply(1:length(wh.poly.ab), function(x) {
                                 out = mpb.bc.poly.r.us[[wh.poly.bc[x]]] + mpb.ab.poly.r.us[[wh.poly.ab[x]]]
                                 return(out)})
 mpb.poly.r = stack(mpb.poly.r.us)
+
+newPlot()
 plot(mpb.poly.r)
 
-names(mpb.bc.r) = names(bcab)
-names(mpb.ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))
+#names(mpb.bc.r) = names(bcab)
+#names(mpb.ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))
 names(mpb.bc.poly.r) = names(bc.poly)
 
 wh.mpb.poly.r = na.omit(pmatch(substr(names(mpb.bc.r),2,5), names(ab.poly)))
@@ -178,21 +191,13 @@ x2 = paste(2002:2012,"-10-01",sep="")
 z1 = as.POSIXct(as.Date(x1))
 z2 = as.POSIXct(as.Date(x2))
 
-sps = SpatialPointsDataFrame(spTransform(spsample(west,1,type = "random"),latlongproj),
-  data = data.frame(dat= 1))
-mpb.ts <- new("RasterBrickTimeSeries", variable = "X", sampled = sps,
-  rasters = mpb.brk.ll, TimeSpan.begin = z1,
-  TimeSpan.end = z2)
+sps = SpatialPointsDataFrame(spTransform(spsample(west,1,type = "random"),latlongproj), data = data.frame(dat= 1))
+mpb.ts <- new("RasterBrickTimeSeries", variable = "X", sampled = sps, rasters = mpb.brk.ll, TimeSpan.begin = z1, TimeSpan.end = z2)
 dims = dim(mpb.brk.ll)
-plotKML(mpb.ts, colour_scale = c(rep("black",2),heat.colors(12)[12:1]),
-  pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
-
+plotKML(mpb.ts, colour_scale = c(rep("black",2),heat.colors(12)[12:1]), pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
 
 names(mpb.all) = names(mpb.bc.r)
 plot(mpb.all)
-
-
-
 
 wind(2)
 par(mfrow = c(3,3))
@@ -203,7 +208,7 @@ toplot = 2003:2011
 wh = match(toplot, years)
 west.county.ll = reproject(west.county)
 for (x in wh) {
-  plot(west.county.ll,border="light grey")
+  plot(west.county.ll, border="light grey")
   title(years[x])
 #  points(bcab.ll[[years[x]]][,match(c("coords.x1","coords.x2"),names(bcab.ll[[years[x]]]))],pch=".",col="black")
   symbols(x = coordinates(bcab.ll[[years[x]]]),#bcab.ll[[years[x]]][,match(c("coords.x1","coords.x2"),names(bcab.ll[[years[x]]]))],
@@ -234,31 +239,18 @@ if (!is.na(any(pmatch(years[x],names(ab.polygon)))))
 symbols(x = bcab.ll[[years[x]]][,match(c("coords.x1","coords.x2"),names(bcab.ll[[years[x]]]))],
   circles=bcab.ll.ntrees[[years[x]]]$ntrees,col="black",add = T)
 
-
-
-
-
-
 legend("topright",legend=toplot, col = wh,pch=19,xpd=F)
 
-
-  sapply(wh, function(x) points(bcab.ll[[years[x]]][,match(c("coords.x1","coords.x2"),names(bcab.ll[[years[x]]]))],pch=".",col=x))
+sapply(wh, function(x) points(bcab.ll[[years[x]]][, match(c("coords.x1","coords.x2"), names(bcab.ll[[years[x]]]))], pch=".", col=x))
 
 points(bcab.ll[["2011"]][,1:2],pch=".",col="red")
 points(bcab.ll[["2010"]][,1:2],pch=".",col="green")
 
-
-
-lapply(1:length(ab.ll), function(x) plot(ab.ll[[x]], add=T,pch=".",col=x))
+lapply(1:length(ab.ll), function(x) plot(ab.ll[[x]], add=T, pch=".", col=x))
 plot(mpb2011,add = T,pch = ".",col="red")
 plot(usmpb2011,add =T, pch = ".",col="red")
 plot(abmpb2011,add =T, pch = ".",col="red")
 
-
-
-###################################################################################
-###################################################################################
-###################################################################################
 ###################################################################################
 al = AgentLocation(Which(west.r==2) )
 
