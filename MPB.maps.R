@@ -8,7 +8,9 @@ library(data.table)
 library(maptools)
 library(maps)
 library(mapdata)
+library(plotKML)
 library(rgeos)
+library(rts)
 library(shapefiles)
 library(snowfall)
 
@@ -36,19 +38,18 @@ work.on.raw.maps = FALSE
 devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/newplot.R")
 
 ### LOAD MPB DATA FROM BC AND AB, BOTH POLYGON AND POINT DATA SOURCES
-
 if (read.in.raw.maps) {
   # Read in raw maps, and save them as individual files (takes ~10 mins)
   source(file.path(work.dir, "import.raw.maps.R"))
 } else {
   # Load the precollected R files instead
   path = file.path(maps.dir, "MPB", "Rmaps")
-  objects2load = c("bc", "ab", "ab.poly", "bc.poly", "west", "west.county", "west.r")
+  objects2load = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "west", "west.county", "west.r")
   lapply(objects2load, function(x) load(file=paste(path, "/", "mpb.", x, ".rdata", sep=""), env=globalenv()))  
 }
 
 ### Convert everything to rasters @ 1km resolution.
-###   This resolution decision is determined with the `west.r` rasterization above
+###   This resolution decision is determined with the `west.r` rasterization done when importing
 
 path = file.path(maps.dir, "MPB", "Rmaps")
 
@@ -133,11 +134,10 @@ if (work.on.raw.maps) {
   load(file.path(path, "mpb.bc.r.rdata"))
   load(file.path(path, "mpb.ab.poly.r.rdata"))
   load(file.path(path, "mpb.bc.poly.r.rdata"))
-  load(file.path(path, "ab.polygon.rdata"))
-  load(file.path(path, "bc.polygon.rdata"))
+  load(file.path(path, "bcab.rdata"))
 }
 
-mpb.poly.r = mpb.bc.poly.r
+# combine mpb.bc.poly and mpb.ab.poly:
 mpb.bc.poly.r.us = unstack(mpb.bc.poly.r)
 mpb.ab.poly.r.us = unstack(mpb.ab.poly.r)
 mpb.poly.r.us = mpb.bc.poly.r.us
@@ -148,27 +148,26 @@ mpb.poly.r.us[wh.poly.bc] = lapply(1:length(wh.poly.ab), function(x) {
                                 out = mpb.bc.poly.r.us[[wh.poly.bc[x]]] + mpb.ab.poly.r.us[[wh.poly.ab[x]]]
                                 return(out)})
 mpb.poly.r = stack(mpb.poly.r.us)
+names(mpb.poly.r) = names(mpb.bc.poly.r)
 
-newPlot()
-plot(mpb.poly.r)
-
+# assigning names to layers isn't working
 #names(mpb.bc.r) = names(bcab)
 #names(mpb.ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))
-names(mpb.bc.poly.r) = names(bc.poly)
+#names(mpb.bc.poly.r) = names(bc.poly)
 
-wh.mpb.poly.r = na.omit(pmatch(substr(names(mpb.bc.r),2,5), names(ab.poly)))
-wh.mpb.bc.r = na.omit(pmatch(substr(names(ab.poly),1,4), names(bcab)))
+wh.mpb.poly.r = na.omit(match(substr(names(ab.poly),1,4), substr(names(mpb.poly.r),2,5)))
+wh.mpb.bcab.r = na.omit(pmatch(substr(names(ab.poly),1,4), names(bcab)))
 
 mpb.all = list()
 inner.count = 0
 for (i in 1:nlayers(mpb.bc.r)) {
   if (any(substr(names(mpb.bc.r),2,5)[i] == substr(names(mpb.poly.r),2,5))) {
     inner.count = inner.count + 1
-    if (any(is.finite(cellStats(mpb.poly.r[["X2005poly"]],"range")))) {
-        mpb.all[[i]] = mpb.bc.r[[wh.mpb.bc.r[inner.count]]] + mpb.poly.r[[wh.mpb.poly.r[inner.count]]]
-      } else {
-        mpb.all[[i]] = mpb.bc.r[[wh.mpb.bc.r[inner.count]]]
-      }
+    if (any(is.finite(cellStats(mpb.poly.r[[i]], "range")))) {
+        mpb.all[[i]] = mpb.bc.r[[wh.mpb.bcab.r[inner.count]]] + mpb.poly.r[[wh.mpb.poly.r[inner.count]]]
+    } else {
+        mpb.all[[i]] = mpb.bc.r[[wh.mpb.bcab.r[inner.count]]]
+    }
   } else {
     mpb.all[[i]] = mpb.bc.r[[i]]
   }
@@ -177,22 +176,25 @@ for (i in 1:nlayers(mpb.bc.r)) {
 mpb.all = lapply(mpb.all, function(x) { x[is.na(x)] <- 0; return(x) })
 mpb.all = lapply(mpb.all, function(x) { x[x>0] <- log(x[x>0])+10; return(x) })
 
-#latlongproj = "+
 
 mpb.stk = stack(mpb.all)
 mpb.brk = brick(mpb.all)
-#mpb.brk = aggregate(mpb.stk,fact = 1)
-mpb.brk.ll <- projectRaster(mpb.brk,crs=latlongproj)
+#mpb.brk = aggregate(mpb.stk, fact=1)
+
+latlongproj = "+proj=longlat"
+mpb.brk.ll = projectRaster(mpb.brk, crs=latlongproj)
 mpb.brk.ll = brick(lapply(1:nlayers(mpb.brk.ll), function(x) {mpb.brk.ll[[x]][is.na(mpb.brk.ll[[x]])]<- 0; return(mpb.brk.ll[[x]])}))
 mpb.brk.ll@title <- "MPB intensity"
 
-x1 = paste(2001:2011,"-10-01",sep="")
-x2 = paste(2002:2012,"-10-01",sep="")
+years = 2001:2012
+x1 = paste(years[1:(length(years)-1)],"-10-01",sep="")
+x2 = paste(years[2:length(years)],"-10-01",sep="")
 z1 = as.POSIXct(as.Date(x1))
 z2 = as.POSIXct(as.Date(x2))
 
-sps = SpatialPointsDataFrame(spTransform(spsample(west,1,type = "random"),latlongproj), data = data.frame(dat= 1))
-mpb.ts <- new("RasterBrickTimeSeries", variable = "X", sampled = sps, rasters = mpb.brk.ll, TimeSpan.begin = z1, TimeSpan.end = z2)
+sps = SpatialPointsDataFrame(spTransform(spsample(west, 1, type="random"), CRS(latlongproj)), data=data.frame(dat=1))
+mpb.ts = new("RasterBrickTimeSeries", variable="X", sampled=sps, rasters=mpb.brk.ll, TimeSpan.begin=z1, TimeSpan.end=z2)
+mpb.ts2 = rts(mpb.brk.ll, time=z1)
 dims = dim(mpb.brk.ll)
 plotKML(mpb.ts, colour_scale = c(rep("black",2),heat.colors(12)[12:1]), pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
 
