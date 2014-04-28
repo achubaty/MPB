@@ -22,16 +22,17 @@ setwd(work.dir)
 getOGR <- function(layer, dir) {
   orig.dir = getwd()
   setwd(dir)
-  readOGR(dsn=".", layer=layer)
+  out = readOGR(dsn=".", layer=layer)
   setwd(orig.dir)
+  return(out)
 }
 
 ################################################################################
 ### PROCESS AB AND BC MAPS (POINTS & POLYGONS)
 sfInit(cpus=num.cpus, parallel=TRUE)
-  sfLibrary(sp)
   sfLibrary(rgdal)
-  
+  sfLibrary(sp)
+    
   ### AB maps
   ab.files = dir(path=file.path(maps.dir, "MPB", "ab_mpb"), pattern="spot")
   ab.dir.shp = unique(sapply(strsplit(ab.files, "\\."), function(x) x[[1]]))
@@ -54,6 +55,23 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   bc.poly = sfClusterApplyLB(bc.poly.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "province_BC"))
   names(bc.poly) = sapply(strsplit(bc.poly.dir.shp,"_"), function(x) x[[3]])
 
+  ### US maps
+  us.poly.files = dir(path=file.path(maps.dir, "MPB", "US"), pattern="us_mpb")
+  us.poly.dir.shp = unique(sapply(strsplit(us.poly.files, "\\."), function(x) x[[1]]))
+  us.poly = sfClusterApplyLB(us.poly.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "US"))
+  names(us.poly) = sapply(strsplit(us.poly.dir.shp,"mpb"), function(x) x[[2]])
+
+  us.poly.pre2006 = us.poly[["1997to2005"]] # no 2005?
+  us.poly = us.poly[-1] # drop "1997to2005" from the list
+  
+  years.post = names(us.poly)
+  years.pre = unique(us.poly.pre2006$YEAR)
+  for (year in years.pre) {
+    ids = which(us.poly.pre2006$YEAR == year)
+    us.poly = append(us.poly.pre2006[ids,], us.poly)
+  }
+  names(us.poly) = c(rev(years.pre), years.post)
+  
 sfStop()
 
 ### LOAD OTHER MAPS, PROVINCE OUTLINES, COUNTY OUTLINES, BOREAL FOREST
@@ -62,7 +80,7 @@ crs.boreal = CRS(proj4string(boreal))
 
 load(file.path(maps.dir, "CAN_adm1.RData"))
 canada1 = gadm
-canada1.boreal = spTransform(canada1, crs.boreal))
+canada1.boreal = spTransform(canada1, crs.boreal)
 west = canada1.boreal[na.omit(match(c("Alberta", "British Columbia","Saskatchewan"), canada1.boreal$NAME_1)),]
 rm(gadm, canada1, canada1.boreal)
 
@@ -75,47 +93,62 @@ subset = match(canada2.boreal.dt[c("Alberta", "British Columbia", "Saskatchewan"
 west.county = canada2.boreal[subset,]
 rm(gadm, canada2, canada2.boreal, canada2.boreal.dt, subset)
 
+# extent obtained using `locator()`
 ext = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
 west.empty = raster(ext)
 res(west.empty) <- 100
 west.r = rasterize(west, west.empty)
 
-### REPROJECT BC AND AB SO THEY ARE BOTH IN THE `boreal` PROJECTION
+### REPROJECT AB, BC, US SO THEY ARE BOTH IN THE `boreal` PROJECTION
 sfInit(cpus=num.cpus, parallel=TRUE)
+  sfLibrary(rgdal)
   sfExport("crs.boreal")
   ab.bor = sfClusterApplyLB(ab, spTransform, crs.boreal)
   bc.bor = sfClusterApplyLB(bc, spTransform, crs.boreal)
 sfStop()
 
 sfInit(cpus=num.cpus, parallel=TRUE)
+  sfLibrary(rgdal)
+  sfExport("crs.boreal")
   ab.poly.bor = sfClusterApplyLB(ab.poly, spTransform, crs.boreal)
   bc.poly.bor = sfClusterApplyLB(bc.poly, spTransform, crs.boreal)
+  us.poly.bor = sfClusterApplyLB(us.poly, spTransform, crs.boreal)
 sfStop()
+
+rm(ab, ab.poly, bc, bc.poly, us.poly)
 
 sfInit(cpus=num.cpus, parallel=TRUE)
+  sfLibrary(rgdal)
+  sfExport("crs.boreal")
   west.bor = spTransform(west, crs.boreal)
   west.county.bor = spTransform(west.county, crs.boreal)
-  west.r.bor = projectRaster(west.r, res=, crs=crs.boreal)
 sfStop()
 
-rm(ab, ab.poly, bc, bc.poly, west, west.county, west.r)
+# warning this eats up RAM like crazy!
+beginCluster(n=num.cpu)
+  west.r.bor = projectRaster(west.r, res=, crs=crs.boreal)
+endCluster()
 
-names(bc.poly.bor) = sapply(strsplit(bc.poly.dir.shp,"_"),function(x) x[[3]])
-names(ab.poly.bor) = sapply(strsplit(ab.poly.dir.shp,"_"),function(x) x[[3]])
-names(bc.bor) = sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])
+rm(west, west.county, west.r)
+
 names(ab.bor) = sapply(strsplit(ab.dir.shp,"_"),function(x) x[[3]])
+names(bc.bor) = sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])
+names(ab.poly.bor) = sapply(strsplit(ab.poly.dir.shp,"_"),function(x) x[[3]])
+names(bc.poly.bor) = sapply(strsplit(bc.poly.dir.shp,"_"),function(x) x[[3]])
+names(us.poly.bor) = c(rev(years.pre), years.post)
 
 ### Rename them to simpler names
 ab = ab.bor
 ab.poly = ab.poly.bor
 bc = bc.bor
 bc.poly = bc.poly.bor
+us.poly = us.poly.bor
 west.r = west.r.bor
 west = west.bor
 west.county = west.county.bor
-rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, west.bor, west.county.bor, west.r.bor)
+rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, us.poly.bor, west.bor, west.county.bor, west.r.bor)
 
 ### Save these new map objects for later use
 path = file.path(maps.dir, "MPB", "Rmaps")
-objects2save = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "west", "west.county", "west.r")
+objects2save = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "us.poly", "west", "west.county", "west.r")
 lapply(objects2save, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))

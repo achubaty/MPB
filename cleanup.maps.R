@@ -44,7 +44,7 @@ if (read.in.raw.maps) {
 } else {
   # Load the precollected R files instead
   path = file.path(maps.dir, "MPB", "Rmaps")
-  objects2load = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "west", "west.county", "west.r")
+  objects2load = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "us.poly", "west", "west.county", "west.r")
   lapply(objects2load, function(x) load(file=paste(path, "/", x, ".rdata", sep=""), env=globalenv()))  
 }
 
@@ -81,8 +81,8 @@ if (work.on.raw.maps) {
     wh.ab.poly = na.omit(pmatch(names(bc.poly), names(ab.poly)))
     wh.bc.poly = na.omit(pmatch(substr(names(ab.poly),1,4), names(bc.poly)))
     
-    sfExport("ab", "ab.poly", "bc", "bc.poly")
-    sfExport("wh.ab", "wh.ab.poly", "wh.bc", "wh.bc.poly")
+#    sfExport("ab", "ab.poly", "bc", "bc.poly")
+#    sfExport("wh.ab", "wh.ab.poly", "wh.bc", "wh.bc.poly")
     bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {
               out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]], all=TRUE)
               coordinates(out) <- ~ coords.x1 + coords.x2
@@ -125,7 +125,7 @@ if (work.on.raw.maps) {
   ab.poly.r.stack = stack(sfClusterApplyLB(ab.poly, change.res))
   names(ab.poly.r.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
 
-  # several rasters have no values because they were in southern Alberta: west.r` doesn't cover that.
+  # several rasters have no values because they were in southern Alberta: `west.r` doesn't cover that.
   nas = which(sapply(1:nlayers(ab.poly.r.stack), function(x) unique(!is.na(which.min(ab.poly.r.stack[[x]])))))
   ab.poly.r = ab.poly.r.stack[[nas]] # remove the NA layers
   names(ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))[nas]
@@ -142,6 +142,7 @@ if (work.on.raw.maps) {
   load(file.path(path, "ab.poly.r.rdata"))
   load(file.path(path, "bc.poly.r.rdata"))
   load(file.path(path, "bcab.rdata"))
+  load(file.path(path, "bcab.poly.rdata"))
 }
 
 # combine bc.poly and ab.poly:
