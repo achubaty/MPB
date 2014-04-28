@@ -77,7 +77,7 @@ rm(gadm, canada2, canada2.boreal, canada2.boreal.dt, subset)
 
 ext = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
 west.empty = raster(ext)
-res(west.empty) <- 1000
+res(west.empty) <- 100
 west.r = rasterize(west, west.empty)
 
 ### REPROJECT BC AND AB SO THEY ARE BOTH IN THE `boreal` PROJECTION
@@ -118,4 +118,4 @@ rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, west.bor, west.county.bor, west.r.b
 ### Save these new map objects for later use
 path = file.path(maps.dir, "MPB", "Rmaps")
 objects2save = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "west", "west.county", "west.r")
-lapply(objects2save, function(x) save(list=x, file=paste(path, "/", "mpb.", x, ".rdata", sep="")))
+lapply(objects2save, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
