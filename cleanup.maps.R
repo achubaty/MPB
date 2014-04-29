@@ -54,8 +54,6 @@ if (read.in.raw.maps) {
 path = file.path(maps.dir, "MPB", "Rmaps")
 
 if (work.on.raw.maps) {
-  require(snowfall)
-  
   sfInit(cpus=num.cpus, parallel=TRUE)
     sfLibrary(raster)
     sfExport("west.r")

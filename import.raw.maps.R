@@ -116,7 +116,7 @@ sfInit(cpus=num.cpus, parallel=TRUE)
 sfStop()
 
 # rename them to simpler names
-rm(ab, ab.poly, bc, bc.poly, us.poly, us.poly.pre2006, years.pre, years.post)
+rm(ab, ab.poly, bc, bc.poly, us.poly, us.poly.pre2006)
 ab = ab.bor
 ab.poly = ab.poly.bor
 bc = bc.bor
@@ -127,7 +127,7 @@ names(bc.bor) = sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])
 names(ab.poly.bor) = sapply(strsplit(ab.poly.dir.shp,"_"),function(x) x[[3]])
 names(bc.poly.bor) = sapply(strsplit(bc.poly.dir.shp,"_"),function(x) x[[3]])
 names(us.poly.bor) = c(rev(years.pre), years.post)
-rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, us.poly.bor)
+rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, us.poly.bor, years.pre, years.post)
 
 # save these new map objects for later use
 path = file.path(maps.dir, "MPB", "Rmaps")
