@@ -115,8 +115,27 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   us.poly.bor = sfClusterApplyLB(us.poly, spTransform, crs.boreal)
 sfStop()
 
-rm(ab, ab.poly, bc, bc.poly, us.poly)
+# rename them to simpler names
+rm(ab, ab.poly, bc, bc.poly, us.poly, us.poly.pre2006, years.pre, years.post)
+ab = ab.bor
+ab.poly = ab.poly.bor
+bc = bc.bor
+bc.poly = bc.poly.bor
+us.poly = us.poly.bor
+names(ab.bor) = sapply(strsplit(ab.dir.shp,"_"),function(x) x[[3]])
+names(bc.bor) = sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])
+names(ab.poly.bor) = sapply(strsplit(ab.poly.dir.shp,"_"),function(x) x[[3]])
+names(bc.poly.bor) = sapply(strsplit(bc.poly.dir.shp,"_"),function(x) x[[3]])
+names(us.poly.bor) = c(rev(years.pre), years.post)
+rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, us.poly.bor)
 
+# save these new map objects for later use
+path = file.path(maps.dir, "MPB", "Rmaps")
+objects2save = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "us.poly")
+lapply(objects2save, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
+
+
+### REPROJECT WEST SO IT'S IN THE `boreal` PROJECTION
 sfInit(cpus=num.cpus, parallel=TRUE)
   sfLibrary(rgdal)
   sfExport("crs.boreal")
@@ -124,31 +143,20 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   west.county.bor = spTransform(west.county, crs.boreal)
 sfStop()
 
-# warning this eats up RAM like crazy!
-beginCluster(n=num.cpu)
+# WARNING: this eats up RAM like crazy! use fewer cpus
+# (RAM usage fluctuates, but I've seen it use up to 6.5 GB per cpu)
+beginCluster(n=ceiling(num.cpus/4))
   west.r.bor = projectRaster(west.r, res=, crs=crs.boreal)
 endCluster()
 
+# rename them to simpler names
 rm(west, west.county, west.r)
-
-names(ab.bor) = sapply(strsplit(ab.dir.shp,"_"),function(x) x[[3]])
-names(bc.bor) = sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])
-names(ab.poly.bor) = sapply(strsplit(ab.poly.dir.shp,"_"),function(x) x[[3]])
-names(bc.poly.bor) = sapply(strsplit(bc.poly.dir.shp,"_"),function(x) x[[3]])
-names(us.poly.bor) = c(rev(years.pre), years.post)
-
-### Rename them to simpler names
-ab = ab.bor
-ab.poly = ab.poly.bor
-bc = bc.bor
-bc.poly = bc.poly.bor
-us.poly = us.poly.bor
 west.r = west.r.bor
 west = west.bor
 west.county = west.county.bor
-rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, us.poly.bor, west.bor, west.county.bor, west.r.bor)
+rm(west.bor, west.county.bor, west.r.bor)
 
 ### Save these new map objects for later use
 path = file.path(maps.dir, "MPB", "Rmaps")
-objects2save = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "us.poly", "west", "west.county", "west.r")
+objects2save = c("west", "west.county", "west.r")
 lapply(objects2save, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
