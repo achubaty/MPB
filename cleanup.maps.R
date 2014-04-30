@@ -38,20 +38,18 @@ work.on.raw.maps = FALSE
 devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/newplot.R")
 
 ### LOAD MPB DATA FROM BC AND AB, BOTH POLYGON AND POINT DATA SOURCES
+path = file.path(maps.dir, "MPB", "Rmaps")
 if (read.in.raw.maps) {
   # Read in raw maps, and save them as individual files (takes ~10 mins)
   source(file.path(work.dir, "import.raw.maps.R"))
 } else {
   # Load the precollected R files instead
-  path = file.path(maps.dir, "MPB", "Rmaps")
   objects2load = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "us.poly", "west", "west.county", "west.r")
-  lapply(objects2load, function(x) load(file=paste(path, "/", x, ".rdata", sep=""), env=globalenv()))  
+  lapply(objects2load, function(x) load(file=paste(path, "/", x, ".rdata", sep=""), env=globalenv()))
 }
 
-### Convert everything to rasters @ 1km resolution.
+### Convert everything to rasters @ 1 ha resolution.
 ###   This resolution decision is determined with the `west.r` rasterization done when importing
-
-path = file.path(maps.dir, "MPB", "Rmaps")
 
 if (work.on.raw.maps) {
   sfInit(cpus=num.cpus, parallel=TRUE)
@@ -71,44 +69,42 @@ if (work.on.raw.maps) {
   ### merge alberta and bc points
   sfInit(cpus=num.cpus, parallel=TRUE)
     sfLibrary(sp)
-    sfExport("west.r")
     
     wh.ab = na.omit(pmatch(names(bc), names(ab)))
     wh.bc = na.omit(pmatch(substr(names(ab), 1, 4), names(bc)))
     
-    wh.ab.poly = na.omit(pmatch(names(bc.poly), names(ab.poly)))
-    wh.bc.poly = na.omit(pmatch(substr(names(ab.poly),1,4), names(bc.poly)))
-    
-#    sfExport("ab", "ab.poly", "bc", "bc.poly")
-#    sfExport("wh.ab", "wh.ab.poly", "wh.bc", "wh.bc.poly")
+    sfExport("ab", "bc", "west.r", "wh.ab", "wh.bc")
+      
     bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {
               out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]], all=TRUE)
               coordinates(out) <- ~ coords.x1 + coords.x2
               out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees, NA))
               return(out)})
     bcab = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
-      
     names(bcab) = names(bc)[wh.bc] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
-    rm(bc, ab)
+    rm(wh.ab, wh.bc)
     
-    bcab.poly = sfClusterApplyLB(1:length(wh.ab.poly), function(x) {
-                  out = merge(bc.poly[[wh.bc.poly[x]]], ab.poly[[wh.ab.poly[x]]], all=TRUE)
-                  coordinates(out) <- ~ coords.x1 + coords.x2
-                  return(out)})
-    bcab.poly = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
-    
-    names(bcab.poly) = names(bc.poly)[wh.bc.poly] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
-    
-    rm(ab, ab.poly, bc, bc.poly)
-  
-    #areas = lapply(lapply(ab.poly.ll,slot,"polygons"),function(x) sapply(x, slot,"area")/1e4)
-    #sapply(areas,range)
-  
     save(bcab, file=file.path(path, "bcab.rdata"))
-    save(bcab.poly, file=file.path(path, "bc.poly.rdata"))
   sfStop()
 
-  
+  sfInit(cpus=num.cpus, parallel=TRUE)
+    sfLibrary(sp)
+
+    wh.ab.poly = na.omit(pmatch(names(bc.poly), names(ab.poly)))
+    wh.bc.poly = na.omit(pmatch(substr(names(ab.poly),1,4), names(bc.poly)))
+    
+    sfExport("ab.poly", "bc.poly", "west.r", "wh.ab.poly", "wh.bc.poly")
+        
+    bcab.poly = sfClusterApplyLB(1:length(wh.ab.poly), function(x) {
+      out = merge(bc.poly[[wh.bc.poly[x]]], ab.poly[[wh.ab.poly[x]]], all=TRUE)
+      coordinates(out) <- ~ coords.x1 + coords.x2
+      return(out)})
+    bcab.poly = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
+    names(bcab.poly) = names(bc.poly)[wh.bc.poly] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
+    rm(wh.ab.poly, wh,bc,poly)
+    
+    save(bcab.poly, file=file.path(path, "bcab.poly.rdata"))
+  sfStop()  
   
   ### for the next two, we arbitrarily picked 1000 trees per 1ha
   ###   This NEEDS to be revisited.
@@ -117,22 +113,22 @@ if (work.on.raw.maps) {
   }
   
   sfInit(cpus=num.cpus, parallel=TRUE)
-  sfLibrary(raster)
-  sfExport("west.r")
+    sfLibrary(raster)
+    sfExport("west.r")
+    
+    ab.poly.r.stack = stack(sfClusterApplyLB(ab.poly, change.res))
+    names(ab.poly.r.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
   
-  ab.poly.r.stack = stack(sfClusterApplyLB(ab.poly, change.res))
-  names(ab.poly.r.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
-
-  # several rasters have no values because they were in southern Alberta: `west.r` doesn't cover that.
-  nas = which(sapply(1:nlayers(ab.poly.r.stack), function(x) unique(!is.na(which.min(ab.poly.r.stack[[x]])))))
-  ab.poly.r = ab.poly.r.stack[[nas]] # remove the NA layers
-  names(ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))[nas]
-  save(ab.poly.r, file=file.path(path, "ab.poly.r.rdata"))
-  rm(ab.poly.r.stack, nas)
-  
-  bc.poly.r = stack(sfClusterApplyLB(bc.poly, change.res))
-  names(bc.poly.r) = names(bc.poly)
-  save(bc.poly.r, file=file.path(path, "bc.poly.r.rdata"))
+    # several rasters have no values because they were in southern Alberta: `west.r` doesn't cover that.
+    nas = which(sapply(1:nlayers(ab.poly.r.stack), function(x) unique(!is.na(which.min(ab.poly.r.stack[[x]])))))
+    ab.poly.r = ab.poly.r.stack[[nas]] # remove the NA layers
+    names(ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))[nas]
+    save(ab.poly.r, file=file.path(path, "ab.poly.r.rdata"))
+    rm(ab.poly.r.stack, nas)
+    
+    bc.poly.r = stack(sfClusterApplyLB(bc.poly, change.res))
+    names(bc.poly.r) = names(bc.poly)
+    save(bc.poly.r, file=file.path(path, "bc.poly.r.rdata"))
   sfStop()
 } else {
   load(file.path(path, "ab.r.rdata"))
@@ -142,6 +138,8 @@ if (work.on.raw.maps) {
   load(file.path(path, "bcab.rdata"))
   load(file.path(path, "bcab.poly.rdata"))
 }
+
+####################################################################
 
 # combine bc.poly and ab.poly:
 bc.poly.r.us = unstack(bc.poly.r)

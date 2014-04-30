@@ -93,7 +93,9 @@ subset = match(canada2.boreal.dt[c("Alberta", "British Columbia", "Saskatchewan"
 west.county = canada2.boreal[subset,]
 rm(gadm, canada2, canada2.boreal, canada2.boreal.dt, subset)
 
-# extent obtained using `locator()`
+## extent obtained using:
+#plot(west)
+#locator(2)
 ext = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
 west.empty = raster(ext)
 res(west.empty) <- 100
