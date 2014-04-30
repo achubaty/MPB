@@ -4,13 +4,25 @@ library(rgdal)
 library(snowfall)
 
 num.cpus = 4
+res.maps = 1000
+ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
+  
+## map extent was obtained using:
+#     plot(west)
+#     locator(2)
+
 
 if (Sys.info()[["sysname"]]=="Darwin") {
   maps.dir = "~/Documents/data/maps"
   work.dir = "~/Documents/GitHub/MPB"
 } else if (Sys.info()[["sysname"]]=="Linux") {
-  maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB"
+  if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch=0)) {
+    maps.dir = "~/data/maps"
+    work.dir = "~/GitHub/MPB"
+  } else {
+    maps.dir = "~/Documents/data/maps"
+    work.dir = "~/Documents/GitHub/MPB"
+  }
 } else if (Sys.info()[["sysname"]]=="Windows") {
   maps.dir = "~/data/maps"
   work.dir = "~/GitHub/MPB"
@@ -93,12 +105,8 @@ subset = match(canada2.boreal.dt[c("Alberta", "British Columbia", "Saskatchewan"
 west.county = canada2.boreal[subset,]
 rm(gadm, canada2, canada2.boreal, canada2.boreal.dt, subset)
 
-## extent obtained using:
-#plot(west)
-#locator(2)
-ext = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
-west.empty = raster(ext)
-res(west.empty) <- 100
+west.empty = raster(ext.maps)
+res(west.empty) <- maps.res
 west.r = rasterize(west, west.empty)
 
 ### REPROJECT AB, BC, US SO THEY ARE BOTH IN THE `boreal` PROJECTION

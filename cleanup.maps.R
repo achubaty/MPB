@@ -15,7 +15,7 @@ library(shapefiles)
 library(snowfall)
 
 ### set up workspace
-num.cpus = 4
+num.cpus = 2
 
 if (Sys.info()[["sysname"]]=="Darwin") {
   maps.dir = "~/Documents/data/maps"
@@ -85,6 +85,7 @@ if (work.on.raw.maps) {
     rm(wh.ab, wh.bc)
     
     save(bcab, file=file.path(path, "bcab.rdata"))
+    rm(ab, bc)
   sfStop()
 
   sfInit(cpus=num.cpus, parallel=TRUE)
@@ -104,7 +105,9 @@ if (work.on.raw.maps) {
     rm(wh.ab.poly, wh,bc,poly)
     
     save(bcab.poly, file=file.path(path, "bcab.poly.rdata"))
-  sfStop()  
+  sfStop()
+  
+  rm(bcab)
   
   ### for the next two, we arbitrarily picked 1000 trees per 1ha
   ###   This NEEDS to be revisited.
