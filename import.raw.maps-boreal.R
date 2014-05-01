@@ -19,18 +19,24 @@ canada2.boreal = spTransform(canada2, crs.boreal)
 canada2.boreal.dt = data.table(data.frame(canada2.boreal))
 setkey(canada2.boreal.dt, "NAME_1")
 subset = match(canada2.boreal.dt[c("Alberta", "British Columbia", "Saskatchewan")]$PID, canada2.boreal@data$PID)
+# `subset` produces data.table warning re: mixed font encodings
+#
 west2.boreal = canada2.boreal[subset,]
 rm(gadm, canada2, canada2.boreal.dt, subset)
 
 boreal.can <- boreal[boreal$COUNTRY=="CANADA",]
-west.boreal.union <- unionSpatialPolygons(west.boreal, west.boreal$ID_0)
+west.boreal.union <- unionSpatialPolygons(west.boreal, west.boreal$ID_0, threshold=1) # threshold value???
 boreal.west <- gIntersection(west.boreal.union, boreal.can) # ERROR MESSAGE BELOW
 
 #   Error in RGEOSBinTopoFunc(spgeom1, spgeom2, byid, id, drop_not_poly, "rgeos_intersection") : 
 #     TopologyException: Input geom 0 is invalid: Too few points in geometry component at or
 #     near point 199577.44732574001 5470112.4132905202 at 199577.44732574001 5470112.4132905202
 
-
+rm(west.boreal.union)
 
 ### Save these new map objects for later use
-saveObjects(c("boreal", "boreal.can", "boreal.west", "canada1.boreal", "canada2.boreal", "west.boreal", "west2.boreal"), rdata.path)
+objects2save = c("boreal", "boreal.can", "boreal.west",
+                 "canada1.boreal", "canada2.boreal",
+                 "west.boreal", "west2.boreal")
+saveObjects(objects2save, rdata.path)
+rm(list=objects2save)

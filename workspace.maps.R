@@ -2,25 +2,19 @@
 ### SETUP R WORKSPACE TO WORK WITH MPB MAP DATA
 ###
 
-# data packages
-library(data.table)
-
-# GIS and spatial packages
-library(maptools)
-library(maps)
-library(mapdata)
-library(plotKML)
-library(raster)
-library(rgdal)
-library(rgeos)
-library(rts)
-library(shapefiles)
-
-# HPC packages
-library(snowfall)
-
-# plotting packages
-library(RColorBrewer)
+reqd.pkgs = list("data.table",
+                 "maps",
+                 "mapdata",
+                 "maptools",
+                 "plotKML",
+                 "raster",
+                 "rgdal",
+                 "rgeos",
+                 "rts",
+                 "shapefiles",
+                 "snowfall",
+                 "RColorBrewer")
+load.packages(reqd.pkgs, install=TRUE)
 
 if (Sys.info()[["sysname"]]=="Darwin") {
   maps.dir = "~/Documents/data/maps"

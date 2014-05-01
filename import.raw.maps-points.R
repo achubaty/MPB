@@ -26,5 +26,5 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   saveObjects(c("ab.pnts", "bc.pnts"), rdata.path)
 
   # clean up workspace
-  rm(ab.pnts.dir.shp, bc.pnts.dir.shp, ab.pnts.files, bc.pnts.files, omit)
+  rm(ab.pnts, ab.pnts.dir.shp, ab.pnts.files, bc.pnts, bc.pnts.dir.shp, bc.pnts.files, omit)
 sfStop()

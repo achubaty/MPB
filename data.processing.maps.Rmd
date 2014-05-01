@@ -28,6 +28,8 @@ Descriptions of:
 
 ```{r setup.workspace, echo=FALSE, message=FALSE}
 ### SETUP R WORKING ENVIROMENT
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
 source("workspace.maps.R")
 
 num.cpus = 4
@@ -38,9 +40,6 @@ work.on.raw.maps = FALSE
 res.maps = 1000
 ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
 # map extent obtained using `locator(2)` on 'west' map
-
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
 ```
 
 ## Importing map data
@@ -52,9 +51,6 @@ if (read.in.raw.maps) {
   # Read in raw maps, and save them as individual files
   # - this may take a while...grab a coffee or something
   source(file.path(work.dir, "import.raw.maps-points.R"))
-} else {
-  # Load the precollected R files instead
-  loadObjects(c("ab.pnts", "bc.pnts"), rdata.path)
 }
 ```
 
@@ -65,9 +61,6 @@ if (read.in.raw.maps) {
   # Read in raw maps, and save them as individual files
   # - this may take a while...grab a coffee or something
   source(file.path(work.dir, "import.raw.maps-polygons.R"))
-} else {
-  # Load the precollected R files instead
-  loadObjects(c("ab.poly", "bc.poly"), rdata.path)
 }
 ```
 
@@ -78,16 +71,15 @@ if (read.in.raw.maps) {
   # Read in raw maps, and save them as individual files
   # - this may take a while...grab a coffee or something
   source(file.path(work.dir, "import.raw.maps-boreal.R"))
-} else {
-  # Load the precollected R files instead
-  loadObjects(c("boreal", "west.boreal"), rdata.path)
 }
 ```
 
 Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
 
 ```{r crs.boreal}
+loadObjects("boreal")
 crs.boreal = CRS(proj4string(boreal))
+rm(boreal)
 ```
 
 **The Canadian boreal forest:**
@@ -120,14 +112,14 @@ rm(boreal.west)
 
 ### MPB `SpatialPoints` data
 
-```{r reproject.mpb.maps-points}
+```{r reproject.mpb.maps-points echo=FALSE}
 loadObjects(c("ab.pnts", "bc.pnts"), rdata.path)
 source(file.path(work.dir, "reproject.maps-points.R"))
-rm(ab.pnts, bc.pnts, ab.pnts.boreal, bc.pnts.boreal)
+rm(ab.pnts, bc.pnts)
 ```
 
 ### MPB `SpatialPolygons` data
-```{r reproject.mpb.maps-polygons}
+```{r reproject.mpb.maps-polygons echo=FALSE}
 loadObjects(c("ab.poly", "bc.poly"), rdata.path)
 source(file.path(work.dir, "reproject.maps-polygons.R"))
 rm(ab.poly, bc.poly, ab.poly.boreal, bc.poly.boreal)

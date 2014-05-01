@@ -16,3 +16,4 @@ names(bc.pnts.boreal) = names(bc.pnts)
 
 # save these new map objects for later use
 saveObjects(c("ab.pnts.boreal", "bc.pnts.boreal"), rdata.path)
+rm(ab.pnts.boreal, bc.pnts.boreal)

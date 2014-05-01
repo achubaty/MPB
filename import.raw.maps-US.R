@@ -24,5 +24,5 @@ sfInit(cpus=num.cpus, parallel=TRUE)
     us.poly = append(us.poly.pre2006[ids,], us.poly)
   }
   names(us.poly) = c(rev(years.pre), years.post)
-  save(us.poly, paste(rdata.path, "/us.poly.rdata", sep=""))
+  saveObjects("us.poly", rdata.path)
 sfStop()
