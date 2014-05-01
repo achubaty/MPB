@@ -1,45 +1,8 @@
-library(data.table)
-library(raster)
-library(rgdal)
-library(snowfall)
+###
+### LOAD WORKSPACE SETTINGS
+###   - make sure `num.cpus` is set
+source("workspace.maps.R")
 
-num.cpus = 4
-res.maps = 1000
-ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
-  
-## map extent was obtained using:
-#     plot(west)
-#     locator(2)
-
-
-if (Sys.info()[["sysname"]]=="Darwin") {
-  maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB"
-} else if (Sys.info()[["sysname"]]=="Linux") {
-  if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch=0)) {
-    maps.dir = "~/data/maps"
-    work.dir = "~/GitHub/MPB"
-  } else {
-    maps.dir = "~/Documents/data/maps"
-    work.dir = "~/Documents/GitHub/MPB"
-  }
-} else if (Sys.info()[["sysname"]]=="Windows") {
-  maps.dir = "~/data/maps"
-  work.dir = "~/GitHub/MPB"
-} else {
-  print("Which operating system are you using?")
-}
-setwd(work.dir)
-
-getOGR <- function(layer, dir) {
-  orig.dir = getwd()
-  setwd(dir)
-  out = readOGR(dsn=".", layer=layer)
-  setwd(orig.dir)
-  return(out)
-}
-
-################################################################################
 ### PROCESS AB AND BC MAPS (POINTS & POLYGONS)
 sfInit(cpus=num.cpus, parallel=TRUE)
   sfLibrary(rgdal)
@@ -140,9 +103,8 @@ names(us.poly.bor) = c(rev(years.pre), years.post)
 rm(ab.bor, ab.poly.bor, bc.bor, bc.poly.bor, us.poly.bor, years.pre, years.post)
 
 # save these new map objects for later use
-path = file.path(maps.dir, "MPB", "Rmaps")
 objects2save = c("ab", "ab.poly", "bc", "bc.poly", "boreal", "us.poly")
-lapply(objects2save, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
+lapply(objects2save, function(x) save(list=x, file=paste(rdata.path, "/", x, ".rdata", sep="")))
 
 
 ### REPROJECT WEST SO IT'S IN THE `boreal` PROJECTION
@@ -167,6 +129,5 @@ west.county = west.county.bor
 rm(west.bor, west.county.bor, west.r.bor)
 
 ### Save these new map objects for later use
-path = file.path(maps.dir, "MPB", "Rmaps")
 objects2save = c("west", "west.county", "west.r")
-lapply(objects2save, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
+lapply(objects2save, function(x) save(list=x, file=paste(rdata.path, "/", x, ".rdata", sep="")))

@@ -1,31 +1,5 @@
-library(maptools)
-library(maps)
-library(mapdata)
-library(plotKML)
-library(RColorBrewer)
-
-### set up workspace
-num.cpus = 4
-
-if (Sys.info()[["sysname"]]=="Darwin") {
-  maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB"
-} else if (Sys.info()[["sysname"]]=="Linux") {
-  maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB"
-} else if (Sys.info()[["sysname"]]=="Windows") {
-  maps.dir = "~/data/maps"
-  work.dir = "~/GitHub/MPB"
-} else {
-  print("Which operating system are you using?")
-}
-
-setwd(work.dir)
-
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/newplot.R")
 
 # Load the precollected R files instead
-path = file.path(maps.dir, "MPB", "Rmaps")
 mpb.points = c("ab", "bc", "west")
 mpb.polygons = c("ab.poly", "bc.poly", "us.poly", "west")
 mpb.rasters = c("ab.r", "ab.poly.r", "bc.r", "bc.poly.r", "us.poly.r", "west.r")

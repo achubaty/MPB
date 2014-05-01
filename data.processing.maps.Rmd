@@ -1,0 +1,135 @@
+# MPB maps data processing
+
+**Alex M. Chubaty**
+
+Canadian Forest Service
+Pacific Forestry Centre
+506 Burnside Road W
+Victoria, BC V8Z 1M5
+
+Université Laval
+Faculté de foresterie, de géographie et de géomatique
+Département des sciences du bois et de la forêt
+
+*email:* [Alexander.Chubaty@nrcan.gc.ca][1]
+*phone:* +1.250.298.2347
+
+[1]: <mailto:Alexander.Chubaty@nrcan.gc.ca>
+
+------------------------------------------------------------------
+
+## Overview of MPB map data
+
+Descriptions of:
+
+- data sources
+- data collected
+- etc.
+
+```{r setup.workspace, echo=FALSE, message=FALSE}
+### SETUP R WORKING ENVIROMENT
+source("workspace.maps.R")
+
+num.cpus = 4
+
+read.in.raw.maps = FALSE
+work.on.raw.maps = FALSE
+
+res.maps = 1000
+ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
+# map extent obtained using `locator(2)` on 'west' map
+
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
+```
+
+## Importing map data
+
+### MPB `SpatialPoints` data
+
+```{r import.maps-points, echo=FALSE}
+if (read.in.raw.maps) {
+  # Read in raw maps, and save them as individual files
+  # - this may take a while...grab a coffee or something
+  source(file.path(work.dir, "import.raw.maps-points.R"))
+} else {
+  # Load the precollected R files instead
+  loadObjects(c("ab.pnts", "bc.pnts"), rdata.path)
+}
+```
+
+### MPB `SpatialPolygons` data
+
+```{r import.maps-polygons, echo=FALSE}
+if (read.in.raw.maps) {
+  # Read in raw maps, and save them as individual files
+  # - this may take a while...grab a coffee or something
+  source(file.path(work.dir, "import.raw.maps-polygons.R"))
+} else {
+  # Load the precollected R files instead
+  loadObjects(c("ab.poly", "bc.poly"), rdata.path)
+}
+```
+
+### Canadian boreal forest maps
+
+```{r import.maps-boreal, echo=FALSE}
+if (read.in.raw.maps) {
+  # Read in raw maps, and save them as individual files
+  # - this may take a while...grab a coffee or something
+  source(file.path(work.dir, "import.raw.maps-boreal.R"))
+} else {
+  # Load the precollected R files instead
+  loadObjects(c("boreal", "west.boreal"), rdata.path)
+}
+```
+
+Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
+
+```{r crs.boreal}
+crs.boreal = CRS(proj4string(boreal))
+```
+
+**The Canadian boreal forest:**
+
+```{r plot.canada.boreal fig.height=4 fig.width=7}
+loadObjects("boreal.can", rdata.path)
+darkgreen <- col2rgb("darkgreen")/255
+col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
+rm(darkgreen)
+
+plot(canada1.boreal)
+plot(boreal.can, col=col.bor, add=TRUE)
+rm(boreal.can)
+```
+
+**The western Canadian boreal forest:**
+
+```{r plot.western.boreal fig.height=5, fig.width=6}
+loadObjects("boreal.west", rdata.path)
+darkgreen <- col2rgb("darkgreen")/255
+col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
+rm(darkgreen)
+
+plot(west)
+plot(boreal.west, col=col.bor, add=TRUE))
+rm(boreal.west)
+```
+
+## Reproject MPB maps to `crs.boreal`
+
+### MPB `SpatialPoints` data
+
+```{r reproject.mpb.maps-points}
+loadObjects(c("ab.pnts", "bc.pnts"), rdata.path)
+source(file.path(work.dir, "reproject.maps-points.R"))
+rm(ab.pnts, bc.pnts, ab.pnts.boreal, bc.pnts.boreal)
+```
+
+### MPB `SpatialPolygons` data
+```{r reproject.mpb.maps-polygons}
+loadObjects(c("ab.poly", "bc.poly"), rdata.path)
+source(file.path(work.dir, "reproject.maps-polygons.R"))
+rm(ab.poly, bc.poly, ab.poly.boreal, bc.poly.boreal)
+```
+
