@@ -18,7 +18,7 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   bc.pnts.files = dir(path=file.path(maps.dir, "MPB", "province_BC"), pattern="spot")
   bc.pnts.dir.shp = unique(sapply(strsplit(bc.pnts.files, "\\."), function(x) x[[1]]))
   omit = which(match(bc.pnts.dir.shp, "ibm_spot_data_northernpoints_removed", nomatch=0)==1)
-  bc.pnts.dir.shp = bc.pnts.dir.shp[-omit]
+  if(length[omit]>0) bc.pnts.dir.shp = bc.pnts.dir.shp[-omit]
   bc.pnts = sfClusterApplyLB(bc.pnts.dir.shp, fun=getOGR, dir=file.path(maps.dir, "MPB", "province_BC"))
   names(bc.pnts) = sapply(strsplit(bc.pnts.dir.shp,"_"), function(x) x[[3]])
 
