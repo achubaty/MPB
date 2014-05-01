@@ -1,7 +1,7 @@
 ###
 ### LOAD WORKSPACE SETTINGS
 ###   - make sure `num.cpus` is set
-source("workspace.maps.R")
+if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 ### PROCESS AB AND BC MAPS (POINTS & POLYGONS)
 sfInit(cpus=num.cpus, parallel=TRUE)

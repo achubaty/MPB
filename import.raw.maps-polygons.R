@@ -1,7 +1,7 @@
 ###
 ### LOAD WORKSPACE SETTINGS
 ###   - make sure `num.cpus` is set
-source("workspace.maps.R")
+if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 ### AB maps
 sfInit(cpus=num.cpus, parallel=TRUE)

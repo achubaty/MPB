@@ -28,8 +28,6 @@ Descriptions of:
 
 ```{r setup.workspace, echo=FALSE, message=FALSE}
 ### SETUP R WORKING ENVIROMENT
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
 source("workspace.maps.R")
 
 num.cpus = 4

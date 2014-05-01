@@ -1,7 +1,7 @@
 ###
 ### LOAD WORKSPACE SETTINGS
 ###   - make sure `num.cpus` is set
-source("workspace.maps.R")
+if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 ### REPROJECT AB, BC, US SO THEY ARE BOTH IN THE `boreal` PROJECTION
 sfInit(cpus=num.cpus, parallel=TRUE)
@@ -9,11 +9,13 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   sfExport("crs.boreal")
   ab.poly.boreal = sfClusterApplyLB(ab.poly, spTransform, crs.boreal)
   bc.poly.boreal = sfClusterApplyLB(bc.poly, spTransform, crs.boreal)
+  
+  names(ab.poly.boreal) = names(ab.pnts)
+  names(bc.poly.boreal) = names(bc.pnts)
+  
+  # save these new map objects for later use
+  saveObjects(c("ab.poly.boreal", "bc.poly.boreal"), rdata.path)
+  
+  # cleanup workspace
+  rm(ab.poly.boreal, bc.poly.boreal)
 sfStop()
-
-names(ab.poly.boreal) = names(ab.pnts)
-names(bc.poly.boreal) = names(bc.pnts)
-
-# save these new map objects for later use
-saveObjects(c("ab.poly.boreal", "bc.poly.boreal"), rdata.path)
-rm(ab.poly.boreal, bc.poly.boreal)

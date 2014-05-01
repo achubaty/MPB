@@ -1,6 +1,8 @@
 ###
 ### SETUP R WORKSPACE TO WORK WITH MPB MAP DATA
 ###
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
 
 reqd.pkgs = list("data.table",
                  "maps",
@@ -51,3 +53,5 @@ loadObjects <- function(objects, path) {
 saveObjects <- function(objects, path) {
   lapply(objects, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
 }
+
+WORKSPACE = TRUE

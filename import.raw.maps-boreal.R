@@ -1,7 +1,7 @@
 ###
 ### LOAD WORKSPACE SETTINGS
 ###   - make sure `num.cpus` is set
-source("workspace.maps.R")
+if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 ### LOAD OTHER MAPS, PROVINCE OUTLINES, COUNTY OUTLINES, BOREAL FOREST
 boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))

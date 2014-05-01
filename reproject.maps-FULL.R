@@ -1,7 +1,7 @@
 ###
 ### LOAD WORKSPACE SETTINGS
 ###   - make sure `num.cpus` is set
-source("workspace.maps.R")
+if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 ### REPROJECT AB, BC, US SO THEY ARE BOTH IN THE `boreal` PROJECTION
 sfInit(cpus=num.cpus, parallel=TRUE)
