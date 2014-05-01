@@ -2,11 +2,16 @@
 ### LOAD WORKSPACE SETTINGS
 ###   - make sure `num.cpus` is set
 if (!exists("WORKSPACE")) source("workspace.maps.R")
+if(!exists("crs.boreal")) {
+  loadObjects("boreal", rdata.path)
+  crs.boreal = CRS(proj4string(boreal))
+  rm(boreal)
+}
 
 ### REPROJECT AB, BC SO THEY ARE BOTH IN THE `boreal` PROJECTION
 sfInit(cpus=num.cpus, parallel=TRUE)
   sfLibrary(rgdal)
-  sfExport("crs.boreal")
+  sfExport("ab.pnts", "bc.pnts", "crs.boreal")
   ab.pnts.boreal = sfClusterApplyLB(ab.pnts, spTransform, crs.boreal)
   bc.pnts.boreal = sfClusterApplyLB(bc.pnts, spTransform, crs.boreal)
 

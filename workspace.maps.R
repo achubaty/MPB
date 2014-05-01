@@ -47,11 +47,11 @@ getOGR <- function(layer, dir) {
 }
 
 loadObjects <- function(objects, path) {
-  lapply(objects, function(x) load(file=paste(rdata.path, "/", x, ".rdata", sep=""), env=globalenv()))
+  lapply(objects, function(x) load(file=paste(rdata.path, "/", x, ".RData", sep=""), env=globalenv()))
 }
 
 saveObjects <- function(objects, path) {
-  lapply(objects, function(x) save(list=x, file=paste(path, "/", x, ".rdata", sep="")))
+  lapply(objects, function(x) save(list=x, file=paste(path, "/", x, ".RData", sep="")))
 }
 
 WORKSPACE = TRUE

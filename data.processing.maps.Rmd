@@ -75,9 +75,11 @@ if (read.in.raw.maps) {
 Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
 
 ```{r crs.boreal}
-loadObjects("boreal")
-crs.boreal = CRS(proj4string(boreal))
-rm(boreal)
+if(!exists("crs.boreal")) {
+  loadObjects("boreal", rdata.path)
+  crs.boreal = CRS(proj4string(boreal))
+  rm(boreal)
+}
 ```
 
 **The Canadian boreal forest:**
