@@ -1,8 +1,10 @@
 ###
 ### SETUP R WORKSPACE TO WORK WITH MPB MAP DATA
 ###
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
 devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
 
 reqd.pkgs = list("data.table",
                  "maps",
@@ -18,10 +20,11 @@ reqd.pkgs = list("data.table",
                  "RColorBrewer")
 load.packages(reqd.pkgs, install=TRUE)
 
-if (Sys.info()[["sysname"]]=="Darwin") {
+OS = Sys.info()[["sysname"]]
+if (OS=="Darwin") {
   maps.dir = "~/Documents/data/maps"
   work.dir = "~/Documents/GitHub/MPB"
-} else if (Sys.info()[["sysname"]]=="Linux") {
+} else if (OS=="Linux") {
   if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch=0)) {
     maps.dir = "~/data/maps"
     work.dir = "~/GitHub/MPB"
@@ -29,7 +32,7 @@ if (Sys.info()[["sysname"]]=="Darwin") {
     maps.dir = "~/Documents/data/maps"
     work.dir = "~/Documents/GitHub/MPB"
   }
-} else if (Sys.info()[["sysname"]]=="Windows") {
+} else if (OS=="Windows") {
   maps.dir = "~/data/maps"
   work.dir = "~/GitHub/MPB"
 } else {
@@ -44,14 +47,6 @@ getOGR <- function(layer, dir) {
   out = readOGR(dsn=".", layer=layer)
   setwd(orig.dir)
   return(out)
-}
-
-loadObjects <- function(objects, path) {
-  lapply(objects, function(x) load(file=paste(rdata.path, "/", x, ".RData", sep=""), env=globalenv()))
-}
-
-saveObjects <- function(objects, path) {
-  lapply(objects, function(x) save(list=x, file=paste(path, "/", x, ".RData", sep="")))
 }
 
 WORKSPACE = TRUE

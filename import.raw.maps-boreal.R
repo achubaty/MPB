@@ -25,12 +25,12 @@ west2.boreal = canada2.boreal[subset,]
 rm(gadm, canada2, canada2.boreal.dt, subset)
 
 boreal.can <- boreal[boreal$COUNTRY=="CANADA",]
-west.boreal.union <- unionSpatialPolygons(west.boreal, west.boreal$ID_0, threshold=1) # threshold value???
-boreal.west <- gIntersection(west.boreal.union, boreal.can) # ERROR MESSAGE BELOW
+west.boreal.union <- unionSpatialPolygons(west.boreal, west.boreal$ID_0, threshold=10) # threshold value???
+#boreal.west <- gIntersection(west.boreal.union, boreal.can) # ERROR MESSAGE BELOW
 
-#   Error in RGEOSBinTopoFunc(spgeom1, spgeom2, byid, id, drop_not_poly, "rgeos_intersection") : 
-#     TopologyException: Input geom 0 is invalid: Too few points in geometry component at or
-#     near point 199577.44732574001 5470112.4132905202 at 199577.44732574001 5470112.4132905202
+##  Error in RGEOSBinTopoFunc(spgeom1, spgeom2, byid, id, drop_not_poly, "rgeos_intersection") : 
+##    TopologyException: Input geom 0 is invalid: Too few points in geometry component at or
+##    near point 199577.44732574001 5470112.4132905202 at 199577.44732574001 5470112.4132905202
 
 rm(west.boreal.union)
 

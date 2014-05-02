@@ -11,7 +11,7 @@ if(!exists("crs.boreal")) {
 ### REPROJECT AB, BC SO THEY ARE BOTH IN THE `boreal` PROJECTION
 sfInit(cpus=num.cpus, parallel=TRUE)
   sfLibrary(rgdal)
-  sfExport("ab.pnts", "bc.pnts", "crs.boreal")
+  
   ab.pnts.boreal = sfClusterApplyLB(ab.pnts, spTransform, crs.boreal)
   bc.pnts.boreal = sfClusterApplyLB(bc.pnts, spTransform, crs.boreal)
 
@@ -20,7 +20,29 @@ sfInit(cpus=num.cpus, parallel=TRUE)
 
   # save these new map objects for later use
   saveObjects(c("ab.pnts.boreal", "bc.pnts.boreal"), rdata.path)
-  
-  # cleanup workspace
+
+  # clean up workspace
+  rm(ab.pnts, bc.pnts)
+sfStop()
+
+### merge ab and bc points
+wh.ab = na.omit(pmatch(names(bc.pnts.boreal), names(ab.pnts.boreal)))
+wh.bc = na.omit(pmatch(substr(names(ab.pnts.boreal), 1, 4), names(bc.pnts.boreal)))
+
+sfInit(cpus=num.cpus, parallel=TRUE)
+  sfLibrary(sp)
+  sfExport("ab.pnts.boreal", "bc.pnts.boreal", "crs.boreal", "wh.ab", "wh.bc")  
+
+  bcab.pnts.boreal = sfClusterApplyLB(1:length(wh.ab), function(x) {
+    out = merge(bc.pnts.boreal[[wh.bc[x]]], ab.pnts.boreal[[wh.ab[x]]], all=TRUE)
+    coordinates(out) <- ~ coords.x1 + coords.x2
+    out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees, NA))
+    return(out)})
+  bcab.pnts.boreal = sfClusterApplyLB(bcab.pnts.boreal, function(x) {proj4string(x) <- crs.boreal; return(x)})
+  names(bcab.pnts.boreal) = names(bc.pnts.boreal)[wh.bc]
+    
+  saveObjects("bcab.pnts.boreal", rdata.path)
   rm(ab.pnts.boreal, bc.pnts.boreal)
 sfStop()
+
+rm(wh.ab, wh.bc)

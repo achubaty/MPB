@@ -1,11 +1,12 @@
 
 # Load the precollected R files instead
-mpb.points = c("ab", "bc", "west")
-mpb.polygons = c("ab.poly", "bc.poly", "us.poly", "west")
-mpb.rasters = c("ab.r", "ab.poly.r", "bc.r", "bc.poly.r", "us.poly.r", "west.r")
+mpb.points = c("ab.pnts.boreal", "bc.pnts.boreas", "west.boreal")
+mpb.polygons = c("ab.poly.boreal", "bc.poly.boreal", "west.boreal")
+mpb.rasters = c("ab.pnts.raster", "ab.poly.raster",
+                "bc.pnts.raster", "bc.poly.raster",
+                "west.boreal.raster")
 
-objects2load = mpb.rasters
-lapply(objects2load, function(x) load(file=paste(path, "/", x, ".rdata", sep=""), env=globalenv()))
+loadObjects(mpb.rasters)
 
 
 ############
@@ -15,20 +16,24 @@ lapply(objects2load, function(x) load(file=paste(path, "/", x, ".rdata", sep="")
 newPlot()
 plot(west)
 colours <- brewer.pal(n=9, name="YlOrRd")
-for (i in names(ab)) {
-  points(ab[[i]], pch=".", col=colours)
+for (i in names(ab.pnts.boreal)) {
+  points(ab.pnts.boreal[[i]], pch=".", col=colours)
 }
-for (i in names(bc)) {
-  points(bc[[i]], pch=".", col=colours)
+for (i in names(bc.pnts.boreal)) {
+  points(bc.pnts.boreal[[i]], pch=".", col=colours)
 }
 
 ### AB and BC polygon data
+loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal"), rdata.path)
 newPlot()
-plot(west)
+plot(west.boreal)
 colours <- brewer.pal(n=9, name="YlOrRd")
-plot(ab.poly)
-plot(bc.poly)
-#plot(us.poly)
+for (i in names(bc.poly.boreal)) {
+  plot(ab.poly.boreal[[i]], col=colours, add=TRUE)
+}
+for (i in names(bc.poly.boreal)) {
+  plot(bc.poly.boreal[[i]], col=colours, add=TRUE)
+}
 
 ### RASTERS
 newPlot()

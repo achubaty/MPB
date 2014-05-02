@@ -1,64 +1,8 @@
-###
-### Convert everything to rasters @ 1 ha resolution.
-###   This resolution decision is determined with the `west.r` rasterization done when importing
+# WARNING: this next chunk eats up RAM like crazy! use fewer cpus
+#  - adjust `guesstimate` as needed for your machine
+guesstimate = floor(sysmem("gb") / 7)
 
-if (work.on.raw.maps) {
-  sfInit(cpus=num.cpus, parallel=TRUE)
-    sfLibrary(raster)
-    sfExport("west.r")
-    
-    ab.r = stack(sfClusterApplyLB(ab, function(x) rasterize(x=x, y=west.r,
-                field=if(any(colnames(x@data)=="NUM_TREES")) x@data$NUM_TREES else x@data$num_trees, fun="sum")))
-    names(ab.r) = sapply(names(ab), function(x) strsplit(x,"spot")[[1]])
-    save(ab.r, file=file.path(path, "ab.r.rdata"))
-  
-    bc.r = stack(sfClusterApplyLB(bc, function(x) rasterize(x=x, y=west.r, field=x@data$NUM_TREES, fun="sum")))
-    names(bc.r) = names(bc)
-    save(bc.r, file=file.path(path, "bc.r.rdata"))
-  sfStop()
-  
-  ### merge alberta and bc points
-  sfInit(cpus=num.cpus, parallel=TRUE)
-    sfLibrary(sp)
-    
-    wh.ab = na.omit(pmatch(names(bc), names(ab)))
-    wh.bc = na.omit(pmatch(substr(names(ab), 1, 4), names(bc)))
-    
-    sfExport("ab", "bc", "west.r", "wh.ab", "wh.bc")
-      
-    bcab = sfClusterApplyLB(1:length(wh.ab), function(x) {
-              out = merge(bc[[wh.bc[x]]], ab[[wh.ab[x]]], all=TRUE)
-              coordinates(out) <- ~ coords.x1 + coords.x2
-              out$ntrees = ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees, NA))
-              return(out)})
-    bcab = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
-    names(bcab) = names(bc)[wh.bc] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
-    rm(wh.ab, wh.bc)
-    
-    save(bcab, file=file.path(path, "bcab.rdata"))
-    rm(ab, bc)
-  sfStop()
-
-  sfInit(cpus=num.cpus, parallel=TRUE)
-    sfLibrary(sp)
-
-    wh.ab.poly = na.omit(pmatch(names(bc.poly), names(ab.poly)))
-    wh.bc.poly = na.omit(pmatch(substr(names(ab.poly),1,4), names(bc.poly)))
-    
-    sfExport("ab.poly", "bc.poly", "west.r", "wh.ab.poly", "wh.bc.poly")
-        
-    bcab.poly = sfClusterApplyLB(1:length(wh.ab.poly), function(x) {
-      out = merge(bc.poly[[wh.bc.poly[x]]], ab.poly[[wh.ab.poly[x]]], all=TRUE)
-      coordinates(out) <- ~ coords.x1 + coords.x2
-      return(out)})
-    bcab.poly = sfClusterApplyLB(bcab, function(x) {proj4string(x) <- proj4string(west.r); return(x)})
-    names(bcab.poly) = names(bc.poly)[wh.bc.poly] #sapply(strsplit(bc.dir.shp,"_"),function(x) x[[3]])[wh.bc]
-    rm(wh.ab.poly, wh,bc,poly)
-    
-    save(bcab.poly, file=file.path(path, "bcab.poly.rdata"))
-  sfStop()
-  
-  rm(bcab)
+####################################################################
   
   ### for the next two, we arbitrarily picked 1000 trees per 1ha
   ###   This NEEDS to be revisited.
@@ -84,13 +28,6 @@ if (work.on.raw.maps) {
     names(bc.poly.r) = names(bc.poly)
     save(bc.poly.r, file=file.path(path, "bc.poly.r.rdata"))
   sfStop()
-} else {
-  load(file.path(path, "ab.r.rdata"))
-  load(file.path(path, "bc.r.rdata"))
-  load(file.path(path, "ab.poly.r.rdata"))
-  load(file.path(path, "bc.poly.r.rdata"))
-  load(file.path(path, "bcab.rdata"))
-  load(file.path(path, "bcab.poly.rdata"))
 }
 
 ####################################################################
