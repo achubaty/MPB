@@ -1,36 +1,4 @@
-####################################################################
-
-# assigning names to layers isn't working
-#names(bc.r) = names(bcab)
-#names(ab.poly.raster) = unlist(strsplit(names(ab.poly),"poly"))
-#names(bc.poly.r) = names(bc.poly)
-
-wh.poly.r = na.omit(match(substr(names(ab.poly),1,4), substr(names(poly.r),2,5)))
-wh.bcab.r = na.omit(pmatch(substr(names(ab.poly),1,4), names(bcab)))
-
-all = list()
-inner.count = 0
-for (i in 1:nlayers(bc.r)) {
-  if (any(substr(names(bc.r),2,5)[i] == substr(names(poly.r),2,5))) {
-    inner.count = inner.count + 1
-    if (any(is.finite(cellStats(poly.r[[i]], "range")))) {
-        all[[i]] = bc.r[[wh.bcab.r[inner.count]]] + poly.r[[wh.poly.r[inner.count]]]
-    } else {
-        all[[i]] = bc.r[[wh.bcab.r[inner.count]]]
-    }
-  } else {
-    all[[i]] = bc.r[[i]]
-  }
-}
-
-all = lapply(all, function(x) { x[is.na(x)] <- 0; return(x) })
-all = lapply(all, function(x) { x[x>0] <- log(x[x>0])+10; return(x) })
-
-
-stk = stack(all)
-brk = brick(all)
-#brk = aggregate(stk, fact=1)
-
+###
 latlongproj = "+proj=longlat"
 brk.ll = projectRaster(brk, crs=latlongproj)
 brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) {brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]])}))

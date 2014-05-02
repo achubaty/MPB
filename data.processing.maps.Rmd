@@ -166,3 +166,12 @@ if (rasterize.maps) {
 }
 ```
 
+## Combine all MPB maps
+
+```{r combine echo=FALSE}
+if (rasterize.maps) {
+  loadObjects(c(), rdata.path)
+  source(file.path(work.dir, "combine.maps.R"))
+  rm()
+}
+```
