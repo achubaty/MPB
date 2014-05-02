@@ -1,18 +1,5 @@
 ####################################################################
 
-# combine bc.poly and ab.poly:
-bc.poly.r.us = unstack(bc.poly.r)
-ab.poly.raster.us = unstack(ab.poly.raster)
-poly.r.us = bc.poly.r.us
-
-wh.poly.bc =  na.omit(match(names(ab.poly.raster), names(bc.poly.r)))
-wh.poly.ab =  na.omit(match(names(bc.poly.r), names(ab.poly.raster)))
-poly.r.us[wh.poly.bc] = lapply(1:length(wh.poly.ab), function(x) {
-                                out = bc.poly.r.us[[wh.poly.bc[x]]] + ab.poly.raster.us[[wh.poly.ab[x]]]
-                                return(out)})
-poly.r = stack(poly.r.us)
-names(poly.r) = names(bc.poly.r)
-
 # assigning names to layers isn't working
 #names(bc.r) = names(bcab)
 #names(ab.poly.raster) = unlist(strsplit(names(ab.poly),"poly"))

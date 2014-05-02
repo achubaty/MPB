@@ -36,8 +36,17 @@ for (i in names(bc.poly.boreal)) {
 }
 
 ### RASTERS
+loadObjects(c("bc.poly.boreal.raster.stack", "bc.poly.boreal.raster.stack",
+              "bcab.poly.boreal.raster.stack", "west.boreal.raster"), rdata.path)
+
 newPlot()
-plot(west.r)
 colours <- brewer.pal(n=9, name="YlOrRd")
-
-
+# only 9 cols so only plot 9
+last9 <- (length(names(bc.poly.boreal.raster.stack))-8):length(names(bc.poly.boreal.raster.stack))
+plot(west.boreal)
+for (i in rev(last9)) {
+  # plot them in reverse order to better see colours
+  plot(bc.poly.boreal.raster.stack[[i]], col=colours[i-last9[1]], legend=FALSE, add=TRUE)
+  
+}
+legend("topright", legend=names(bc.poly.boreal.raster.stack[[last9]]), fill=colours)

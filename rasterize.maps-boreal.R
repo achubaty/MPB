@@ -10,10 +10,11 @@ if(!exists("crs.boreal")) {
   rm(boreal)
 }
 
-west.empty.raster = raster(ext.maps)
+west.empty.raster = raster(extent(west.boreal))
 res(west.empty.raster) <- res.maps
-west.boreal.raster = rasterize(west.boreal, west.empty.raster)
-rm(west.empty.raster)
+west.raster = rasterize(west.boreal, west.empty.raster)
 
 ### Save these new map objects for later use
 saveObjects("west.boreal.raster", rdata.path)
+
+rm(west.boreal.raster, west.empty.raster)

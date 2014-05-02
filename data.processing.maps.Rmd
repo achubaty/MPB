@@ -139,7 +139,7 @@ if (reproj.raw.maps) {
 
 ```{r rasterize.maps-boreal echo=FALSE}
 if (rasterize.maps) {
-  loadObjects(c(""), rdata.path)
+  loadObjects(c("west.boreal"), rdata.path)
   source(file.path(work.dir, "rasterize.maps-boreal.R"))
   rmObjects()
 }
@@ -151,7 +151,7 @@ if (rasterize.maps) {
 if (rasterize.maps) {
   loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal.raster"), rdata.path)
   source(file.path(work.dir, "rasterize.maps-points.R"))
-  rmObjects(west.boreal.raster)
+  rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal.raster)
 }
 ```
 
@@ -161,7 +161,8 @@ if (rasterize.maps) {
 if (rasterize.maps) {
   loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal.raster"), rdata.path)
   source(file.path(work.dir, "rasterize.maps-polygons.R"))
-  rmObjects(west.boreal.raster)
+  source(file.path(work.dir, "merge.maps-polygons.R"))
+  rm(ab.poly.boreal, bc.poly.boreal, west.boreal.raster)
 }
 ```
 
