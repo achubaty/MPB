@@ -139,9 +139,9 @@ if (reproj.raw.maps) {
 
 ```{r rasterize.maps-boreal echo=FALSE}
 if (rasterize.maps) {
-  loadObjects(c("west.boreal"), rdata.path)
+  loadObjects(c("bcab.pnts.boreal", "west.boreal.raster"), rdata.path)
   source(file.path(work.dir, "rasterize.maps-boreal.R"))
-  rmObjects()
+  rm(bcab.pnts.boreal, west.boreal)
 }
 ```
 
