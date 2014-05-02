@@ -117,6 +117,7 @@ rm(boreal.west)
 if (reproj.raw.maps) {
   loadObjects(c("ab.pnts", "bc.pnts"), rdata.path)
   source(file.path(work.dir, "reproject.maps-points.R"))
+  source(file.path(work.dir, "merge.maps-points.R"))
   rm(ab.pnts, bc.pnts)
 }
 ```
@@ -125,9 +126,9 @@ if (reproj.raw.maps) {
 
 ```{r reproject.maps-polygons echo=FALSE}
 if (reproj.raw.maps) {
-  ## WARNING: high ram use (see source for details)
   loadObjects(c("ab.poly", "bc.poly"), rdata.path)
   source(file.path(work.dir, "reproject.maps-polygons.R"))
+  # merging poly data can't be done at this point -- will merge rasters
   rm(ab.poly, bc.poly)
 }
 ```
