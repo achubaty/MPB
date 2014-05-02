@@ -49,4 +49,13 @@ getOGR <- function(layer, dir) {
   return(out)
 }
 
+num.cpus = 4            # maximum cpus to use
+
+read.in.raw.maps = FALSE
+reproj.raw.maps = FALSE
+rasterize.maps = FALSE
+
+res.maps = 1000
+ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
+
 WORKSPACE = TRUE

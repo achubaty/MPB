@@ -1,7 +1,3 @@
-# WARNING: this next chunk eats up RAM like crazy! use fewer cpus
-#  - adjust `guesstimate` as needed for your machine
-guesstimate = floor(sysmem("gb") / 7)
-
 ####################################################################
   
   ### for the next two, we arbitrarily picked 1000 trees per 1ha
@@ -12,17 +8,17 @@ guesstimate = floor(sysmem("gb") / 7)
   
   sfInit(cpus=num.cpus, parallel=TRUE)
     sfLibrary(raster)
-    sfExport("west.r")
+    sfExport("west.boreal.raster")
     
-    ab.poly.r.stack = stack(sfClusterApplyLB(ab.poly, change.res))
-    names(ab.poly.r.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
+    ab.poly.raster.stack = stack(sfClusterApplyLB(ab.poly, change.res))
+    names(ab.poly.raster.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
   
     # several rasters have no values because they were in southern Alberta: `west.r` doesn't cover that.
-    nas = which(sapply(1:nlayers(ab.poly.r.stack), function(x) unique(!is.na(which.min(ab.poly.r.stack[[x]])))))
-    ab.poly.r = ab.poly.r.stack[[nas]] # remove the NA layers
-    names(ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))[nas]
-    save(ab.poly.r, file=file.path(path, "ab.poly.r.rdata"))
-    rm(ab.poly.r.stack, nas)
+    nas = which(sapply(1:nlayers(ab.poly.raster.stack), function(x) unique(!is.na(which.min(ab.poly.raster.stack[[x]])))))
+    ab.poly.rasteraster = ab.poly.raster.stack[[nas]] # remove the NA layers
+    names(ab.poly.raster) = unlist(strsplit(names(ab.poly),"poly"))[nas]
+    save(ab.poly.raster, file=file.path(path, "ab.poly.raster.rdata"))
+    rm(ab.poly.raster.stack, nas)
     
     bc.poly.r = stack(sfClusterApplyLB(bc.poly, change.res))
     names(bc.poly.r) = names(bc.poly)
@@ -34,20 +30,20 @@ guesstimate = floor(sysmem("gb") / 7)
 
 # combine bc.poly and ab.poly:
 bc.poly.r.us = unstack(bc.poly.r)
-ab.poly.r.us = unstack(ab.poly.r)
+ab.poly.raster.us = unstack(ab.poly.raster)
 poly.r.us = bc.poly.r.us
 
-wh.poly.bc =  na.omit(match(names(ab.poly.r), names(bc.poly.r)))
-wh.poly.ab =  na.omit(match(names(bc.poly.r), names(ab.poly.r)))
+wh.poly.bc =  na.omit(match(names(ab.poly.raster), names(bc.poly.r)))
+wh.poly.ab =  na.omit(match(names(bc.poly.r), names(ab.poly.raster)))
 poly.r.us[wh.poly.bc] = lapply(1:length(wh.poly.ab), function(x) {
-                                out = bc.poly.r.us[[wh.poly.bc[x]]] + ab.poly.r.us[[wh.poly.ab[x]]]
+                                out = bc.poly.r.us[[wh.poly.bc[x]]] + ab.poly.raster.us[[wh.poly.ab[x]]]
                                 return(out)})
 poly.r = stack(poly.r.us)
 names(poly.r) = names(bc.poly.r)
 
 # assigning names to layers isn't working
 #names(bc.r) = names(bcab)
-#names(ab.poly.r) = unlist(strsplit(names(ab.poly),"poly"))
+#names(ab.poly.raster) = unlist(strsplit(names(ab.poly),"poly"))
 #names(bc.poly.r) = names(bc.poly)
 
 wh.poly.r = na.omit(match(substr(names(ab.poly),1,4), substr(names(poly.r),2,5)))
@@ -229,15 +225,16 @@ rasterFromSparse = function(sp.ras, ras) {
 setwd("c:/Rwork")
 
 ben = benchmark(replications= 1,
-writeRaster(ras,"test.nc",overwrite=T),
-writeRaster(ras,"test.grd",overwrite=T),
-writeRaster(ras,"test.asc",overwrite=T),
-writeRaster(ras,"test.sdat",overwrite=T) ,
-writeRaster(ras,"test.img",overwrite=T)   ,
-writeRaster(ras,"test1.tif",overwrite=T)   ,
-writeRaster(ras,"test.bil",overwrite=T)     ,
-writeRaster(ras,"test.envi",overwrite=T),
-save(ras,file="test.rdata")     )
+                writeRaster(ras,"test.nc", overwrite=T),
+                writeRaster(ras,"test.grd", overwrite=T),
+                writeRaster(ras,"test.asc", overwrite=T),
+                writeRaster(ras,"test.sdat", overwrite=T) ,
+                writeRaster(ras,"test.img", overwrite=T),
+                writeRaster(ras,"test1.tif", overwrite=T),
+                writeRaster(ras,"test.bil", overwrite=T),
+                writeRaster(ras,"test.envi", overwrite=T),
+                save(ras,file="test.rdata")
+)
 
 
 

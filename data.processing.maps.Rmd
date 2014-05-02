@@ -30,7 +30,6 @@ Descriptions of:
 ### SETUP R WORKING ENVIROMENT
 source("workspace.maps.R")
 
-max.mem = sysmem("gb")  # maximum system RAM
 num.cpus = 4            # maximum cpus to use
 
 read.in.raw.maps = FALSE
@@ -126,6 +125,7 @@ if (reproj.raw.maps) {
 
 ```{r reproject.maps-polygons echo=FALSE}
 if (reproj.raw.maps) {
+  ## WARNING: high ram use (see source for details)
   loadObjects(c("ab.poly", "bc.poly"), rdata.path)
   source(file.path(work.dir, "reproject.maps-polygons.R"))
   rm(ab.poly, bc.poly)
