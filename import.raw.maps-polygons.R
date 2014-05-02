@@ -36,3 +36,6 @@ sfInit(cpus=num.cpus, parallel=TRUE)
   # clean up workspace
   rm(bc.poly, bc.poly.files, bc.poly.dir.shp)
 sfStop()
+
+# manual garbage collection to free recently unallocated memory
+for (i in 1:10) gc()

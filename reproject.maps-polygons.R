@@ -22,3 +22,7 @@ sfInit(cpus=num.cpus, parallel=TRUE)
 
   rm(ab.poly.boreal, bc.poly.boreal)
 sfStop()
+
+
+# manual garbage collection to free recently unallocated memory
+for (i in 1:10) gc()
