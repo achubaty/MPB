@@ -1,32 +1,4 @@
 ####################################################################
-  
-  ### for the next two, we arbitrarily picked 1000 trees per 1ha
-  ###   This NEEDS to be revisited.
-  change.res = function(x, y=west.r, field=1000, fun="last", ...) {
-    rasterize(x=x, y=y, field=field, fun=fun, ...)
-  }
-  
-  sfInit(cpus=num.cpus, parallel=TRUE)
-    sfLibrary(raster)
-    sfExport("west.boreal.raster")
-    
-    ab.poly.raster.stack = stack(sfClusterApplyLB(ab.poly, change.res))
-    names(ab.poly.raster.stack) = sapply(names(ab.poly), function(x) strsplit(x,"poly")[[1]])
-  
-    # several rasters have no values because they were in southern Alberta: `west.r` doesn't cover that.
-    nas = which(sapply(1:nlayers(ab.poly.raster.stack), function(x) unique(!is.na(which.min(ab.poly.raster.stack[[x]])))))
-    ab.poly.rasteraster = ab.poly.raster.stack[[nas]] # remove the NA layers
-    names(ab.poly.raster) = unlist(strsplit(names(ab.poly),"poly"))[nas]
-    save(ab.poly.raster, file=file.path(path, "ab.poly.raster.rdata"))
-    rm(ab.poly.raster.stack, nas)
-    
-    bc.poly.r = stack(sfClusterApplyLB(bc.poly, change.res))
-    names(bc.poly.r) = names(bc.poly)
-    save(bc.poly.r, file=file.path(path, "bc.poly.r.rdata"))
-  sfStop()
-}
-
-####################################################################
 
 # combine bc.poly and ab.poly:
 bc.poly.r.us = unstack(bc.poly.r)
