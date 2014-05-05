@@ -483,8 +483,6 @@ if (rasterize.maps) {
   saveObjects(c("bcab.all.boreal.raster.brick", "bcab.all.boreal.raster.stack"), rdata.path)
   
   rm(all, bcab.all.boreal.raster.brick, bcab.all.boreal.raster.stack, wh.pnts, wh.poly)
-  
-  rm(bcab.pnts.boreal.raster.stack, bcab.poly.boreal.raster.stack)
 }
 ```
 

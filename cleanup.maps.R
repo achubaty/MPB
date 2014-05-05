@@ -1,6 +1,6 @@
 ###
 latlongproj = "+proj=longlat"
-brk.ll = projectRaster(brk, crs=latlongproj)
+brk.ll = projectRaster(bcab.all.raster.brick, crs=latlongproj)
 brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) {brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]])}))
 brk.ll@title <- "MPB intensity"
 
