@@ -1,25 +1,33 @@
-## combine pontis and poly
-wh.poly.r = na.omit(match(substr(names(ab.poly),1,4), substr(names(poly.r),2,5)))
-wh.bcab.r = na.omit(pmatch(substr(names(ab.poly),1,4), names(bcab)))
+### combine bcab points and poly rasters
+wh.pnts = na.omit(match(names(bcab.poly.boreal.raster.stack), names(bcab.pnts.boreal.raster.stack)))
+wh.poly = na.omit(match(names(bcab.pnts.boreal.raster.stack), names(bcab.poly.boreal.raster.stack)))
 
 all = list()
 inner.count = 0
-for (i in 1:nlayers(bc.r)) {
-  if (any(substr(names(bc.r),2,5)[i] == substr(names(poly.r),2,5))) {
+for (i in 1:nlayers(bcab.poly.boreal.raster.stack)) {
+  if (any(names(bcab.poly.boreal.raster.stack)[i] == names(bcab.pnts.boreal.raster.stack))) {
     inner.count = inner.count + 1
-    if (any(is.finite(cellStats(poly.r[[i]], "range")))) {
-      all[[i]] = bc.r[[wh.bcab.r[inner.count]]] + poly.r[[wh.poly.r[inner.count]]]
+    if (any(is.finite(cellStats(bcab.poly.boreal.raster.stack[[i]], "range")))) {
+      all[[i]] = merge(bcab.pnts.boreal.raster.stack[[wh.pnts[inner.count]]],
+                       bcab.poly.boreal.raster.stack[[wh.poly[inner.count]]])
     } else {
-      all[[i]] = bc.r[[wh.bcab.r[inner.count]]]
+      all[[i]] = bcab.pnts.boreal.raster.stack[[wh.pnts[inner.count]]]
     }
   } else {
-    all[[i]] = bc.r[[i]]
+    all[[i]] = bcab.poly.boreal.raster.stack[[i]]
   }
 }
 
 all = lapply(all, function(x) { x[is.na(x)] <- 0; return(x) })
 all = lapply(all, function(x) { x[x>0] <- log(x[x>0])+10; return(x) })
+names(all) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
 
+bcab.all.boreal.raster.brick = brick(all)
+bcab.all.boreal.raster.stack = stack(all)
 
-stk = stack(all)
-brk = brick(all)
+names(bcab.all.boreal.raster.brick) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
+names(bcab.all.boreal.raster.stack) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
+
+saveObjects(c("bcab.all.boreal.raster.brick", "bcab.all.boreal.raster.stack"), rdata.path)
+
+rm(all, bcab.all.boreal.raster.brick, bcab.all.boreal.raster.stack, wh.pnts, wh.poly)

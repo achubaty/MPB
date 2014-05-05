@@ -62,6 +62,8 @@ for (i in rev(last9.bc)) {
 legend("topright", legend=names(bc.poly.boreal.raster.stack[[last9.bc]]), fill=colours)
 rm(wh.ab, wh.bc)
 
+
+
 colours <- brewer.pal(n=9, name="YlOrRd") # only 9 colours in this pallette so only plot 9
 last9 <- (length(names(bcab.poly.boreal.raster.stack))-8):length(names(bcab.poly.boreal.raster.stack))
 last9 <- last9[last9>0]
@@ -73,3 +75,11 @@ for (i in rev(last9)) {
   plot(bcab.poly.boreal.raster.stack[[i]], col=colours[i-last9[1]+1], legend=FALSE, add=TRUE)
 }
 legend("topright", legend=names(bcab.poly.boreal.raster.stack[[last9]]), fill=colours)
+
+
+
+newPlot()
+for (i in length(names(bcab.all.raster.stack))) {
+  plot(bcab.all.raster.stack[[i]])
+  plot(west.boreal, add=TRUE)
+}
