@@ -28,6 +28,8 @@ Descriptions of:
 
 ```{r setup.workspace, echo=FALSE, message=FALSE}
 ### SETUP R WORKING ENVIROMENT
+
+# load workspace
 source("workspace.maps.R")
 
 # additional options
@@ -38,6 +40,8 @@ use.cache = TRUE          # cache knitr results
 # - e.g., you get new MPB map data
 # - e.g., you want to change the resolution/extent/etc. of the maps
 #        (before rerunning just to change res, can you `clip` out a subset?)
+#
+# NOTE: changes here override the values stored in the workspace script
 #
 read.in.raw.maps = FALSE  # read in raw maps from data
 reproj.raw.maps = FALSE   # reproject raw maps to `boreal`
@@ -553,11 +557,13 @@ loadObjects(c("bcab.all.boreal.raster.stack", "west.boreal"), rdata.path)
 colours = brewer.pal(n=9, name="YlOrRd")
 years = substr(names(bcab.all.boreal.raster.stack), 2, 5)
 last9 = (length(years)-8):length(years) # the last 9 years
-subset = last9[last9>0]
+last9 = last9[last9>0]
+
+subset = 1:length(years)
 
 plot(bcab.all.boreal.raster.stack, subset, main=years, legend=FALSE, axes=FALSE,
      col=c("white", colours), addfun=function(x) { plot(west.boreal, add=TRUE) } )
-legend("topright", legend=years[last9], fill=colours)
+#legend("topright", legend=years[subsut], fill=colours)
 rm(bcab.all.boreal.raster.stack, west.boreal)
 ```
 
