@@ -3,3 +3,7 @@
 .Rhistory
 .Rproj.user
 .log
+.html
+.md
+cache/
+figure/

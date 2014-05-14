@@ -18,8 +18,10 @@ reqd.pkgs = list("data.table",
                  "shapefiles",
                  "snowfall",
                  "RColorBrewer")
-load.packages(reqd.pkgs, install=TRUE)
 
+load.packages(reqd.pkgs, install=TRUE, quiet=TRUE)
+
+# set work dirs based on computer used
 OS = Sys.info()[["sysname"]]
 if (OS=="Darwin") {
   maps.dir = "~/Documents/data/maps"

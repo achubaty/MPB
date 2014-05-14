@@ -1,17 +1,17 @@
-# MPB maps data processing
+# Mountain pine beetle outbreak maps
 
-**Alex M. Chubaty**
+**Alex M. Chubaty** and **Eliot Mcintire**
 
-Canadian Forest Service
-Pacific Forestry Centre
-506 Burnside Road W
+Canadian Forest Service  
+Pacific Forestry Centre  
+506 Burnside Road W  
 Victoria, BC V8Z 1M5
 
-Université Laval
-Faculté de foresterie, de géographie et de géomatique
-Département des sciences du bois et de la forêt
+Université Laval  
+Faculté de foresterie, de géographie et de géomatique  
+Département des sciences du bois et de la forêt  
 
-*email:* [Alexander.Chubaty@nrcan.gc.ca][1]
+*email:* [Alexander.Chubaty@nrcan.gc.ca][1]  
 *phone:* +1.250.298.2347
 
 [1]: <mailto:Alexander.Chubaty@nrcan.gc.ca>
@@ -30,22 +30,32 @@ Descriptions of:
 ### SETUP R WORKING ENVIROMENT
 source("workspace.maps.R")
 
-num.cpus = 4            # maximum cpus to use
+# additional options
+num.cpus = 4              # max cpus to use (overrides value set in workspace)
+use.cache = TRUE          # cache knitr results
 
-read.in.raw.maps = FALSE
-reproj.raw.maps = FALSE
-rasterize.maps = FALSE
+# options below only need to be changed if you want to reprocess the data
+# - e.g., you get new MPB map data
+# - e.g., you want to change the resolution/extent/etc. of the maps
+#        (before rerunning just to change res, can you `clip` out a subset?)
+#
+read.in.raw.maps = FALSE  # read in raw maps from data
+reproj.raw.maps = FALSE   # reproject raw maps to `boreal`
+rasterize.maps = FALSE    # convert the maps to rasters
 
-res.maps = 1000
+# map extent obtained using `locator(2)` on 'west.boreal' map
 ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
-# map extent obtained using `locator(2)` on 'west' map
+
+res.maps = 1000           # map resolution, in metres
 ```
 
-## Importing map data
+## Processing the MPB map data
 
-### MPB `SpatialPoints` data
+### Importing map data
 
-```{r import.maps-points, echo=FALSE}
+#### MPB `SpatialPoints` data
+
+```{r import.maps-points, echo=FALSE, cache=use.cache}
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -78,9 +88,9 @@ if (read.in.raw.maps) {
 }
 ```
 
-### MPB `SpatialPolygons` data
+#### MPB `SpatialPolygons` data
 
-```{r import.maps-polygons, echo=FALSE}
+```{r import.maps-polygons, echo=FALSE, cache=use.cache}
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -118,9 +128,9 @@ if (read.in.raw.maps) {
 }
 ```
 
-### Canadian boreal forest maps
+#### Canadian boreal forest maps
 
-```{r import.maps-boreal, echo=FALSE}
+```{r import.maps-boreal, echo=FALSE, cache=use.cache}
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -173,7 +183,9 @@ if (read.in.raw.maps) {
 
 Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
 
-```{r crs.boreal, echo=FALSE}
+```{r crs.boreal, echo=FALSE, cache=use.cache, results="markup"}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
 if(!exists("crs.boreal")) {
   loadObjects("boreal", rdata.path)
   crs.boreal = CRS(proj4string(boreal))
@@ -182,37 +194,11 @@ if(!exists("crs.boreal")) {
 }
 ```
 
-**The Canadian boreal forest:**
+### Reproject MPB maps to `crs.boreal`
 
-```{r plot.canada.boreal fig.height=4 fig.width=7}
-loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
-darkgreen <- col2rgb("darkgreen")/255
-col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
-rm(darkgreen)
+#### MPB `SpatialPoints` data
 
-plot(canada1.boreal)
-plot(boreal.can, col=col.bor, add=TRUE)
-rm(boreal.can)
-```
-
-**The western Canadian boreal forest:**
-
-```{r plot.western.boreal fig.height=5, fig.width=6}
-loadObjects(c("boreal.west", "west.boreal"), rdata.path)
-darkgreen <- col2rgb("darkgreen")/255
-col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
-rm(darkgreen)
-
-plot(west.boreal)
-#plot(boreal.west, col=col.bor, add=TRUE)) ## doesn't work yet
-rm(boreal.west, west.boreal)
-```
-
-## Reproject MPB maps to `crs.boreal`
-
-### MPB `SpatialPoints` data
-
-```{r reproject.maps-points echo=FALSE}
+```{r reproject.maps-points, echo=FALSE, cache=use.cache}
 if (reproj.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -265,9 +251,9 @@ if (reproj.raw.maps) {
 }
 ```
 
-### MPB `SpatialPolygons` data
+#### MPB `SpatialPolygons` data
 
-```{r reproject.maps-polygons echo=FALSE}
+```{r reproject.maps-polygons, echo=FALSE, cache=use.cache}
 if (reproj.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
 
@@ -302,11 +288,11 @@ if (reproj.raw.maps) {
 }
 ```
 
-## Rasterize MPB maps
+### Rasterize MPB maps
 
-### Canadian boreal forest maps
+#### Canadian boreal forest maps
 
-```{r rasterize.maps-boreal echo=FALSE}
+```{r rasterize.maps-boreal, echo=FALSE, cache=use.cache}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -328,9 +314,9 @@ if (rasterize.maps) {
 }
 ```
 
-### MPB `SpatialPoints` data
+#### MPB `SpatialPoints` data
 
-```{r rasterize.maps-points echo=FALSE}
+```{r rasterize.maps-points, echo=FALSE, cache=use.cache}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -347,7 +333,9 @@ if (rasterize.maps) {
               field=if(any(colnames(x@data)=="NUM_TREES")) {
                 x@data$NUM_TREES
                 } else {
-                  x@data$num_trees, fun="sum"}
+                  x@data$num_trees
+                },
+              fun="sum"
               )
   }
   
@@ -375,9 +363,9 @@ if (rasterize.maps) {
 }
 ```
 
-### MPB `SpatialPolygons` data
+#### MPB `SpatialPolygons` data
 
-```{r rasterize.maps-polygons echo=FALSE}
+```{r rasterize.maps-polygons, echo=FALSE, cache=use.cache}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -444,9 +432,9 @@ if (rasterize.maps) {
 }
 ```
 
-## Combine all MPB maps
+### Combine all MPB maps
 
-```{r combine.maps-all echo=FALSE}
+```{r combine.maps-all, echo=FALSE, cache=use.cache}
 if (rasterize.maps) {
   ### combine bcab points and poly rasters
   loadObjects(c("bcab.pnts.boreal.raster.stack", "bcab.poly.boreal.raster.stack"), rdata.path)
@@ -484,5 +472,92 @@ if (rasterize.maps) {
   
   rm(all, bcab.all.boreal.raster.brick, bcab.all.boreal.raster.stack, wh.pnts, wh.poly)
 }
+```
+
+## Plotting maps
+
+### Boreal forest maps
+
+**The Canadian boreal forest:**
+
+```{r plot.canada.boreal, fig.height=4, fig.width=7, echo=FALSE, cache=use.cache}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
+loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
+darkgreen <- col2rgb("darkgreen")/255
+col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
+rm(darkgreen)
+
+plot(canada1.boreal)
+plot(boreal.can, col=col.bor, add=TRUE)
+rm(boreal.can)
+```
+
+**The western Canadian boreal forest:**
+
+```{r plot.western.boreal, fig.height=5, fig.width=6, echo=FALSE, cache=use.cache}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
+loadObjects(c("west.boreal"), rdata.path) # also need "boreal.west" once it works
+darkgreen <- col2rgb("darkgreen")/255
+col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
+rm(darkgreen)
+
+plot(west.boreal)
+#plot(boreal.west, col=col.bor, add=TRUE)) ## doesn't work yet
+rm(boreal.west, west.boreal)
+```
+
+### MPB in western Canada
+
+#### MPB `SpatialPoints` data
+
+```{r plot.mpb.western.boreal.points, fig.height=5, fig.width=6, echo=FALSE, eval=FALSE}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
+loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal"), rdata.path)
+plot(west.boreal)
+colours <- brewer.pal(n=9, name="YlOrRd")
+for (i in names(ab.pnts.boreal)) {
+  points(ab.pnts.boreal[[i]], pch=".", col=colours)
+}
+for (i in names(bc.pnts.boreal)) {
+  points(bc.pnts.boreal[[i]], pch=".", col=colours)
+}
+rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal)
+```
+
+#### MPB `SpatialPolygons` data
+
+```{r plot.mpb.western.boreal.polygons, fig.height=5, fig.width=6, echo=FALSE, eval=FALSE}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
+loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal"), rdata.path)
+plot(west.boreal)
+colours <- brewer.pal(n=9, name="YlOrRd")
+for (i in names(bc.poly.boreal)) {
+  plot(ab.poly.boreal[[i]], col=colours, add=TRUE)
+}
+for (i in names(bc.poly.boreal)) {
+  plot(bc.poly.boreal[[i]], col=colours, add=TRUE)
+}
+rm(ab.poly.boreal, bc.poly.boreal, west.boreal)
+```
+
+#### MPB `RasterStack`
+
+```{r plot.mpb.western.boreal.raster.stack, fig.height=6, fig.width=6, echo=FALSE}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
+loadObjects(c("bcab.all.boreal.raster.stack", "west.boreal"), rdata.path)
+colours = brewer.pal(n=9, name="YlOrRd")
+years = substr(names(bcab.all.boreal.raster.stack), 2, 5)
+last9 = (length(years)-8):length(years) # the last 9 years
+subset = last9[last9>0]
+
+plot(bcab.all.boreal.raster.stack, subset, main=years, legend=FALSE, axes=FALSE,
+     col=c("white", colours), addfun=function(x) { plot(west.boreal, add=TRUE) } )
+legend("topright", legend=years[last9], fill=colours)
+rm(bcab.all.boreal.raster.stack, west.boreal)
 ```
 
