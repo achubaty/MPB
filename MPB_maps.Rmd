@@ -310,7 +310,8 @@ if (rasterize.maps) {
   
   west.empty.raster = raster(extent(west.boreal))
   res(west.empty.raster) <- res.maps
-  west.boreal.raster = rasterize(west.boreal, west.empty.raster)
+  west.boreal.raster = rasterize(west.boreal, west.empty.raster,
+                                 filename=file.path(rdata.path, "west_boreal.grd"))
   
   saveObjects("west.boreal.raster", rdata.path)
   
@@ -421,6 +422,8 @@ if (rasterize.maps) {
   bcab.poly.boreal.raster.stack = stack(bcab.poly.boreal.raster.unstack)
   names(bcab.poly.boreal.raster.stack) = names(bc.poly.boreal.raster.stack)
   
+  writeRaster(bcab.poly.boreal.raster.stack,
+              filename=file.path(rdata.path, "bcab_poly_stack.grd"), overwrite=TRUE)
   saveObjects("bcab.poly.boreal.raster.stack", rdata.path)
   
   objects2rm <- c("ab.poly.boreal", "bc.poly.boreal", 
@@ -440,6 +443,14 @@ if (rasterize.maps) {
 
 ```{r combine.maps-all, echo=FALSE, cache=use.cache}
 if (rasterize.maps) {
+  if (!exists("WORKSPACE")) source("workspace.maps.R")
+  
+  if(!exists("crs.boreal")) {
+    loadObjects("boreal", rdata.path)
+    crs.boreal = CRS(proj4string(boreal))
+    rm(boreal)
+  }
+
   ### combine bcab points and poly rasters
   loadObjects(c("bcab.pnts.boreal.raster.stack", "bcab.poly.boreal.raster.stack"), rdata.path)
   
@@ -468,13 +479,17 @@ if (rasterize.maps) {
   
   bcab.all.boreal.raster.brick = brick(all)
   bcab.all.boreal.raster.stack = stack(all)
-  
+    
   names(bcab.all.boreal.raster.brick) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
   names(bcab.all.boreal.raster.stack) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
   
+  writeRaster(bcab.all.boreal.raster.brick, filename=file.path(rdata.path, "mpb_brick.grd"), overwrite=TRUE)
+  writeRaster(bcab.all.boreal.raster.stack, filename=file.path(rdata.path, "mpb_stack.grd"), overwrite=TRUE)
+    
   saveObjects(c("bcab.all.boreal.raster.brick", "bcab.all.boreal.raster.stack"), rdata.path)
   
-  rm(all, bcab.all.boreal.raster.brick, bcab.all.boreal.raster.stack, wh.pnts, wh.poly)
+  rm(all, bcab.pnts.boreal.raster.stack, bcab.poly.boreal.raster.stack,
+     bcab.all.boreal.raster.brick, bcab.all.boreal.raster.stack, wh.pnts, wh.poly)
 }
 ```
 
@@ -567,3 +582,45 @@ plot(bcab.all.boreal.raster.stack, subset, main=years, legend=FALSE, axes=FALSE,
 rm(bcab.all.boreal.raster.stack, west.boreal)
 ```
 
+#### MPB `RasterBrick` timeseries
+
+```{r plot.mpb.western.boreal.time.series, fig.height=6, fig.width=6, echo=FALSE}
+if (!exists("WORKSPACE")) source("workspace.maps.R")
+
+loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
+
+# `spsample` needs planar coordinates, so need to reproject to latlong
+latlongproj = CRS("+proj=longlat +datum=WGS84")
+brk.ll = projectRaster(bcab.all.boreal.raster.brick, crs=latlongproj,
+                       filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
+
+# replace NAs with zeros
+brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) { brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]]) }))
+brk.ll@title <- "MPB intensity"
+writeRaster(brk.ll, filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
+
+#brk.ll = brick(file.path(rdata.path, "mpb_brick_ll.grd"))
+years = as.numeric(substr(names(bcab.all.boreal.raster.brick), 2, 5))
+t.strt = as.POSIXct(as.Date(paste(years,"-10-01",sep=""))) # why Oct 1?
+t.stop = as.POSIXct(as.Date(paste(years+1,"-10-01",sep=""))) # why Oct 1?
+
+# random sample of spatial points
+sps = SpatialPointsDataFrame(spTransform(spsample(west.boreal, 1, type="random"), latlongproj), data=data.frame(dat=1))
+
+# colour palette
+colours = brewer.pal(n=9, name="YlOrRd")
+
+# `plotKML` timeseries
+ts.kml = new("RasterBrickTimeSeries", variable="X", sampled=sps, rasters=brk.ll,
+         TimeSpan.begin=t.strt, TimeSpan.end=t.stop)
+dims = dim(brk.ll)
+plotKML(ts.kml, colour_scale=c(rep("black",2),heat.colors(12)[12:1]),
+        pngwidth=dims[1], pngheight=dims[2], pngpointsize=14)
+
+# `rts` timeseries
+ts.rts = rts(brk.ll, time=as.POSIXct(as.Date(t.strt)))
+plot(ts.rts, col=c("white", colours)) # this is a garbage way to plot a TS
+
+saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
+rm(bcab.all.boreal.raster.stack, west.boreal)
+```

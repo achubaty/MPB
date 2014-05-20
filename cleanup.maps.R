@@ -1,24 +1,4 @@
 ###
-latlongproj = "+proj=longlat"
-brk.ll = projectRaster(bcab.all.raster.brick, crs=latlongproj)
-brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) {brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]])}))
-brk.ll@title <- "MPB intensity"
-
-years = 2001:2012
-x1 = paste(years[1:(length(years)-1)],"-10-01",sep="")
-x2 = paste(years[2:length(years)],"-10-01",sep="")
-z1 = as.POSIXct(as.Date(x1))
-z2 = as.POSIXct(as.Date(x2))
-
-sps = SpatialPointsDataFrame(spTransform(spsample(west, 1, type="random"), CRS(latlongproj)), data=data.frame(dat=1))
-ts = new("RasterBrickTimeSeries", variable="X", sampled=sps, rasters=brk.ll, TimeSpan.begin=z1, TimeSpan.end=z2)
-ts2 = rts(brk.ll, time=z1)
-dims = dim(brk.ll)
-plotKML(ts, colour_scale = c(rep("black",2),heat.colors(12)[12:1]), pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
-
-names(all) = names(bc.r)
-plot(all)
-
 wind(2)
 par(mfrow = c(3,3))
 par(omi = c(0.01, 0.01, 0.01, 0.01))
