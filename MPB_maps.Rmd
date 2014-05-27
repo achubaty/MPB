@@ -165,13 +165,13 @@ if (read.in.raw.maps) {
   rm(gadm, canada2, canada2.boreal.dt, subset)
   
   ### SUBSET ONLY WESTERN CANADIAN BOREAL FOR PLOTTING
-  boreal.can <- boreal[boreal$COUNTRY=="CANADA",]
-  west.boreal.union <- unionSpatialPolygons(west.boreal, west.boreal$ID_0, threshold=10) # threshold value???
-  #boreal.west <- gIntersection(west.boreal.union, boreal.can) # ERROR MESSAGE BELOW
+  boreal.can = boreal[boreal$COUNTRY=="CANADA",]
+  west.boreal.union.buff = gBuffer(west.boreal, width=0.00000) # corrects for non-adjacent boundaries
+  boreal.west = intersect(west.boreal.union.buff, boreal.can) # ERROR MESSAGE BELOW
   ##
   ##  Error in RGEOSBinTopoFunc(spgeom1, spgeom2, byid, id, drop_not_poly, "rgeos_intersection") : 
-  ##    TopologyException: Input geom 0 is invalid: Too few points in geometry component at or
-  ##    near point 199577.44732574001 5470112.4132905202 at 199577.44732574001 5470112.4132905202
+  ##    TopologyException: Input geom 1 is invalid: Ring Self-intersection at or
+  ##    near point -1297333.62501293 6927174.4999799998 at -1297333.62501293 6927174.4999799998
   ##
   rm(west.boreal.union)
   
@@ -331,16 +331,17 @@ if (rasterize.maps) {
     rm(boreal)
   }
   
-  loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal.raster"), rdata.path)
+  loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "bcab.pnts.boreal",
+                "west.boreal.raster"), rdata.path)
   
-  rasterize.mpb = function(x) {
+  rasterize.mpb = function(x,...) {
     rasterize(x=x, y=west.boreal.raster,
               field=if(any(colnames(x@data)=="NUM_TREES")) {
                 x@data$NUM_TREES
                 } else {
                   x@data$num_trees
                 },
-              fun="sum"
+              fun="sum", ...
               )
   }
   
@@ -350,16 +351,19 @@ if (rasterize.maps) {
     
     ab.pnts.boreal.raster.stack = stack(sfClusterApplyLB(ab.pnts.boreal, rasterize.mpb))
     names(ab.pnts.boreal.raster.stack) = names(ab.pnts.boreal)
+    writeRaster(ab.pnts.boreal.raster.stack, file.path(rdata.path, "ab_pnts_boreal.grd"), overwrite=TRUE)
     saveObjects("ab.pnts.boreal.raster.stack", rdata.path)
     rm(ab.pnts.boreal.raster.stack)
   
     bc.pnts.boreal.raster.stack = stack(sfClusterApplyLB(bc.pnts.boreal, rasterize.mpb))
     names(bc.pnts.boreal.raster.stack) = names(bc.pnts.boreal)
+    writeRaster(bc.pnts.boreal.raster.stack, file.path(rdata.path, "bc_pnts_boreal.grd"), overwrite=TRUE)
     saveObjects("bc.pnts.boreal.raster.stack", rdata.path)
     rm(bc.pnts.boreal.raster.stack)
     
     bcab.pnts.boreal.raster.stack = stack(sfClusterApplyLB(bcab.pnts.boreal, rasterize.mpb))
     names(bcab.pnts.boreal.raster.stack) = names(bcab.pnts.boreal)
+    writeRaster(bcab.pnts.boreal.raster.stack, file.path(rdata.path, "bcab_pnts_boreal.grd"), overwrite=TRUE)
     saveObjects("bcab.pnts.boreal.raster.stack", rdata.path)
     rm(bcab.pnts.boreal.raster.stack)
   sfStop()
@@ -397,12 +401,16 @@ if (rasterize.maps) {
     # several rasters have no values because they were in southern Alberta
     notNAs = which(sapply(1:nlayers(ab.poly.boreal.raster.stack),
                        function(x) unique(!is.na(which.min(ab.poly.boreal.raster.stack[[x]])))))
-    ab.poly.boreal.raster = ab.poly.boreal.raster.stack[[notNAs]] # remove the NA layers
+    ab.poly.boreal.raster.stack = ab.poly.boreal.raster.stack[[notNAs]] # remove the NA layers
     names(ab.poly.boreal.raster.stack) = unlist(strsplit(names(ab.poly.boreal),"poly"))[notNAs]
+    writeRaster(ab.poly.boreal.raster.stack,
+              filename=file.path(rdata.path, "ab_poly_boreal.grd"), overwrite=TRUE)
     saveObjects("ab.poly.boreal.raster.stack", rdata.path)
       
     bc.poly.boreal.raster.stack = stack(sfClusterApplyLB(bc.poly.boreal, change.res))
     names(bc.poly.boreal.raster.stack) = names(bc.poly.boreal)
+    writeRaster(bc.poly.boreal.raster.stack,
+              filename=file.path(rdata.path, "bc_poly_boreal.grd"), overwrite=TRUE)
     saveObjects("bc.poly.boreal.raster.stack", rdata.path)
     
     rm(change.res, notNAs)
@@ -423,10 +431,10 @@ if (rasterize.maps) {
   names(bcab.poly.boreal.raster.stack) = names(bc.poly.boreal.raster.stack)
   
   writeRaster(bcab.poly.boreal.raster.stack,
-              filename=file.path(rdata.path, "bcab_poly_stack.grd"), overwrite=TRUE)
+              filename=file.path(rdata.path, "bcab_poly_boreal.grd"), overwrite=TRUE)
   saveObjects("bcab.poly.boreal.raster.stack", rdata.path)
   
-  objects2rm <- c("ab.poly.boreal", "bc.poly.boreal", 
+  objects2rm <- c("ab.poly.boreal", "bc.poly.boreal",
                   "ab.poly.boreal.raster.stack", "ab.poly.boreal.raster.unstack",
                   "bc.poly.boreal.raster.stack", "bc.poly.boreal.raster.unstack",
                   "bcab.poly.boreal.raster.stack", "bcab.poly.boreal.raster.unstack", 
@@ -458,15 +466,15 @@ if (rasterize.maps) {
   wh.poly = na.omit(match(names(bcab.pnts.boreal.raster.stack), names(bcab.poly.boreal.raster.stack)))
   
   all = list()
-  inner.count = 0
+  j = 0
   for (i in 1:nlayers(bcab.poly.boreal.raster.stack)) {
     if (any(names(bcab.poly.boreal.raster.stack)[i] == names(bcab.pnts.boreal.raster.stack))) {
-      inner.count = inner.count + 1
+      j = j + 1
       if (any(is.finite(cellStats(bcab.poly.boreal.raster.stack[[i]], "range")))) {
-        all[[i]] = merge(bcab.pnts.boreal.raster.stack[[wh.pnts[inner.count]]],
-                         bcab.poly.boreal.raster.stack[[wh.poly[inner.count]]])
+        all[[i]] = merge(bcab.pnts.boreal.raster.stack[[wh.pnts[j]]],
+                         bcab.poly.boreal.raster.stack[[wh.poly[j]]])
       } else {
-        all[[i]] = bcab.pnts.boreal.raster.stack[[wh.pnts[inner.count]]]
+        all[[i]] = bcab.pnts.boreal.raster.stack[[wh.pnts[j]]]
       }
     } else {
       all[[i]] = bcab.poly.boreal.raster.stack[[i]]
@@ -619,7 +627,7 @@ plotKML(ts.kml, colour_scale=c(rep("black",2),heat.colors(12)[12:1]),
 
 # `rts` timeseries
 ts.rts = rts(brk.ll, time=as.POSIXct(as.Date(t.strt)))
-plot(ts.rts, col=c("white", colours)) # this is a garbage way to plot a TS
+plot(ts.rts, col=c("white", colours)) # this is a *garbage* way to plot a TS
 
 saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
 rm(bcab.all.boreal.raster.stack, west.boreal)
