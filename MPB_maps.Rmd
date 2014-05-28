@@ -166,14 +166,9 @@ if (read.in.raw.maps) {
   
   ### SUBSET ONLY WESTERN CANADIAN BOREAL FOR PLOTTING
   boreal.can = boreal[boreal$COUNTRY=="CANADA",]
-  west.boreal.union.buff = gBuffer(west.boreal, width=0.00000) # corrects for non-adjacent boundaries
-  boreal.west = intersect(west.boreal.union.buff, boreal.can) # ERROR MESSAGE BELOW
-  ##
-  ##  Error in RGEOSBinTopoFunc(spgeom1, spgeom2, byid, id, drop_not_poly, "rgeos_intersection") : 
-  ##    TopologyException: Input geom 1 is invalid: Ring Self-intersection at or
-  ##    near point -1297333.62501293 6927174.4999799998 at -1297333.62501293 6927174.4999799998
-  ##
-  rm(west.boreal.union)
+  west.boreal.union.buff = gBuffer(west.boreal, width=0.00001) # corrects for non-adjacent boundaries
+  boreal.west = intersect(west.boreal.union.buff, boreal.can)
+  rm(west.boreal.union.buff)
   
   ### Save these new map objects for later use
   objects2save = c("boreal", "boreal.can", "boreal.west",
@@ -485,14 +480,21 @@ if (rasterize.maps) {
   all = lapply(all, function(x) { x[x>0] <- log(x[x>0])+10; return(x) })
   names(all) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
   
-  bcab.all.boreal.raster.brick = brick(all)
+  bcab.all.boreal.raster.brick = brick(all) # won't keep in memory; won't let me specify file
   bcab.all.boreal.raster.stack = stack(all)
+#  bcab.all.boreal.raster.brick = brick(bcab.all.boreal.raster.stack,
+#                                       filename=file.path(rdata.path, "mpb_brick.grd"),
+#                                       overwrite=TRUE)
     
   names(bcab.all.boreal.raster.brick) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
   names(bcab.all.boreal.raster.stack) = substr(names(bcab.poly.boreal.raster.stack), 2, 5)
   
-  writeRaster(bcab.all.boreal.raster.brick, filename=file.path(rdata.path, "mpb_brick.grd"), overwrite=TRUE)
-  writeRaster(bcab.all.boreal.raster.stack, filename=file.path(rdata.path, "mpb_stack.grd"), overwrite=TRUE)
+  bcab.all.boreal.raster.brick = writeRaster(bcab.all.boreal.raster.brick,
+                                             filename=file.path(rdata.path, "mpb_brick.grd"),
+                                             overwrite=TRUE)
+  bcab.all.boreal.raster.stack = writeRaster(bcab.all.boreal.raster.stack,
+                                             filename=file.path(rdata.path, "mpb_stack.grd"),
+                                             overwrite=TRUE)
     
   saveObjects(c("bcab.all.boreal.raster.brick", "bcab.all.boreal.raster.stack"), rdata.path)
   
@@ -522,16 +524,16 @@ rm(boreal.can)
 
 **The western Canadian boreal forest:**
 
-```{r plot.western.boreal, fig.height=5, fig.width=6, echo=FALSE, cache=use.cache}
+```{r plot.western.boreal, fig.height=6, fig.width=8, echo=FALSE, cache=use.cache}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
-loadObjects(c("west.boreal"), rdata.path) # also need "boreal.west" once it works
+loadObjects(c("boreal.west", "west.boreal"), rdata.path)
 darkgreen <- col2rgb("darkgreen")/255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha=0.5)
 rm(darkgreen)
 
 plot(west.boreal)
-#plot(boreal.west, col=col.bor, add=TRUE)) ## doesn't work yet
+plot(boreal.west, col=col.bor, add=TRUE)
 rm(boreal.west, west.boreal)
 ```
 
@@ -599,13 +601,12 @@ loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
 
 # `spsample` needs planar coordinates, so need to reproject to latlong
 latlongproj = CRS("+proj=longlat +datum=WGS84")
-brk.ll = projectRaster(bcab.all.boreal.raster.brick, crs=latlongproj,
-                       filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
+brk.ll = projectRaster(bcab.all.boreal.raster.brick, crs=latlongproj)
 
 # replace NAs with zeros
 brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) { brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]]) }))
 brk.ll@title <- "MPB intensity"
-writeRaster(brk.ll, filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
+brk.ll = writeRaster(brk.ll, filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
 
 #brk.ll = brick(file.path(rdata.path, "mpb_brick_ll.grd"))
 years = as.numeric(substr(names(bcab.all.boreal.raster.brick), 2, 5))
@@ -630,5 +631,6 @@ ts.rts = rts(brk.ll, time=as.POSIXct(as.Date(t.strt)))
 plot(ts.rts, col=c("white", colours)) # this is a *garbage* way to plot a TS
 
 saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
-rm(bcab.all.boreal.raster.stack, west.boreal)
+rm(bcab.all.boreal.raster.stack, brk.ll, ts.kml, ts.rts west.boreal)
 ```
+

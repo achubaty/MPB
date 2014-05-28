@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=9" >
+
+<title>Mountain pine beetle outbreak maps</title>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+
+
+
+
+</head>
+
+<body>
+<h1>Mountain pine beetle outbreak maps</h1>
+
+<p><strong>Alex M. Chubaty</strong> and <strong>Eliot Mcintire</strong></p>
+
+<p>Canadian Forest Service<br/>
+Pacific Forestry Centre<br/>
+506 Burnside Road W<br/>
+Victoria, BC V8Z 1M5</p>
+
+<p>Université Laval<br/>
+Faculté de foresterie, de géographie et de géomatique<br/>
+Département des sciences du bois et de la forêt  </p>
+
+<p><em>email:</em> <a href="mailto:Alexander.Chubaty@nrcan.gc.ca">Alexander.Chubaty@nrcan.gc.ca</a><br/>
+<em>phone:</em> +1.250.298.2347</p>
+
+<hr/>
+
+<h2>Overview of MPB map data</h2>
+
+<p>Descriptions of:</p>
+
+<ul>
+<li>data sources</li>
+<li>data collected</li>
+<li>etc.</li>
+</ul>
+
+<h2>Processing the MPB map data</h2>
+
+<h3>Importing map data</h3>
+
+<h4>MPB <code>SpatialPoints</code> data</h4>
+
+<h4>MPB <code>SpatialPolygons</code> data</h4>
+
+<h4>Canadian boreal forest maps</h4>
+
+<p>Boreal forest map data uses the <code>crs.boreal</code> projection below. We reproject the Canadian administrative boundaries maps to use this projection:</p>
+
+<pre><code>## CRS arguments:
+##  +proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113 +x_0=0
+## +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
+</code></pre>
+
+<h3>Reproject MPB maps to <code>crs.boreal</code></h3>
+
+<h4>MPB <code>SpatialPoints</code> data</h4>
+
+<h4>MPB <code>SpatialPolygons</code> data</h4>
+
+<h3>Rasterize MPB maps</h3>
+
+<h4>Canadian boreal forest maps</h4>
+
+<h4>MPB <code>SpatialPoints</code> data</h4>
+
+<h4>MPB <code>SpatialPolygons</code> data</h4>
+
+<h3>Combine all MPB maps</h3>
+
+<h2>Plotting maps</h2>
+
+<h3>Boreal forest maps</h3>
+
+<p><strong>The Canadian boreal forest:</strong></p>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk plot.canada.boreal"/> </p>
+
+<p><strong>The western Canadian boreal forest:</strong></p>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk plot.western.boreal"/> </p>
+
+<h3>MPB in western Canada</h3>
+
+<h4>MPB <code>SpatialPoints</code> data</h4>
+
+<h4>MPB <code>SpatialPolygons</code> data</h4>
+
+<h4>MPB <code>RasterStack</code></h4>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk plot.mpb.western.boreal.raster.stack"/> </p>
+
+<h4>MPB <code>RasterBrick</code> timeseries</h4>
+
+<pre><code>## Warning: cannot open file
+## &#39;C:\Temp\R_raster_achubaty\raster_tmp_2014-05-26_162343_4640_90793.gri&#39;:
+## No such file or directory
+</code></pre>
+
+<pre><code>## Error: cannot open the connection
+</code></pre>
+
+<pre><code>## Error: error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;brick&#39;: Error in nlayers(brk.ll) : 
+##   error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;nlayers&#39;: Error: object &#39;brk.ll&#39; not found
+## Calls: lapply -&gt; nlayers
+</code></pre>
+
+<pre><code>## Error: object &#39;brk.ll&#39; not found
+</code></pre>
+
+<pre><code>## Error: error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;writeRaster&#39;: Error: object &#39;brk.ll&#39; not found
+</code></pre>
+
+<pre><code>## Error: object &#39;brk.ll&#39; not found
+</code></pre>
+
+<pre><code>## Error: object &#39;brk.ll&#39; not found
+</code></pre>
+
+<pre><code>## Error: error in evaluating the argument &#39;obj&#39; in selecting a method for function &#39;plotKML&#39;: Error: object &#39;ts.kml&#39; not found
+</code></pre>
+
+<pre><code>## Error: error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;rts&#39;: Error: object &#39;brk.ll&#39; not found
+</code></pre>
+
+<pre><code>## Error: error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;plot&#39;: Error: object &#39;ts.rts&#39; not found
+</code></pre>
+
+<pre><code>## Error: object &#39;brk.ll&#39; not found
+</code></pre>
+
+<pre><code>## Warning: object &#39;bcab.all.boreal.raster.stack&#39; not found
+</code></pre>
+
+</body>
+
+</html>
+

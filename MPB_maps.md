@@ -105,10 +105,6 @@ Boreal forest map data uses the `crs.boreal` projection below. We reproject the 
 
 ![plot of chunk plot.western.boreal](figure/plot_western_boreal.png) 
 
-```
-## Warning: object 'boreal.west' not found
-```
-
 
 ### MPB in western Canada
 
@@ -126,4 +122,59 @@ Boreal forest map data uses the `crs.boreal` projection below. We reproject the 
 
 ![plot of chunk plot.mpb.western.boreal.raster.stack](figure/plot_mpb_western_boreal_raster_stack.png) 
 
+
+#### MPB `RasterBrick` timeseries
+
+
+```
+## Warning: cannot open file
+## 'C:\Temp\R_raster_achubaty\raster_tmp_2014-05-26_162343_4640_90793.gri':
+## No such file or directory
+```
+
+```
+## Error: cannot open the connection
+```
+
+```
+## Error: error in evaluating the argument 'x' in selecting a method for function 'brick': Error in nlayers(brk.ll) : 
+##   error in evaluating the argument 'x' in selecting a method for function 'nlayers': Error: object 'brk.ll' not found
+## Calls: lapply -> nlayers
+```
+
+```
+## Error: object 'brk.ll' not found
+```
+
+```
+## Error: error in evaluating the argument 'x' in selecting a method for function 'writeRaster': Error: object 'brk.ll' not found
+```
+
+```
+## Error: object 'brk.ll' not found
+```
+
+```
+## Error: object 'brk.ll' not found
+```
+
+```
+## Error: error in evaluating the argument 'obj' in selecting a method for function 'plotKML': Error: object 'ts.kml' not found
+```
+
+```
+## Error: error in evaluating the argument 'x' in selecting a method for function 'rts': Error: object 'brk.ll' not found
+```
+
+```
+## Error: error in evaluating the argument 'x' in selecting a method for function 'plot': Error: object 'ts.rts' not found
+```
+
+```
+## Error: object 'brk.ll' not found
+```
+
+```
+## Warning: object 'bcab.all.boreal.raster.stack' not found
+```
 
