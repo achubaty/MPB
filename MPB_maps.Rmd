@@ -144,6 +144,13 @@ if (read.in.raw.maps) {
   boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
   crs.boreal = CRS(proj4string(boreal))
   
+  ### CANADIAN MAPS
+  # fill in code to read in can adm maps from gadm.org
+  # e.g. from my MPB stuff (AB & SK)
+  # canada <- readShapeSpatial("CAN_adm/CAN_adm1.shp", proj4string=CRS("+proj=longlat +datum=WGS84"))
+  # canada2 <- spTransform(canada, CRS("+proj=lcc +lon_0=110w +lat_1=49n +lat_2=60n"))
+
+  
   ### PROVINCE BOUNDARIES
   load(file.path(maps.dir, "CAN_adm1.RData"))
   canada1 = gadm
