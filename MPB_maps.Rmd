@@ -516,7 +516,7 @@ if (rasterize.maps) {
 
 **The Canadian boreal forest:**
 
-```{r plot.canada.boreal, fig.height=4, fig.width=7, echo=FALSE, cache=use.cache}
+```{r plot.canada.boreal, fig.height=12, fig.width=16, echo=FALSE, cache=use.cache}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
@@ -531,7 +531,7 @@ rm(boreal.can)
 
 **The western Canadian boreal forest:**
 
-```{r plot.western.boreal, fig.height=6, fig.width=8, echo=FALSE, cache=use.cache}
+```{r plot.western.boreal, fig.height=12, fig.width=16, echo=FALSE, cache=use.cache}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("boreal.west", "west.boreal"), rdata.path)
@@ -548,7 +548,7 @@ rm(boreal.west, west.boreal)
 
 #### MPB `SpatialPoints` data
 
-```{r plot.mpb.western.boreal.points, fig.height=5, fig.width=6, echo=FALSE, eval=FALSE}
+```{r plot.mpb.western.boreal.points, fig.height=10, fig.width=12, echo=FALSE, eval=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal"), rdata.path)
@@ -565,7 +565,7 @@ rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal)
 
 #### MPB `SpatialPolygons` data
 
-```{r plot.mpb.western.boreal.polygons, fig.height=5, fig.width=6, echo=FALSE, eval=FALSE}
+```{r plot.mpb.western.boreal.polygons, fig.height=10, fig.width=12, echo=FALSE, eval=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal"), rdata.path)
@@ -582,7 +582,7 @@ rm(ab.poly.boreal, bc.poly.boreal, west.boreal)
 
 #### MPB `RasterStack`
 
-```{r plot.mpb.western.boreal.raster.stack, fig.height=6, fig.width=6, echo=FALSE}
+```{r plot.mpb.western.boreal.raster.stack, fig.height=12, fig.width=12, echo=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("bcab.all.boreal.raster.stack", "west.boreal"), rdata.path)
@@ -601,7 +601,7 @@ rm(bcab.all.boreal.raster.stack, west.boreal)
 
 #### MPB `RasterBrick` timeseries
 
-```{r plot.mpb.western.boreal.time.series, fig.height=6, fig.width=6, echo=FALSE}
+```{r plot.mpb.western.boreal.time.series, fig.height=12, fig.width=12, echo=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
