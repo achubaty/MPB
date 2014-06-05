@@ -603,7 +603,7 @@ loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
 latlongproj = CRS("+proj=longlat +datum=WGS84")
 brk.ll = projectRaster(bcab.all.boreal.raster.brick, crs=latlongproj)
 
-# replace NAs with zeros
+# replace NAs with zeros (WHY??)
 brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) { brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]]) }))
 brk.ll@title <- "MPB intensity"
 brk.ll = writeRaster(brk.ll, filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
