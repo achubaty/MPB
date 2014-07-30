@@ -2,7 +2,7 @@
 ### SETUP R WORKSPACE TO WORK WITH MPB MAP DATA
 ###
 devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
-devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plot2dev.R")
+devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plotting.R")
 devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
 devtools::source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
 
