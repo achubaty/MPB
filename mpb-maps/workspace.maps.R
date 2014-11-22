@@ -26,18 +26,17 @@ loadPackages(reqd.pkgs, install=TRUE, quiet=TRUE)
 OS = Sys.info()[["sysname"]]
 if (OS=="Darwin") {
   maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB"
+  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
 } else if (OS=="Linux") {
   if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch=0)) {
     maps.dir = "~/data/maps"
-    work.dir = "~/GitHub/MPB"
   } else {
     maps.dir = "~/Documents/data/maps"
-    work.dir = "~/Documents/GitHub/MPB"
   }
+  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
 } else if (OS=="Windows") {
   maps.dir = "~/data/maps"
-  work.dir = "~/GitHub/MPB"
+  work.dir = "~/GitHub/MPB/mpb-maps"
 } else {
   print("Which operating system are you using?")
 }

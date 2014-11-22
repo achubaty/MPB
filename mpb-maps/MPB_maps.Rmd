@@ -526,6 +526,12 @@ rm(darkgreen)
 
 plot(canada1.boreal)
 plot(boreal.can, col=col.bor, add=TRUE)
+
+png("../figures/boreal.can.png", type="cairo", width = 1600, height=1200)
+plot(canada1.boreal)
+plot(boreal.can, col=col.bor, add=TRUE)
+dev.off()
+
 rm(boreal.can)
 ```
 
@@ -541,6 +547,12 @@ rm(darkgreen)
 
 plot(west.boreal)
 plot(boreal.west, col=col.bor, add=TRUE)
+
+png("../figures/boreal.west.png", type="cairo", width = 1600, height=1200)
+plot(west.boreal)
+plot(boreal.west, col=col.bor, add=TRUE)
+dev.off()
+
 rm(boreal.west, west.boreal)
 ```
 
@@ -552,6 +564,7 @@ rm(boreal.west, west.boreal)
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal"), rdata.path)
+
 plot(west.boreal)
 colours <- brewer.pal(n=9, name="YlOrRd")
 for (i in names(ab.pnts.boreal)) {
@@ -560,6 +573,7 @@ for (i in names(ab.pnts.boreal)) {
 for (i in names(bc.pnts.boreal)) {
   points(bc.pnts.boreal[[i]], pch=".", col=colours)
 }
+
 rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal)
 ```
 
@@ -591,11 +605,20 @@ years = substr(names(bcab.all.boreal.raster.stack), 2, 5)
 last9 = (length(years)-8):length(years) # the last 9 years
 last9 = last9[last9>0]
 
-subset = 1:length(years)
+#subset = 1:length(years)
+subset = last9
 
 plot(bcab.all.boreal.raster.stack, subset, main=years, legend=FALSE, axes=FALSE,
      col=c("white", colours), addfun=function(x) { plot(west.boreal, add=TRUE) } )
-#legend("topright", legend=years[subsut], fill=colours)
+#legend("topright", legend=years[subset], fill=colours)
+
+png("../figures/bcab.all.boreal.raster.stack.png", type="cairo", width = 2400, height=1600)
+plot(bcab.all.boreal.raster.stack, subset, main=years, cex.main=3,
+     legend=FALSE, axes=FALSE, col=c("white", colours),
+     addfun=function(x) { plot(west.boreal, add=TRUE) } )
+#legend("topright", legend=years[subset], fill=colours)
+dev.off()
+
 rm(bcab.all.boreal.raster.stack, west.boreal)
 ```
 
