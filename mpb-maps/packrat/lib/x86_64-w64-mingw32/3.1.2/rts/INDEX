@@ -1,0 +1,19 @@
+RasterStackBrickTS-class
+                        rts classes
+[,RasterStackBrickTS,Spatial,ANY-method
+                        Exrtract values from raster time series
+[[,RasterStackBrickTS,ANY,ANY-method
+                        Subset layers in a raster time series object by
+                        index
+apply.monthly           Apply a function over calendar periods
+cellFromXY              Get cell number from row, column or XY
+endpoints               Locate endpoints by time
+extract                 Extract values from raster time series
+index                   Extracting and replacing the index of raster
+                        time series
+period.apply            Apply a function over specified time intervals
+plot                    Plot raster time series
+read.rts                Read raster time Series data from a file
+rts                     Create a Raster Time Series object
+subset                  Subset layers in a raster time series object
+write.rts               Write raster time Series data to a file
