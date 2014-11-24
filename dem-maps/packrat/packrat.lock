@@ -1,0 +1,35 @@
+PackratFormat: 1.4
+PackratVersion: 0.4.1.7
+RVersion: 3.1.2
+Repos: CRAN=http://cran.rstudio.com
+
+Package: RCurl
+Source: CRAN
+Version: 1.95-4.3
+Hash: 158377109f939084a72f240125f821d3
+Requires: bitops
+
+Package: bitops
+Source: CRAN
+Version: 1.0-6
+Hash: cb26464a8321628636b547518994c931
+
+Package: packrat
+Source: github
+Version: 0.4.1.7
+Hash: d22ba3fbd91ee088b2f84dec6fc02e3542e4a52c
+GithubRepo: packrat
+GithubUsername: rstudio
+GithubRef: master
+GithubSha1: d22ba3fbd91ee088b2f84dec6fc02e3542e4a52c
+
+Package: raster
+Source: CRAN
+Version: 2.3-12
+Hash: b84f479bf59fd3ed66553827b3f8c497
+Requires: sp
+
+Package: sp
+Source: CRAN
+Version: 1.0-16
+Hash: 1ec8e2e48ab1a6a12ba2b9754a860ed4
