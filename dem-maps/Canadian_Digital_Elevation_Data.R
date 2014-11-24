@@ -38,9 +38,9 @@ srRt <- raster(file.path(getwd(),"eco_sr_o.tif")) ## Template
     ToI <- c(paste0("001", c("k", "l", "m", "n")),
              paste0("002", c("c", "d", "e", "f")),
              paste0("011", letters[c(4:7,10:12,15:16)]),
-             paste0("012", letters[1:16]),
-             paste0("013", letters[1:16]),
-             paste0("014", letters[c(3:6,11:13)]),
+             paste0("012", letters[c(1:2,5:16)]),
+             paste0("013", letters[1:15]),
+             paste0("014", letters[c(3:6,12:13)]),
              paste0("020", c("o", "p")),
              paste0("021", letters[c(1:2,5,7:16)]),
              paste0("022", letters[1:16]),
@@ -61,13 +61,13 @@ srRt <- raster(file.path(getwd(),"eco_sr_o.tif")) ## Template
              paste0("052", letters[1:16]),
              paste0("053", letters[1:16]),
              paste0("054", letters[1:16]),
-             paste0("062", letters[4:16]),
+             paste0("062", letters[5:16]),
              paste0("063", letters[1:16]),
              paste0("064", letters[1:16]),
-             paste0("072", letters[4:16]),
+             paste0("072", letters[5:16]),
              paste0("073", letters[1:16]),
              paste0("074", letters[1:16]),
-             paste0("082", letters[4:16]),
+             paste0("082", letters[5:16]),
              paste0("083", letters[1:16]),
              paste0("084", letters[1:16]),
              paste0("092", letters[c(2:3,5:12)]),
@@ -78,8 +78,13 @@ srRt <- raster(file.path(getwd(),"eco_sr_o.tif")) ## Template
              paste0("104", letters[c(1:3,6:12)]))
 
     for(i in ToI) {
-      download.file(paste0(url, "250k_dem/", substr(i,1,3), "/", paste0(i,".zip")),
-                    file.path(maps.dir, "250k_dem", paste0(i, ".zip")))
+      try(download.file(paste0(url, "250k_dem/", substr(i,1,3), "/", paste0(i,".zip")),
+                    file.path(maps.dir, "250k_dem", paste0(i, ".zip"))))
+    }
+    retry <- basename(system(paste("find", file.path(maps.dir, "250k_dem"), "-size 0"), intern=TRUE))
+    if (length(retry)) {
+      warning("The following 250k tiles did not download correctly:\n",
+              paste("    ", retry, collapse="\n"))
     }
 
     ## 50m
@@ -88,13 +93,20 @@ srRt <- raster(file.path(getwd(),"eco_sr_o.tif")) ## Template
     w <- 1
     while(w <= length(ToI)){
       i <- ToI[w]
-      fn <- unlist(strsplit(getURL(paste0(url, "50k_dem/", substr(i,1,3),"/"), dirlistonly = TRUE), split = "\n"))
+      fn <- unlist(strsplit(getURL(paste0(url, "50k_dem/", substr(i,1,3), "/"),
+                                   dirlistonly = TRUE), split = "\n"))
       lapply(grep(fn, pattern=substr(i,1,4), value=TRUE), function(x) {
-        download.file(paste0(url,"50k_dem/",substr(i,1,3),"/",x),
-                      file.path(maps.dir,"50k_dem",x))
+        try(download.file(paste0(url,"50k_dem/",substr(i,1,3),"/",x),
+                      file.path(maps.dir,"50k_dem",x)))
         })
       w <- w+1
     }
+    retry <- basename(system(paste("find", file.path(maps.dir, "50k_dem"), "-size 0"), intern=TRUE))
+    if (length(retry)) {
+      warning("The following 50k tiles did not download correctly:\n",
+              paste("    ", retry, collapse="\n"))
+    }
+
 
 ##------------------------------------------------------------------------------
 ##                                   250M_DEM
