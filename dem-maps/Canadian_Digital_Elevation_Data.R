@@ -11,7 +11,7 @@ if(!file.exists(maps.dir)) stop("maps dir does not exist.")
 
 download = FALSE
 num.cpus = 4
-rasterOptions(maxmemory=1e9)
+rasterOptions(maxmemory=5e9)
 
 ## Study Region (process the entire conutry minus the territories)
 getOGR <- function(layer, dir) {
@@ -74,7 +74,7 @@ if (download) {
            paste0("021", letters[c(1:2,5,7:16)]),
            paste0("022", letters[1:16]),
            paste0("023", letters[1:16]),
-           paste0("024", letters[c(1:14,16)]),
+           paste0("024", letters[c(1:16)]),
            paste0("025", letters[c(1:5)]),
            paste0("030", letters[c(12:14)]),
            paste0("031", letters[c(2:16)]),
@@ -115,8 +115,8 @@ if (download) {
   dirs = unique(substr(ToI, 1, 3))
 
   ## 250m
-  if(!file.exists(file.path(maps.dir, "cded", "250k_dem")))
-    dir.create(file.path(maps.dir, "cded","250k_dem", dirs), recursive=TRUE)
+  invisible(lapply(file.path(maps.dir, "cded","250k_dem", dirs), function(x) {
+    if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
   ToI.dl = list.files(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]zip$")
   size.zero = file.size(file.path(maps.dir, "cded", "250k_dem"), 0)
   redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
@@ -135,19 +135,22 @@ if (download) {
   }
 
   ## 50m
-  if(!file.exists(file.path(maps.dir, "cded", "50k_dem")))
-    dir.create(file.path(maps.dir, "cded", "50k_dem", dirs), recursive=TRUE)
+  invisible(lapply(file.path(maps.dir, "cded", "50k_dem", dirs), function(x) {
+    if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
   w <- 1
-  while(w <= length(ToI)) {
-    i <- ToI[w]
-    if(!file.exists(file.path(maps.dir, "cded", "50k_dem", i)))
-      dir.create(file.path(maps.dir, "cded", "50k_dem", i))
-
-    fn <- unlist(strsplit(getURL(paste0(geobase, "50k_dem/", substr(i,1,3), "/"),
+  while(w <= length(dirs)) {
+    i <- dirs[w]
+    # getURL: getting remote dir listings takes forever!
+    # therefore, although we are getting a bit more data than we want,
+    # it's much more efficient to download everything than be selective
+    fn <- unlist(strsplit(getURL(paste0(geobase, "50k_dem/", i, "/"),
                                  dirlistonly=TRUE), split="\n"))
-    lapply(grep(fn, pattern=substr(i,1,4), value=TRUE), function(x) {
-      try(download.file(paste0(geobase, "50k_dem/", substr(i,1,3), "/", x),
-                        file.path(maps.dir, "cded", "50k_dem", substr(i,1,3), x)))
+    ToI.dl = list.files(file.path(maps.dir, "cded", "50k_dem", i), pattern="[.]zip$")
+    size.zero = file.size(file.path(maps.dir, "cded", "50k_dem", i), 0)
+    redownload = sort(c(setdiff(fn, ToI.dl), basename(size.zero)))
+    sapply(redownload, function(x) {
+      try(download.file(paste0(geobase, "50k_dem/", i, "/", x),
+                        file.path(maps.dir, "cded", "50k_dem", i, x)))
       })
     w <- w+1
   }
