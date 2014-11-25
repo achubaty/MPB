@@ -42,8 +42,16 @@ rm(SR.boreal.union.buff)
 
 ## Check file size
 file.size <- function(path=".", size=0) {
-  if (Sys.info()["sysname"]=="Linux")
-    system(paste("find", path, "-size", size), intern=TRUE)
+  if (Sys.info()["sysname"]=="Linux") {
+    f = system(paste("find", path, "-size", size), intern=TRUE)
+    if (length(dir(path))==0) {
+      return(character(0))
+    } else {
+      return(f)
+    }
+  } else {
+    stop("can only be run on Linux.")
+  }
 }
 
 ## Fetch elevation data from internet
