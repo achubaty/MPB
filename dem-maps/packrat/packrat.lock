@@ -29,6 +29,18 @@ Version: 2.3-12
 Hash: b84f479bf59fd3ed66553827b3f8c497
 Requires: sp
 
+Package: rgdal
+Source: CRAN
+Version: 0.9-1
+Hash: 2c5a1585fcd3e95faf99b92e069e75d0
+Requires: sp
+
+Package: rgeos
+Source: CRAN
+Version: 0.3-8
+Hash: 2b41a3b4f25e7be4c85bb376428ddc6d
+Requires: sp
+
 Package: sp
 Source: CRAN
 Version: 1.0-16
