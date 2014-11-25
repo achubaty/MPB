@@ -71,6 +71,7 @@ if (download) {
                           "GeoBase_product_specs_CDED1_en.pdf"))
   download.file("http://www.geobase.ca/images/index/cded/250k/canada.jpg",
                 file.path(maps.dir, "cded", "doc", "canada.jpg"))
+
   ## Download tiles of interest (ToI)
   ToI <- c(paste0("001", letters[11:14]),
            paste0("002", letters[3:6]),
