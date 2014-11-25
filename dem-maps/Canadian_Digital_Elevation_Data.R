@@ -35,8 +35,8 @@ canada1.boreal = spTransform(canada1, crs.boreal)
 SR.boreal = canada1.boreal[na.omit(match(study.region, canada1.boreal$NAME_1)),]
 rm(gadm, canada1)
 
-# study area
-SR.boreal.union.buff = gBuffer(SR.boreal, width=0.00001) # corrects for non-adjacent boundaries
+# study area (correct for non-adjacent boundaries)
+SR.boreal.union.buff = gBuffer(SR.boreal, width=0.00001)
 boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
 rm(SR.boreal.union.buff)
 
@@ -126,7 +126,8 @@ if (download) {
   ## 250m
   invisible(lapply(file.path(maps.dir, "cded","250k_dem", dirs), function(x) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
-  ToI.dl = substr(basename(list.files(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]zip$", recursive=TRUE)), 1, 4)
+  ToI.dl = substr(basename(list.files(file.path(maps.dir, "cded", "250k_dem"),
+                                      pattern="[.]zip$", recursive=TRUE)), 1, 4)
   size.zero = file.size(file.path(maps.dir, "cded", "250k_dem"), 0)
   redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
                        unlist(strsplit(basename(size.zero), "[.]zip$"))))
@@ -178,7 +179,8 @@ invisible(lapply(dir(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]zip$",
                      full.names=TRUE), unzip, exdir=file.path(maps.dir, "cded", "250k_dem")))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]dem$", full.names=TRUE), raster)
+dem <- lapply(dir(file.path(maps.dir, "cded", "250k_dem"),
+                  pattern="[.]dem$", full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
 dem.all.lamb <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
@@ -199,7 +201,8 @@ invisible(lapply(dir(file.path(maps.dir, "cded", "50k_dem"), pattern="[.]zip$",
                      full.names=TRUE), unzip, exdir=file.path(maps.dir, "cded", "50k_dem")))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(file.path(maps.dir, "cded", "50k_dem"), pattern="[.]dem$", full.names=TRUE), raster)
+dem <- lapply(dir(file.path(maps.dir, "cded", "50k_dem"), pattern="[.]dem$",
+                  full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
 dem.all.lamb <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
