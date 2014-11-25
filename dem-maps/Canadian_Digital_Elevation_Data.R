@@ -124,28 +124,30 @@ if (download) {
   dirs = unique(substr(ToI, 1, 3))
 
   ## 250m
-  invisible(lapply(file.path(maps.dir, "cded","250k_dem", dirs), function(x) {
+  dem250k = file.path(maps.dir, "cded","250k_dem")
+  invisible(lapply(file.path(dem250k, dirs), function(x) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
-  ToI.dl = substr(basename(list.files(file.path(maps.dir, "cded", "250k_dem"),
-                                      pattern="[.]zip$", recursive=TRUE)), 1, 4)
-  size.zero = file.size(file.path(maps.dir, "cded", "250k_dem"), 0)
+  ToI.dl = substr(basename(list.files(file.path(dem250k), pattern="[.]zip$",
+                                      recursive=TRUE)), 1, 4)
+  size.zero = file.size(file.path(dem250k), 0)
   redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
-                       unlist(strsplit(basename(size.zero), "[.]zip$"))))
+                      unlist(strsplit(basename(size.zero), "[.]zip$"))))
 
   if (!is.null(redownload)) {
     for(i in redownload) {
       try(download.file(paste0(geobase, "250k_dem/", substr(i,1,3), "/", paste0(i, ".zip")),
-                        file.path(maps.dir, "cded", "250k_dem", substr(i,1,3), paste0(i, ".zip"))))
+                        file.path(dem250k, substr(i,1,3), paste0(i, ".zip"))))
     }
   }
-  retry <- file.size(file.path(maps.dir, "cded", "250k_dem"), 0)
+  retry <- file.size(file.path(dem250k), 0)
   if (length(retry)) {
     warning("The following 250k tiles did not download correctly:\n",
             paste("    ", basename(retry), collapse="\n"))
   }
 
   ## 50m
-  invisible(lapply(file.path(maps.dir, "cded", "50k_dem", dirs), function(x) {
+  dem50k = file.path(maps.dir, "cded","50k_dem")
+  invisible(lapply(file.path(dem50k, dirs), function(x) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
   w <- 1
   while(w <= length(dirs)) {
@@ -155,16 +157,20 @@ if (download) {
     # it's much more efficient to download everything than be selective
     fn <- unlist(strsplit(getURL(paste0(geobase, "50k_dem/", i, "/"),
                                  dirlistonly=TRUE), split="\n"))
-    ToI.dl = list.files(file.path(maps.dir, "cded", "50k_dem", i), pattern="[.]zip$")
-    size.zero = file.size(file.path(maps.dir, "cded", "50k_dem", i), 0)
-    redownload = sort(c(setdiff(fn, ToI.dl), basename(size.zero)))
-    sapply(redownload, function(x) {
-      try(download.file(paste0(geobase, "50k_dem/", i, "/", x),
-                        file.path(maps.dir, "cded", "50k_dem", i, x)))
-      })
+
+    if (exists(fn)) {
+      ToI.dl = list.files(file.path(dem50k, i), pattern="[.]zip$")
+      size.zero = file.size(file.path(dem50k, i), 0)
+      redownload = sort(c(setdiff(fn, ToI.dl), basename(size.zero)))
+      sapply(redownload, function(x) {
+        try(download.file(paste0(geobase, "50k_dem/", i, "/", x),
+                          file.path(dem50k, i, x)))
+        })
+      rm(fn)
+    }
     w <- w+1
   }
-  retry <- file.size(file.path(maps.dir, "cded", "50k_dem"), 0)
+  retry <- file.size(file.path(dem50k), 0)
   if (length(retry)) {
     warning("The following 50k tiles did not download correctly:\n",
             paste("    ", basename(retry), collapse="\n"))
@@ -175,11 +181,11 @@ if (download) {
 ##                                   250M_DEM
 ##------------------------------------------------------------------------------
 ## Unzip data
-invisible(lapply(dir(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=file.path(maps.dir, "cded", "250k_dem")))
+invisible(lapply(dir(file.path(dem250k), pattern="[.]zip$",
+                     full.names=TRUE), unzip, exdir=file.path(dem250k)))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(file.path(maps.dir, "cded", "250k_dem"),
+dem <- lapply(dir(file.path(dem250k),
                   pattern="[.]dem$", full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
@@ -190,18 +196,18 @@ elev.boreal <- clip.raster(dem.all.lamb, boreal.SR)
 writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_250k.tif"))
 
 ## Clean directory: keep only zip files
-lapply(grep(dir(file.path(maps.dir, "cded", "250k_dem"), full.names=TRUE),
+lapply(grep(dir(file.path(dem250k), full.names=TRUE),
             pattern="[.]zip$", value=TRUE, invert=TRUE), file.remove)
 
 ##------------------------------------------------------------------------------
 ##                                   50M_DEM
 ##------------------------------------------------------------------------------
 ## Unzip data
-invisible(lapply(dir(file.path(maps.dir, "cded", "50k_dem"), pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=file.path(maps.dir, "cded", "50k_dem")))
+invisible(lapply(dir(file.path(dem50k), pattern="[.]zip$",
+                     full.names=TRUE), unzip, exdir=file.path(dem50k)))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(file.path(maps.dir, "cded", "50k_dem"), pattern="[.]dem$",
+dem <- lapply(dir(file.path(dem50k), pattern="[.]dem$",
                   full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
@@ -212,7 +218,7 @@ elev.boreal <- clip.raster(dem.all.lamb, boreal.SR)
 writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_50k.tif"))
 
 ## Clean directory: keep only zip files
-lapply(grep(dir(file.path(maps.dir, "cded", "50k_dem"), full.names=TRUE),
+lapply(grep(dir(file.path(dem50k), full.names=TRUE),
             pattern="[.]zip$", value=TRUE, invert=TRUE), file.remove)
 
 ##------------------------------------------------------------------------------
