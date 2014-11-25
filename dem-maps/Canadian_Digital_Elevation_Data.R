@@ -147,7 +147,7 @@ if (download) {
                                  dirlistonly=TRUE), split="\n"))
     lapply(grep(fn, pattern=substr(i,1,4), value=TRUE), function(x) {
       try(download.file(paste0(geobase, "50k_dem/", substr(i,1,3), "/", x),
-                        file.path(maps.dir, "cded", "50k_dem", i, x)))
+                        file.path(maps.dir, "cded", "50k_dem", substr(i,1,3), x)))
       })
     w <- w+1
   }
