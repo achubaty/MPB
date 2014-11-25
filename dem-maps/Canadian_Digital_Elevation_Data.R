@@ -69,7 +69,8 @@ if (download) {
   download.file(paste0(geobase, "doc/GeoBase_product_specs_CDED1_en.pdf"),
                 file.path(maps.dir, "cded", "doc",
                           "GeoBase_product_specs_CDED1_en.pdf"))
-
+  download.file("http://www.geobase.ca/images/index/cded/250k/canada.jpg",
+                file.path(maps.dir, "cded", "doc", "canada.jpg"))
   ## Download tiles of interest (ToI)
   ToI <- c(paste0("001", letters[11:14]),
            paste0("002", letters[3:6]),
@@ -81,19 +82,19 @@ if (download) {
            paste0("021", letters[c(1:2,5,7:16)]),
            paste0("022", letters[1:16]),
            paste0("023", letters[1:16]),
-           paste0("024", letters[c(1:16)]),
-           paste0("025", letters[c(1:5)]),
+           paste0("024", letters[c(1:14,16)]),
+           paste0("025", letters[c(1:6)]),
            paste0("030", letters[c(12:14)]),
-           paste0("031", letters[c(2:16)]),
+           paste0("031", letters[2:16]),
            paste0("032", letters[1:16]),
            paste0("033", letters[1:16]),
            paste0("034", letters[1:16]),
            paste0("035", letters[c(1:12)]),
-           paste0("040", letters[c(9:10,15:16)]),
+           paste0("040", letters[c(7,9:10,15:16)]),
            paste0("041", letters[c(1,7:11,14:16)]),
            paste0("042", letters[1:16]),
            paste0("043", letters[c(1:8,10:15)]),
-           paste0("044", "d"),
+           paste0("044", letters[c(1,4,16)]),
            paste0("052", letters[1:16]),
            paste0("053", letters[1:16]),
            paste0("054", letters[c(1:8,11:13)]),
@@ -124,7 +125,7 @@ if (download) {
   ## 250m
   invisible(lapply(file.path(maps.dir, "cded","250k_dem", dirs), function(x) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
-  ToI.dl = list.files(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]zip$")
+  ToI.dl = substr(basename(list.files(file.path(maps.dir, "cded", "250k_dem"), pattern="[.]zip$", recursive=TRUE)), 1, 4)
   size.zero = file.size(file.path(maps.dir, "cded", "250k_dem"), 0)
   redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
                        unlist(strsplit(basename(size.zero), "[.]zip$"))))
