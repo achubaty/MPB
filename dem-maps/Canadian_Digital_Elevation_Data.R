@@ -158,7 +158,7 @@ if (download) {
     fn <- unlist(strsplit(getURL(paste0(geobase, "50k_dem/", i, "/"),
                                  dirlistonly=TRUE), split="\n"))
 
-    if (exists(fn)) {
+    if (exists("fn")) {
       ToI.dl = list.files(file.path(dem50k, i), pattern="[.]zip$")
       size.zero = file.size(file.path(dem50k, i), 0)
       redownload = sort(c(setdiff(fn, ToI.dl), basename(size.zero)))
