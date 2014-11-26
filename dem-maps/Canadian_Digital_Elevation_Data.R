@@ -37,7 +37,7 @@ SR.boreal = canada1.boreal[na.omit(match(study.region, canada1.boreal$NAME_1)),]
 rm(gadm, canada1)
 
 # study area (correct for non-adjacent boundaries)
-SR.boreal.union.buff = gBuffer(SR.boreal, width=0.00001)
+SR.boreal.union.buff = gBuffer(SR.boreal, width=1e-5)
 boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
 rm(SR.boreal.union.buff)
 
