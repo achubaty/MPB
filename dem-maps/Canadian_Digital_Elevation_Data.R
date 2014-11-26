@@ -4,6 +4,7 @@ library(raster)
 library(RCurl)
 library(rgdal)
 library(rgeos)
+library(snow)
 
 ## Set options
 maps.dir = "~/Documents/Data/maps"
@@ -21,8 +22,8 @@ getOGR <- function(layer, dir) {
   setwd(orig.dir)
   return(out)
 }
-boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
-boreal.can <- boreal[boreal$COUNTRY=="CANADA",]
+boreal = getOGR("NABoreal", file.path(maps.dir, "boreal"))
+boreal.can = boreal[boreal$COUNTRY=="CANADA",]
 crs.boreal = CRS(proj4string(boreal))
 study.region = c("British Columbia", "Alberta", "Saskatchewan", "Manitoba",
                  "Ontario", "Québec", "New Brunswick", "Nova Scotia",
@@ -40,14 +41,19 @@ SR.boreal.union.buff = gBuffer(SR.boreal, width=0.00001)
 boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
 rm(SR.boreal.union.buff)
 
-## Check file size
-size.zero <- function(path=".", size=0) {
-  files = dir(path, full.names=TRUE, recursive=TRUE)
-  return(files[file.info(files)$size==size])
-}
+## Data directories
+dem50k = file.path(maps.dir, "cded","50k_dem")
+dem250k = file.path(maps.dir, "cded","250k_dem")
+tmpdir = tmpDir()
 
 ## Fetch elevation data from internet
 if (download) {
+  ## Get files of size zero
+  size.zero <- function(path=".", size=0) {
+    files = dir(path, full.names=TRUE, recursive=TRUE)
+    return(files[file.info(files)$size==size])
+  }
+
   ## Define the ftp address
   geobase <- "ftp://ftp2.cits.rncan.gc.ca/pub/geobase/official/cded/"
 
@@ -117,7 +123,6 @@ if (download) {
   dirs = unique(substr(ToI, 1, 3))
 
   ## 250m
-  dem250k = file.path(maps.dir, "cded","250k_dem")
   invisible(lapply(file.path(dem250k, dirs), function(x) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
   ToI.dl = substr(basename(list.files(file.path(dem250k), pattern="[.]zip$",
@@ -139,7 +144,6 @@ if (download) {
   }
 
   ## 50m
-  dem50k = file.path(maps.dir, "cded","50k_dem")
   invisible(lapply(file.path(dem50k, dirs), function(x) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
   w <- 1
@@ -174,17 +178,19 @@ if (download) {
 ##                                   250M_DEM
 ##------------------------------------------------------------------------------
 ## Unzip data
-invisible(lapply(dir(file.path(dem250k), pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=file.path(dem250k)))
+tmpdir250k = file.path(tmpdir, "250k_dem")
+invisible(sapply(dir(file.path(dem250k), recursive=TRUE, pattern="[.]zip$",
+                     full.names=TRUE), unzip, exdir=tmpdir250k))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(file.path(dem250k),
-                  pattern="[.]dem$", full.names=TRUE), raster)
+dem <- lapply(dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
-dem.all.lamb <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
+beginCluster(num.cpus)
+dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
+endCluster()
 
-elev.boreal <- clip.raster(dem.all.lamb, boreal.SR)
+elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
 
 writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_250k.tif"))
 
@@ -196,7 +202,8 @@ lapply(grep(dir(file.path(dem250k), full.names=TRUE),
 ##                                   50M_DEM
 ##------------------------------------------------------------------------------
 ## Unzip data
-invisible(lapply(dir(file.path(dem50k), pattern="[.]zip$",
+tmpdir50k = file.path(tmpdir, "50k_dem")
+invisible(sapply(dir(file.path(dem50k), pattern="[.]zip$",
                      full.names=TRUE), unzip, exdir=file.path(dem50k)))
 
 ## Note: dem(e) for East and dem(w) for West
@@ -204,9 +211,11 @@ dem <- lapply(dir(file.path(dem50k), pattern="[.]dem$",
                   full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
-dem.all.lamb <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
+beginCluster(num.cpus)
+dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
+endCluster()
 
-elev.boreal <- clip.raster(dem.all.lamb, boreal.SR)
+elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
 
 writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_50k.tif"))
 
