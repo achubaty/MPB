@@ -124,7 +124,7 @@ if (download) {
                                       recursive=TRUE)), 1, 4)
   zero = size.zero(file.path(dem250k), 0)
   redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
-                      unlist(strsplit(basename(size.zero), "[.]zip$"))))
+                      unlist(strsplit(basename(zero), "[.]zip$"))))
 
   if (!is.null(redownload)) {
     for(i in redownload) {
@@ -154,7 +154,7 @@ if (download) {
     if (exists("fn")) {
       ToI.dl = list.files(file.path(dem50k, i), pattern="[.]zip$")
       zero = size.zero(file.path(dem50k, i), 0)
-      redownload = sort(c(setdiff(fn, ToI.dl), basename(size.zero)))
+      redownload = sort(c(setdiff(fn, ToI.dl), basename(zero)))
       sapply(redownload, function(x) {
         try(download.file(paste0(geobase, "50k_dem/", i, "/", x),
                           file.path(dem50k, i, x)))
