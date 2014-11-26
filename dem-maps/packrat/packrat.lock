@@ -41,6 +41,11 @@ Version: 0.3-8
 Hash: 2b41a3b4f25e7be4c85bb376428ddc6d
 Requires: sp
 
+Package: snow
+Source: CRAN
+Version: 0.3-13
+Hash: 16dca684ceb4baa0f96c1ca1b3314497
+
 Package: sp
 Source: CRAN
 Version: 1.0-16
