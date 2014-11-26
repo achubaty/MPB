@@ -41,16 +41,9 @@ boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
 rm(SR.boreal.union.buff)
 
 ## Check file size
-file.size <- function(path=".", size=0) {
-  if (Sys.info()["sysname"]=="Linux") {
-    if (length(dir(path))==0) {
-      return(character(0))
-    } else {
-      return(system(paste("find", path, "-size", size), intern=TRUE))
-    }
-  } else {
-    stop("can only be run on Linux.")
-  }
+size.zero <- function(path=".", size=0) {
+  files = dir(path, full.names=TRUE, recursive=TRUE)
+  return(files[file.info(files)$size==size])
 }
 
 ## Fetch elevation data from internet
@@ -129,7 +122,7 @@ if (download) {
     if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
   ToI.dl = substr(basename(list.files(file.path(dem250k), pattern="[.]zip$",
                                       recursive=TRUE)), 1, 4)
-  size.zero = file.size(file.path(dem250k), 0)
+  zero = size.zero(file.path(dem250k), 0)
   redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
                       unlist(strsplit(basename(size.zero), "[.]zip$"))))
 
@@ -139,7 +132,7 @@ if (download) {
                         file.path(dem250k, substr(i,1,3), paste0(i, ".zip"))))
     }
   }
-  retry <- file.size(file.path(dem250k), 0)
+  retry <- size.zero(file.path(dem250k), 0)
   if (length(retry)) {
     warning("The following 250k tiles did not download correctly:\n",
             paste("    ", basename(retry), collapse="\n"))
@@ -160,7 +153,7 @@ if (download) {
 
     if (exists("fn")) {
       ToI.dl = list.files(file.path(dem50k, i), pattern="[.]zip$")
-      size.zero = file.size(file.path(dem50k, i), 0)
+      zero = size.zero(file.path(dem50k, i), 0)
       redownload = sort(c(setdiff(fn, ToI.dl), basename(size.zero)))
       sapply(redownload, function(x) {
         try(download.file(paste0(geobase, "50k_dem/", i, "/", x),
@@ -170,7 +163,7 @@ if (download) {
     }
     w <- w+1
   }
-  retry <- file.size(file.path(dem50k), 0)
+  retry <- size.zero(file.path(dem50k), 0)
   if (length(retry)) {
     warning("The following 50k tiles did not download correctly:\n",
             paste("    ", basename(retry), collapse="\n"))
