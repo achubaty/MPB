@@ -57,13 +57,13 @@ if (download) {
   
   eol = ifelse(Sys.info()[["sysname"]]=="Windows", "\r\n", "\n")
   
-  ## Define the ftp address
+  ## Define the ftp address (NOTE this address is temporary)
   ftpsite <- "ftp://ftp.nrcan.gc.ca/pub/outgoing/CANESM2_HISTORICAL/"
   
   for (i in scenarios) { 
     for (j in years) {
       ftppath = paste0(ftpsite, i, "/asciigrids/", j, "/")
-      locpath = file.path(maps.dir, i, "asciigrids", j)
+      locpath = file.path(maps.dir, "climate", "CANESM2_HISTORICAL", i, "asciigrids", j)
       if(!file.exists(locpath)) dir.create(locpath, recursive=TRUE)
       
       files = unlist(strsplit(getURL(ftppath, dirlistonly=TRUE), split=eol))

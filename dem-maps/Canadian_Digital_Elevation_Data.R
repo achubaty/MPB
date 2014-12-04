@@ -12,9 +12,9 @@ if(!file.exists(maps.dir)) stop("maps dir does not exist.")
 
 download = FALSE
 num.cpus = 4
-rasterOptions(maxmemory=5e9)
+rasterOptions(maxmemory=1e9, chunksize=1e8)
 
-## Study Region (process the entire conutry minus the territories)
+## Study Region (process the entire country minus the territories)
 getOGR <- function(layer, dir) {
   orig.dir = getwd()
   setwd(dir)
@@ -25,9 +25,10 @@ getOGR <- function(layer, dir) {
 boreal = getOGR("NABoreal", file.path(maps.dir, "boreal"))
 boreal.can = boreal[boreal$COUNTRY=="CANADA",]
 crs.boreal = CRS(proj4string(boreal))
-study.region = c("British Columbia", "Alberta", "Saskatchewan", "Manitoba",
-                 "Ontario", "Québec", "New Brunswick", "Nova Scotia",
-                 "Newfoundland", "Prince Edward Island")
+study.region = c("British Columbia", "Alberta")
+#study.region = c("British Columbia", "Alberta", "Saskatchewan", "Manitoba",
+#                 "Ontario", "Québec", "New Brunswick", "Nova Scotia",
+#                 "Newfoundland", "Prince Edward Island")
 
 # provicial boundaries
 load(file.path(maps.dir, "CAN_adm1.RData"))
@@ -45,6 +46,8 @@ rm(SR.boreal.union.buff)
 dem50k = file.path(maps.dir, "cded","50k_dem")
 dem250k = file.path(maps.dir, "cded","250k_dem")
 tmpdir = tmpDir()
+tmpdir50k = file.path(tmpdir, "50k_dem")
+tmpdir250k = file.path(tmpdir, "250k_dem")
 
 ## Fetch elevation data from internet
 if (download) {
@@ -53,6 +56,8 @@ if (download) {
     files = dir(path, full.names=TRUE, recursive=TRUE)
     return(files[file.info(files)$size==size])
   }
+  
+  eol = ifelse(Sys.info()[["sysname"]]=="Windows", "\r\n", "\n")
 
   ## Define the ftp address
   geobase <- "ftp://ftp2.cits.rncan.gc.ca/pub/geobase/official/cded/"
@@ -62,7 +67,7 @@ if (download) {
     dir.create(file.path(maps.dir, "doc"))
 
   fileNames <- unlist(strsplit(getURL(paste0(geobase, "doc/"),
-                                      dirlistonly=TRUE), split="\n"))
+                                      dirlistonly=TRUE), split=eol))
   download.file(paste0(geobase, "doc/CDED.pdf"),
                 file.path(maps.dir, "cded", "doc", "CDED.pdf"))
   download.file(paste0(geobase, "doc/GeoBase_product_specs_CDED1_en.pdf"),
@@ -153,7 +158,7 @@ if (download) {
     # therefore, although we are getting a bit more data than we want,
     # it's much more efficient to download everything than be selective
     fn <- unlist(strsplit(getURL(paste0(geobase, "50k_dem/", i, "/"),
-                                 dirlistonly=TRUE), split="\n"))
+                                 dirlistonly=TRUE), split=eol))
 
     if (exists("fn")) {
       ToI.dl = list.files(file.path(dem50k, i), pattern="[.]zip$")
@@ -178,21 +183,29 @@ if (download) {
 ##                                   250M_DEM
 ##------------------------------------------------------------------------------
 ## Unzip data
-tmpdir250k = file.path(tmpdir, "250k_dem")
 invisible(sapply(dir(file.path(dem250k), recursive=TRUE, pattern="[.]zip$",
                      full.names=TRUE), unzip, exdir=tmpdir250k))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE), raster)
-dem.all <- do.call(merge, dem)
+files <- dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE)
+SR <- c("072", "073", "074", "082", "083", "084", "091", "092", "093", "094",
+        "101", "102", "103", "104", "113", "114") # manually: BC, AB
+files.SR <- unlist(lapply(SR, function(x) { grep(x, files, value=TRUE) }))
 
-beginCluster(num.cpus)
-dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
-endCluster()
+dem.SR <- do.call(merge, lapply(files.SR, raster))
+#dem.all <- do.call(merge, lapply(files, raster))
+#dem.all <- raster(file.path(maps.dir, "dem_all_250k.grd"))
 
-elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
+#beginCluster(num.cpus)
+dem.SR.boreal <- projectRaster(from=dem.SR, crs=crs.boreal)
+#dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal)
+#endCluster()
 
-writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_250k.tif"))
+elev.SR.boreal <- clip.raster(dem.SR.boreal, boreal.SR)
+#elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
+
+writeRaster(elev.SR.boreal, file.path(maps.dir, "cded", "elevation_SR_250k.tif"))
+#writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_250k.tif"))
 
 ## Clean directory: keep only zip files
 lapply(grep(dir(file.path(dem250k), full.names=TRUE),
@@ -202,18 +215,16 @@ lapply(grep(dir(file.path(dem250k), full.names=TRUE),
 ##                                   50M_DEM
 ##------------------------------------------------------------------------------
 ## Unzip data
-tmpdir50k = file.path(tmpdir, "50k_dem")
 invisible(sapply(dir(file.path(dem50k), pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=file.path(dem50k)))
+                     full.names=TRUE), unzip, exdir=tmpdir250k))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(file.path(dem50k), pattern="[.]dem$",
-                  full.names=TRUE), raster)
+dem <- lapply(dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
-beginCluster(num.cpus)
+#beginCluster(num.cpus)
 dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
-endCluster()
+#endCluster()
 
 elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
 
