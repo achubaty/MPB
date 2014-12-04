@@ -1,0 +1,49 @@
+PackratFormat: 1.4
+PackratVersion: 0.4.1.1
+RVersion: 3.1.2
+Repos: CRAN=http://cran.rstudio.com,
+    CRANextra=http://www.stats.ox.ac.uk/pub/RWin
+
+Package: bitops
+Source: CRAN
+Version: 1.0-6
+Hash: cb26464a8321628636b547518994c931
+
+Package: packrat
+Source: CRAN
+Version: 0.4.1-1
+Hash: 5716097644904b9c1b4be2692de16005
+
+Package: raster
+Source: CRAN
+Version: 2.3-12
+Hash: b84f479bf59fd3ed66553827b3f8c497
+Requires: sp
+
+Package: RCurl
+Source: CRAN
+Version: 1.95-4.4
+Hash: 32b717e968e3151eaa5b4076267c7f0b
+Requires: bitops
+
+Package: rgdal
+Source: CRAN
+Version: 0.9-1
+Hash: 2c5a1585fcd3e95faf99b92e069e75d0
+Requires: sp
+
+Package: rgeos
+Source: CRAN
+Version: 0.3-8
+Hash: 2b41a3b4f25e7be4c85bb376428ddc6d
+Requires: sp
+
+Package: snow
+Source: CRAN
+Version: 0.3-13
+Hash: 16dca684ceb4baa0f96c1ca1b3314497
+
+Package: sp
+Source: CRAN
+Version: 1.0-16
+Hash: 1ec8e2e48ab1a6a12ba2b9754a860ed4
