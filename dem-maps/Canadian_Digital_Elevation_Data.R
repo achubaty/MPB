@@ -29,6 +29,7 @@ study.region = c("British Columbia", "Alberta")
 #study.region = c("British Columbia", "Alberta", "Saskatchewan", "Manitoba",
 #                 "Ontario", "Québec", "New Brunswick", "Nova Scotia",
 #                 "Newfoundland", "Prince Edward Island")
+rm(boreal, boreal.can)
 
 # provicial boundaries
 load(file.path(maps.dir, "CAN_adm1.RData"))
@@ -193,8 +194,10 @@ SR <- c("072", "073", "074", "082", "083", "084", "091", "092", "093", "094",
 files.SR <- unlist(lapply(SR, function(x) { grep(x, files, value=TRUE) }))
 
 dem.SR <- do.call(merge, lapply(files.SR, raster))
+#dem.SR <- raster(file.path(maps.dir, "cded", "dem_SR_250k.grd"))
+
 #dem.all <- do.call(merge, lapply(files, raster))
-#dem.all <- raster(file.path(maps.dir, "dem_all_250k.grd"))
+#dem.all <- raster(file.path(maps.dir, "cded", "dem_all_250k.grd"))
 
 #beginCluster(num.cpus)
 dem.SR.boreal <- projectRaster(from=dem.SR, crs=crs.boreal)

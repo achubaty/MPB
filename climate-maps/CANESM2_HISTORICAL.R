@@ -7,7 +7,8 @@ library(rgeos)
 library(snow)
 
 ## Set options
-maps.dir <- "M:/data/climate/CANESM2_HISTORICAL"
+maps.dir <- "M:/data/"
+#maps.dir <- "/mnt/A105254/shared/data/"
 #maps.dir = "~/Documents/Data/maps"
 if(!file.exists(maps.dir)) stop("maps dir does not exist.")
 
