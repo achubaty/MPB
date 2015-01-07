@@ -1,42 +1,51 @@
 PackratFormat: 1.4
-PackratVersion: 0.4.1.1
+PackratVersion: 0.4.2.1
 RVersion: 3.1.2
 Repos: CRAN=http://cran.rstudio.com,
     CRANextra=http://www.stats.ox.ac.uk/pub/RWin
+
+Package: RCurl
+Source: CRAN
+Version: 1.95-4.5
+Requires: bitops
 
 Package: bitops
 Source: CRAN
 Version: 1.0-6
 Hash: cb26464a8321628636b547518994c931
 
+Package: chron
+Source: CRAN
+Version: 2.3-45
+Hash: 65cf73bf43c26a4578bb251499de38cd
+
+Package: ncdf4
+Source: CRAN
+Version: 1.13
+Hash: 6c72cbe4773b6b40bf0afb76eb0a37d7
+
 Package: packrat
 Source: CRAN
-Version: 0.4.1-1
-Hash: 5716097644904b9c1b4be2692de16005
+Version: 0.4.2-1
+Hash: 085f944cec9b56e8a280222b5174c76e
 
 Package: raster
 Source: CRAN
 Version: 2.3-12
-Hash: b84f479bf59fd3ed66553827b3f8c497
 Requires: sp
-
-Package: RCurl
-Source: CRAN
-Version: 1.95-4.4
-Hash: 32b717e968e3151eaa5b4076267c7f0b
-Requires: bitops
+Hash: b84f479bf59fd3ed66553827b3f8c497
 
 Package: rgdal
 Source: CRAN
 Version: 0.9-1
-Hash: 2c5a1585fcd3e95faf99b92e069e75d0
 Requires: sp
+Hash: 2c5a1585fcd3e95faf99b92e069e75d0
 
 Package: rgeos
 Source: CRAN
 Version: 0.3-8
-Hash: 2b41a3b4f25e7be4c85bb376428ddc6d
 Requires: sp
+Hash: 2b41a3b4f25e7be4c85bb376428ddc6d
 
 Package: snow
 Source: CRAN
