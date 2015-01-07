@@ -6,3 +6,5 @@
 cache/
 figure/
 figures/
+packrat/lib*/
+*/packrat/lib*/
