@@ -22,6 +22,7 @@ getOGR <- function(layer, dir) {
   setwd(orig.dir)
   return(out)
 }
+
 boreal = getOGR("NABoreal", file.path(maps.dir, "boreal"))
 boreal.can = boreal[boreal$COUNTRY=="CANADA",]
 crs.boreal = CRS(proj4string(boreal))
@@ -52,131 +53,10 @@ tmpdir250k = file.path(tmpdir, "250k_dem")
 
 ## Fetch elevation data from internet
 if (download) {
-  ## Get files of size zero
-  size.zero <- function(path=".", size=0) {
-    files = dir(path, full.names=TRUE, recursive=TRUE)
-    return(files[file.info(files)$size==size])
-  }
-  
-  eol = ifelse(Sys.info()[["sysname"]]=="Windows", "\r\n", "\n")
-
-  ## Define the ftp address
-  geobase <- "ftp://ftp2.cits.rncan.gc.ca/pub/geobase/official/cded/"
-
-  ## Download the documentation
-  if (!file.exists(file.path(maps.dir, "doc")))
-    dir.create(file.path(maps.dir, "doc"))
-
-  fileNames <- unlist(strsplit(getURL(paste0(geobase, "doc/"),
-                                      dirlistonly=TRUE), split=eol))
-  download.file(paste0(geobase, "doc/CDED.pdf"),
-                file.path(maps.dir, "cded", "doc", "CDED.pdf"))
-  download.file(paste0(geobase, "doc/GeoBase_product_specs_CDED1_en.pdf"),
-                file.path(maps.dir, "cded", "doc",
-                          "GeoBase_product_specs_CDED1_en.pdf"))
-  download.file("http://www.geobase.ca/images/index/cded/250k/canada.jpg",
-                file.path(maps.dir, "cded", "doc", "canada.jpg"))
-
-  ## Download tiles of interest (ToI)
-  ToI <- c(paste0("001", letters[11:14]),
-           paste0("002", letters[3:6]),
-           paste0("011", letters[c(4:7,10:12,15:16)]),
-           paste0("012", letters[c(1:2,5:16)]),
-           paste0("013", letters[1:15]),
-           paste0("014", letters[c(3:6,12:13)]),
-           paste0("020", letters[15:16]),
-           paste0("021", letters[c(1:2,5,7:16)]),
-           paste0("022", letters[1:16]),
-           paste0("023", letters[1:16]),
-           paste0("024", letters[c(1:14,16)]),
-           paste0("025", letters[c(1:6)]),
-           paste0("030", letters[c(12:14)]),
-           paste0("031", letters[2:16]),
-           paste0("032", letters[1:16]),
-           paste0("033", letters[1:16]),
-           paste0("034", letters[1:16]),
-           paste0("035", letters[c(1:12)]),
-           paste0("040", letters[c(7,9:10,15:16)]),
-           paste0("041", letters[c(1,7:11,14:16)]),
-           paste0("042", letters[1:16]),
-           paste0("043", letters[c(1:8,10:15)]),
-           paste0("044", letters[c(1,4,16)]),
-           paste0("052", letters[1:16]),
-           paste0("053", letters[1:16]),
-           paste0("054", letters[c(1:8,11:13)]),
-           paste0("055", letters[c(4:6,10:16)]),
-           paste0("062", letters[5:16]),
-           paste0("063", letters[1:16]),
-           paste0("064", letters[1:16]),
-           paste0("065", letters[1:16]),
-           paste0("072", letters[5:16]),
-           paste0("073", letters[1:16]),
-           paste0("074", letters[1:16]),
-           paste0("075", letters[1:16]),
-           paste0("082", letters[5:16]),
-           paste0("083", letters[1:16]),
-           paste0("084", letters[1:16]),
-           paste0("085", letters[1:16]),
-           paste0("092", letters[c(2:3,5:12)]),
-           paste0("093", letters[1:16]),
-           paste0("094", letters[1:16]),
-           paste0("095", letters[1:16]),
-           paste0("102", c("i", "p")),
-           paste0("103", letters[c(1:3,6:11)]),
-           paste0("104", letters[c(1:3,6:12)]),
-           paste0("105", letters[1:16]),
-           paste0("115", letters[c(1:3,6:11,14:16)]))
-  dirs = unique(substr(ToI, 1, 3))
-
-  ## 250m
-  invisible(lapply(file.path(dem250k, dirs), function(x) {
-    if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
-  ToI.dl = substr(basename(list.files(file.path(dem250k), pattern="[.]zip$",
-                                      recursive=TRUE)), 1, 4)
-  zero = size.zero(file.path(dem250k), 0)
-  redownload = sort(c(unlist(strsplit(setdiff(paste0(ToI, ".zip"), ToI.dl), "[.]zip$")),
-                      unlist(strsplit(basename(zero), "[.]zip$"))))
-
-  if (!is.null(redownload)) {
-    for(i in redownload) {
-      try(download.file(paste0(geobase, "250k_dem/", substr(i,1,3), "/", paste0(i, ".zip")),
-                        file.path(dem250k, substr(i,1,3), paste0(i, ".zip"))))
-    }
-  }
-  retry <- size.zero(file.path(dem250k), 0)
-  if (length(retry)) {
-    warning("The following 250k tiles did not download correctly:\n",
-            paste("    ", basename(retry), collapse="\n"))
-  }
-
-  ## 50m
-  invisible(lapply(file.path(dem50k, dirs), function(x) {
-    if(!file.exists(x)) dir.create(x, recursive=TRUE) }))
-  w <- 1
-  while(w <= length(dirs)) {
-    i <- dirs[w]
-    # getURL: getting remote dir listings takes forever!
-    # therefore, although we are getting a bit more data than we want,
-    # it's much more efficient to download everything than be selective
-    fn <- unlist(strsplit(getURL(paste0(geobase, "50k_dem/", i, "/"),
-                                 dirlistonly=TRUE), split=eol))
-
-    if (exists("fn")) {
-      ToI.dl = list.files(file.path(dem50k, i), pattern="[.]zip$")
-      zero = size.zero(file.path(dem50k, i), 0)
-      redownload = sort(c(setdiff(fn, ToI.dl), basename(zero)))
-      sapply(redownload, function(x) {
-        try(download.file(paste0(geobase, "50k_dem/", i, "/", x),
-                          file.path(dem50k, i, x)))
-        })
-      rm(fn)
-    }
-    w <- w+1
-  }
-  retry <- size.zero(file.path(dem50k), 0)
-  if (length(retry)) {
-    warning("The following 50k tiles did not download correctly:\n",
-            paste("    ", basename(retry), collapse="\n"))
+  if (os=="windows") {
+    source("~/GitHub/McIntire-lab/code/data-sources/cded-download.R")
+  } else {
+    source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-download.R")
   }
 }
 
