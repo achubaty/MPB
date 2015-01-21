@@ -43,7 +43,7 @@ rm(gadm, canada1)
 
 # study area (correct for non-adjacent boundaries)
 SR.boreal.union.buff = gBuffer(SR.boreal, width=1e-5)
-boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
+boreal.SR = gIntersection(SR.boreal.union.buff, boreal.can, byid=TRUE)
 rm(SR.boreal.union.buff)
 
 ## Data directories
