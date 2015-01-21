@@ -66,8 +66,10 @@ tmpdir250k = file.path(tmpdir, "250k_dem")
 ## Fetch elevation data from internet
 if (download) {
   if (os=="windows") {
+    system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
     source("~/GitHub/McIntire-lab/code/data-sources/cded-download.R")
   } else {
+    system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
     source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-download.R")
   }
 }
