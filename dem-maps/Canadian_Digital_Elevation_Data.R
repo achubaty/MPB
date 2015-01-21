@@ -1,20 +1,27 @@
+## Set options
+os = tolower(Sys.info()[["sysname"]])
+maps.dir = if (os=="windows") {
+  "//W-VIC-A105254/shared/data"
+} else if (os=="Darwin") {
+  "~/Documents/Data/maps"
+} else if (os=="linux") {
+  "/mnt/A105254/shared/data"
+}
+if(!file.exists(maps.dir)) stop("maps dir does not exist.")
+
+download = FALSE
+num.cpus = 16
+
 ## Libaries
 library(sp)
-library(raster)
-library(RCurl)
+library(raster); rasterOptions(maxmemory=2e10, chunksize=5e7)
 library(rgdal)
 library(rgeos)
 library(snow)
 
-## Set options
-maps.dir = "~/Documents/Data/maps"
-if(!file.exists(maps.dir)) stop("maps dir does not exist.")
+if (download) library(RCurl)
 
-download = FALSE
-num.cpus = 4
-rasterOptions(maxmemory=1e9, chunksize=1e8)
-
-## Study Region (process the entire country minus the territories)
+## Helper functions
 getOGR <- function(layer, dir) {
   orig.dir = getwd()
   setwd(dir)
@@ -23,6 +30,7 @@ getOGR <- function(layer, dir) {
   return(out)
 }
 
+## Define Study Region
 boreal = getOGR("NABoreal", file.path(maps.dir, "boreal"))
 boreal.can = boreal[boreal$COUNTRY=="CANADA",]
 crs.boreal = CRS(proj4string(boreal))
@@ -30,23 +38,27 @@ study.region = c("British Columbia", "Alberta")
 #study.region = c("British Columbia", "Alberta", "Saskatchewan", "Manitoba",
 #                 "Ontario", "Québec", "New Brunswick", "Nova Scotia",
 #                 "Newfoundland", "Prince Edward Island")
-rm(boreal, boreal.can)
+rm(boreal)
 
 # provicial boundaries
-load(file.path(maps.dir, "CAN_adm1.RData"))
+load(file.path(maps.dir, "CAN_adm", "CAN_adm1.RData"))
 canada1 = gadm
 canada1.boreal = spTransform(canada1, crs.boreal)
 SR.boreal = canada1.boreal[na.omit(match(study.region, canada1.boreal$NAME_1)),]
-rm(gadm, canada1)
+rm(canada1, gadm)
 
 # study area (correct for non-adjacent boundaries)
 SR.boreal.union.buff = gBuffer(SR.boreal, width=1e-5)
-boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
-rm(SR.boreal.union.buff)
+#boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
+boreal.SR = gIntersection(SR.boreal.union.buff, boreal.can, byid=TRUE)
+save(boreal.can, file=file.path(maps.dir, "boreal", "Rdata", "boreal.can.RData"))
+save(boreal.SR, file=file.path(maps.dir, "boreal", "Rdata", "boreal.SR.RData"))
+save(SR.boreal.union.buff, file=file.path(maps.dir, "boreal", "Rdata", "SR.boreal.union.buff.RData"))
+rm(boreal.can, SR.boreal.union.buff)
 
 ## Data directories
-dem50k = file.path(maps.dir, "cded","50k_dem")
-dem250k = file.path(maps.dir, "cded","250k_dem")
+dem50k = file.path(maps.dir, "cded", "50k_dem")
+dem250k = file.path(maps.dir, "cded", "250k_dem")
 tmpdir = tmpDir()
 tmpdir50k = file.path(tmpdir, "50k_dem")
 tmpdir250k = file.path(tmpdir, "250k_dem")
@@ -63,6 +75,7 @@ if (download) {
 ##------------------------------------------------------------------------------
 ##                                   250M_DEM
 ##------------------------------------------------------------------------------
+
 ## Unzip data
 invisible(sapply(dir(file.path(dem250k), recursive=TRUE, pattern="[.]zip$",
                      full.names=TRUE), unzip, exdir=tmpdir250k))
@@ -71,13 +84,27 @@ invisible(sapply(dir(file.path(dem250k), recursive=TRUE, pattern="[.]zip$",
 files <- dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE)
 SR <- c("072", "073", "074", "082", "083", "084", "091", "092", "093", "094",
         "101", "102", "103", "104", "113", "114") # manually: BC, AB
-files.SR <- unlist(lapply(SR, function(x) { grep(x, files, value=TRUE) }))
+SR <- paste0("^", SR)
+files.SR <- unlist(lapply(SR, function(x) {
+  i = grep(x, basename(files))
+  file.path(dirname(files[i]), basename(files[i]))
+  }))
 
-dem.SR <- do.call(merge, lapply(files.SR, raster))
-#dem.SR <- raster(file.path(maps.dir, "cded", "dem_SR_250k.grd"))
+grd250k <- file.path(maps.dir, "cded", "dem_all_250k.tif")
+if (file.exists(grd250k)) {
+  dem.all <- raster(grd250k)
+} else {
+  dem.all <- do.call(merge, lapply(files, raster))
+  writeRaster(dem.all, filename=grd250k, overwrite=TRUE)
+}
 
-#dem.all <- do.call(merge, lapply(files, raster))
-#dem.all <- raster(file.path(maps.dir, "cded", "dem_all_250k.grd"))
+grd250k.SR <- file.path(maps.dir, "cded", "dem_SR_250k.tif")
+if (file.exists(grd250k.SR)) {
+  dem.SR <- raster(grd250k.SR)
+} else {
+  dem.SR <- do.call(merge, lapply(files.SR, raster))
+  writeRaster(dem.SR, filename=grd250k.SR, overwrite=TRUE)
+}
 
 #beginCluster(num.cpus)
 dem.SR.boreal <- projectRaster(from=dem.SR, crs=crs.boreal)
