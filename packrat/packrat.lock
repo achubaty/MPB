@@ -8,6 +8,11 @@ Source: CRAN
 Version: 2.0.1
 Hash: 9a3ac4e5fd8059af0fc5156bcb019bbc
 
+Package: RColorBrewer
+Source: CRAN
+Version: 1.0-5
+Hash: 6a849b729bec970204ca88b96906adbc
+
 Package: RCurl
 Source: CRAN
 Version: 1.95-4.5
@@ -66,14 +71,14 @@ Requires: digest
 
 Package: httr
 Source: CRAN
-Version: 0.5
-Hash: 68a70bdd16fb949a12e4fda7f31def00
-Requires: RCurl, digest, jsonlite, stringr
+Version: 0.6.1
+Hash: 3b082465d75a7a0c3d09ad06a0905aff
+Requires: R6, RCurl, digest, jsonlite, mime, stringr
 
 Package: jsonlite
 Source: CRAN
-Version: 0.9.13
-Hash: dd2cfbfb6cce930fef0be435a7093e8a
+Version: 0.9.14
+Hash: 1e949c7f0f926734e2ff498eddb2309a
 
 Package: knitr
 Source: CRAN
@@ -117,19 +122,19 @@ Requires: sp
 Package: rgdal
 Source: CRAN
 Version: 0.9-1
-Hash: bcdc532e25febc0f95960a7a9fce4048
+Hash: 2c5a1585fcd3e95faf99b92e069e75d0
 Requires: sp
 
 Package: rgeos
 Source: CRAN
 Version: 0.3-8
-Hash: ab575b135d32a389ff23c6d364a5bae0
+Hash: 2b41a3b4f25e7be4c85bb376428ddc6d
 Requires: sp
 
 Package: rmarkdown
 Source: CRAN
-Version: 0.3.3
-Hash: fe7b370d7022b58c2b71469681c0431f
+Version: 0.4.2
+Hash: c0a973db5a50da2b14afece2007984ab
 Requires: caTools, htmltools, knitr, yaml
 
 Package: rstudioapi
@@ -144,8 +149,8 @@ Hash: 16dca684ceb4baa0f96c1ca1b3314497
 
 Package: sp
 Source: CRAN
-Version: 1.0-15
-Hash: ccab055c2835c81a8add23517d8b6219
+Version: 1.0-16
+Hash: 1ec8e2e48ab1a6a12ba2b9754a860ed4
 
 Package: stringr
 Source: CRAN
