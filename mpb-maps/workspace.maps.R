@@ -18,6 +18,7 @@ reqd.pkgs = list("data.table",
                  "rts",
                  "shapefiles",
                  "snowfall",
+                 "spatstat",
                  "RColorBrewer")
 
 loadPackages(reqd.pkgs, install=TRUE, quiet=TRUE)
@@ -29,13 +30,13 @@ if (OS=="Darwin") {
   work.dir = "~/Documents/GitHub/MPB/mpb-maps"
 } else if (OS=="Linux") {
   if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch=0)) {
-    maps.dir = "~/data/maps"
+    maps.dir = "/mnt/A105254/shared/data"
   } else {
     maps.dir = "~/Documents/data/maps"
   }
   work.dir = "~/Documents/GitHub/MPB/mpb-maps"
 } else if (OS=="Windows") {
-  maps.dir = "~/data/maps"
+  maps.dir = "//W-VIC-A105254/shared/data"
   work.dir = "~/GitHub/MPB/mpb-maps"
 } else {
   print("Which operating system are you using?")
