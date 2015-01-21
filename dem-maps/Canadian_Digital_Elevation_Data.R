@@ -92,26 +92,26 @@ files.SR <- unlist(lapply(SR, function(x) {
   file.path(dirname(files[i]), basename(files[i]))
   }))
 
-grd250k <- file.path(maps.dir, "cded", "dem_all_250k.tif")
-if (file.exists(grd250k)) {
-  dem.all <- raster(grd250k)
-} else {
-  dem.all <- do.call(merge, lapply(files, raster))
-  writeRaster(dem.all, filename=grd250k, overwrite=TRUE)
-}
+tif250k <- file.path(maps.dir, "cded", "dem_all_250k.tif")
+#if (file.exists(tif250k)) {
+#  dem.all <- raster(tif250k)
+#} else {
+#  dem.all <- do.call(merge, lapply(files, raster))
+#  writeRaster(dem.all, filename=tif250k, overwrite=TRUE)
+#}
 
-grd250k.SR <- file.path(maps.dir, "cded", "dem_SR_250k.tif")
-if (file.exists(grd250k.SR)) {
-  dem.SR <- raster(grd250k.SR)
+tif250k.SR <- file.path(maps.dir, "cded", "dem_SR_250k.tif")
+if (file.exists(tif250k.SR)) {
+  dem.SR <- raster(tif250k.SR)
 } else {
   dem.SR <- do.call(merge, lapply(files.SR, raster))
-  writeRaster(dem.SR, filename=grd250k.SR, overwrite=TRUE)
+  writeRaster(dem.SR, filename=tif250k.SR, overwrite=TRUE)
 }
 
-#beginCluster(num.cpus)
+beginCluster(num.cpus)
 dem.SR.boreal <- projectRaster(from=dem.SR, crs=crs.boreal)
 #dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal)
-#endCluster()
+endCluster()
 
 elev.SR.boreal <- clip.raster(dem.SR.boreal, boreal.SR)
 #elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
