@@ -174,7 +174,8 @@ if (read.in.raw.maps) {
   ### SUBSET ONLY WESTERN CANADIAN BOREAL FOR PLOTTING
   boreal.can = boreal[boreal$COUNTRY=="CANADA",]
   west.boreal.union.buff = gBuffer(west.boreal, width=1e-5) # corrects for non-adjacent boundaries
-  boreal.west = intersect(west.boreal.union.buff, boreal.can)
+  #boreal.west = intersect(west.boreal.union.buff, boreal.can)
+  boreal.west = gIntersect(west.boreal.union.buff, boreal.can, byid=TRUE)
   rm(west.boreal.union.buff)
   
   ### Save these new map objects for later use
