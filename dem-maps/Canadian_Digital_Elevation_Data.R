@@ -9,17 +9,22 @@ maps.dir = if (os=="windows") {
 }
 if(!file.exists(maps.dir)) stop("maps dir does not exist.")
 
-download = FALSE
-num.cpus = 16
+download50k = FALSE
+download250k = FALSE
+
+reprocess50k = FALSE
+reprocess250k = FALSE
+
+num.cpus = 4
 
 ## Libaries
 library(sp)
-library(raster); rasterOptions(maxmemory=2e10, chunksize=5e7)
+library(raster); rasterOptions(maxmemory=2e9, chunksize=5e7)
 library(rgdal)
 library(rgeos)
 library(snow)
 
-if (download) library(RCurl)
+if (download50k || download250k) library(RCurl)
 
 ## Helper functions
 getOGR <- function(layer, dir) {
@@ -34,10 +39,7 @@ getOGR <- function(layer, dir) {
 boreal = getOGR("NABoreal", file.path(maps.dir, "boreal"))
 boreal.can = boreal[boreal$COUNTRY=="CANADA",]
 crs.boreal = CRS(proj4string(boreal))
-study.region = c("British Columbia", "Alberta")
-#study.region = c("British Columbia", "Alberta", "Saskatchewan", "Manitoba",
-#                 "Ontario", "Québec", "New Brunswick", "Nova Scotia",
-#                 "Newfoundland", "Prince Edward Island")
+study.region = c("British Columbia", "Alberta", "Saskatchewan")
 rm(boreal)
 
 # provicial boundaries
@@ -64,13 +66,45 @@ tmpdir50k = file.path(tmpdir, "50k_dem")
 tmpdir250k = file.path(tmpdir, "250k_dem")
 
 ## Fetch elevation data from internet
-if (download) {
+if (download50k) {
   if (os=="windows") {
     system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
-    source("~/GitHub/McIntire-lab/code/data-sources/cded-download.R")
+    source("~/GitHub/McIntire-lab/code/data-sources/cded-download-50k.R")
   } else {
     system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
-    source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-download.R")
+    source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-download-50k.R")
+  }
+}
+
+if (download250k) {
+  if (os=="windows") {
+    system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+    source("~/GitHub/McIntire-lab/code/data-sources/cded-download-250k.R")
+  } else {
+    system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+    source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-download-250k.R")
+  }
+}
+
+
+## Reprocess each ToI and reproject for new study area
+if (reprocess50k) {
+  if (os=="windows") {
+    system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+    source("~/GitHub/McIntire-lab/code/data-sources/cded-reprocess-50k.R")
+  } else {
+    system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+    source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-reprocess-50k.R")
+  }
+}
+
+if (reprocess250k) {
+  if (os=="windows") {
+    system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+    source("~/GitHub/McIntire-lab/code/data-sources/cded-reprocess-250k.R")
+  } else {
+    system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+    source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-reprocess-250k.R")
   }
 }
 
@@ -84,8 +118,9 @@ invisible(sapply(dir(file.path(dem250k), recursive=TRUE, pattern="[.]zip$",
 
 ## Note: dem(e) for East and dem(w) for West
 files <- dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE)
-SR <- c("072", "073", "074", "082", "083", "084", "091", "092", "093", "094",
-        "101", "102", "103", "104", "113", "114") # manually: BC, AB
+SR <- c("062", "063", "064", "072", "073", "074",
+        "082", "083", "084", "091", "092", "093", "094",
+        "101", "102", "103", "104", "113", "114") # manually: BC, AB, SK
 SR <- paste0("^", SR)
 files.SR <- unlist(lapply(SR, function(x) {
   i = grep(x, basename(files))
@@ -128,15 +163,15 @@ lapply(grep(dir(file.path(dem250k), full.names=TRUE),
 ##------------------------------------------------------------------------------
 ## Unzip data
 invisible(sapply(dir(file.path(dem50k), pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=tmpdir250k))
+                     full.names=TRUE), unzip, exdir=tmpdir50k))
 
 ## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE), raster)
+dem <- lapply(dir(tmpdir50k, pattern="[.]dem$", full.names=TRUE), raster)
 dem.all <- do.call(merge, dem)
 
-#beginCluster(num.cpus)
+beginCluster(num.cpus)
 dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
-#endCluster()
+endCluster()
 
 elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
 
