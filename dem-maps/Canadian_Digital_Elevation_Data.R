@@ -148,6 +148,9 @@ dem.SR.boreal <- projectRaster(from=dem.SR, crs=crs.boreal)
 #dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal)
 endCluster()
 
+tif250k.SR.boreal <- file.path(maps.dir, "cded", "dem_SR_boreal_250k.tif")
+writeRaster(dem.SR.boreal, filename=tif250k.SR.boreal, overwrite=TRUE)
+
 elev.SR.boreal <- clip.raster(dem.SR.boreal, boreal.SR)
 #elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
 
