@@ -138,45 +138,21 @@ if (read.in.raw.maps) {
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
+  f = file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData")
+  if (file.exists(f)) {
+    load(file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData"))
+  } else {
+    if (os=="windows") {
+      system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+      source("~/GitHub/McIntire-lab/code/data-sources/boreal.R")
+    } else {
+      system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
+      source("~/Documents/GitHub/McIntire-lab/code/data-sources/boreal.R")
+    }
+  }
+  rm(f)
+  
   west.provs = c("Alberta", "British Columbia", "Saskatchewan")
-  
-  ### BOREAL FOREST
-  boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
-  crs.boreal = CRS(proj4string(boreal))
-  
-  ### CANADIAN MAPS
-  # fill in code to read in can adm maps from gadm.org
-  # e.g. from my MPB stuff (AB & SK)
-  # canada <- readShapeSpatial("CAN_adm/CAN_adm1.shp", proj4string=CRS("+proj=longlat +datum=WGS84"))
-  # canada2 <- spTransform(canada, CRS("+proj=lcc +lon_0=110w +lat_1=49n +lat_2=60n"))
-
-  
-  ### PROVINCE BOUNDARIES
-  load(file.path(maps.dir, "CAN_adm1.RData"))
-  canada1 = gadm
-  canada1.boreal = spTransform(canada1, crs.boreal)
-  west.boreal = canada1.boreal[na.omit(match(west.provs, canada1.boreal$NAME_1)),]
-  rm(gadm, canada1)
-  
-  ### PROVINCIAL COUNTIES
-  load(file.path(maps.dir, "CAN_adm2.RData"))
-  canada2 = gadm
-  canada2.boreal = spTransform(canada2, crs.boreal)
-  canada2.boreal.dt = data.table(data.frame(canada2.boreal))
-  setkey(canada2.boreal.dt, "NAME_1")
-  subset = match(canada2.boreal.dt[west.provs]$PID, canada2.boreal@data$PID)
-  #
-  # `subset` produces data.table warning re: mixed font encodings
-  #
-  west2.boreal = canada2.boreal[subset,]
-  rm(gadm, canada2, canada2.boreal.dt, subset)
-  
-  ### SUBSET ONLY WESTERN CANADIAN BOREAL FOR PLOTTING
-  boreal.can = boreal[boreal$COUNTRY=="CANADA",]
-  west.boreal.union.buff = gBuffer(west.boreal, width=1e-5) # corrects for non-adjacent boundaries
-  #boreal.west = intersect(west.boreal.union.buff, boreal.can)
-  boreal.west = gIntersect(west.boreal.union.buff, boreal.can, byid=TRUE)
-  rm(west.boreal.union.buff)
   
   ### Save these new map objects for later use
   objects2save = c("boreal", "boreal.can", "boreal.west",
