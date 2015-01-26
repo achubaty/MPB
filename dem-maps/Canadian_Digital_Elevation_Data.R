@@ -7,7 +7,7 @@ maps.dir = if (os=="windows") {
 } else if (os=="linux") {
   "/mnt/A105254/shared/data"
 }
-if(!file.exists(maps.dir)) stop("maps dir does not exist.")
+if(!file.exists(maps.dir)) stop("maps.dir does not exist.")
 
 download50k = FALSE
 download250k = FALSE
@@ -125,7 +125,7 @@ SR <- paste0("^", SR)
 files.SR <- unlist(lapply(SR, function(x) {
   i = grep(x, basename(files))
   file.path(dirname(files[i]), basename(files[i]))
-  }))
+}))
 
 tif250k <- file.path(maps.dir, "cded", "dem_all_250k.tif")
 #if (file.exists(tif250k)) {
@@ -150,12 +150,6 @@ endCluster()
 
 tif250k.SR.boreal <- file.path(maps.dir, "cded", "dem_SR_boreal_250k.tif")
 writeRaster(dem.SR.boreal, filename=tif250k.SR.boreal, overwrite=TRUE)
-
-elev.SR.boreal <- clip.raster(dem.SR.boreal, boreal.SR)
-#elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
-
-writeRaster(elev.SR.boreal, file.path(maps.dir, "cded", "elevation_SR_250k.tif"))
-#writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_250k.tif"))
 
 ## Clean directory: keep only zip files
 lapply(grep(dir(file.path(dem250k), full.names=TRUE),
