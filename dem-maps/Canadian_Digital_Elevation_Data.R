@@ -51,7 +51,6 @@ rm(canada1, gadm)
 
 # study area (correct for non-adjacent boundaries)
 SR.boreal.union.buff = gBuffer(SR.boreal, width=1e-5)
-#boreal.SR = intersect(SR.boreal.union.buff, boreal.can)
 boreal.SR = gIntersection(SR.boreal.union.buff, boreal.can, byid=TRUE)
 save(boreal.can, file=file.path(maps.dir, "boreal", "Rdata", "boreal.can.RData"))
 save(boreal.SR, file=file.path(maps.dir, "boreal", "Rdata", "boreal.SR.RData"))
@@ -88,6 +87,9 @@ if (download250k) {
 
 
 ## Reprocess each ToI and reproject for new study area
+##
+## NOTE: be sure to set options, including study region definition within these files!
+##
 if (reprocess50k) {
   if (os=="windows") {
     system("cd ~/GitHub/McIntire-lab && git pull", intern=TRUE, wait=TRUE)
@@ -108,75 +110,8 @@ if (reprocess250k) {
   }
 }
 
-##------------------------------------------------------------------------------
-##                                   250M_DEM
-##------------------------------------------------------------------------------
-
-## Unzip data
-invisible(sapply(dir(file.path(dem250k), recursive=TRUE, pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=tmpdir250k))
-
-## Note: dem(e) for East and dem(w) for West
-files <- dir(tmpdir250k, pattern="[.]dem$", full.names=TRUE)
-SR <- c("062", "063", "064", "072", "073", "074",
-        "082", "083", "084", "091", "092", "093", "094",
-        "101", "102", "103", "104", "113", "114") # manually: BC, AB, SK
-SR <- paste0("^", SR)
-files.SR <- unlist(lapply(SR, function(x) {
-  i = grep(x, basename(files))
-  file.path(dirname(files[i]), basename(files[i]))
-}))
-
-tif250k <- file.path(maps.dir, "cded", "dem_all_250k.tif")
-#if (file.exists(tif250k)) {
-#  dem.all <- raster(tif250k)
-#} else {
-#  dem.all <- do.call(merge, lapply(files, raster))
-#  writeRaster(dem.all, filename=tif250k, overwrite=TRUE)
-#}
-
-tif250k.SR <- file.path(maps.dir, "cded", "dem_SR_250k.tif")
-if (file.exists(tif250k.SR)) {
-  dem.SR <- raster(tif250k.SR)
-} else {
-  dem.SR <- do.call(merge, lapply(files.SR, raster))
-  writeRaster(dem.SR, filename=tif250k.SR, overwrite=TRUE)
-}
-
-beginCluster(num.cpus)
-dem.SR.boreal <- projectRaster(from=dem.SR, crs=crs.boreal)
-#dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal)
-endCluster()
-
-tif250k.SR.boreal <- file.path(maps.dir, "cded", "dem_SR_boreal_250k.tif")
-writeRaster(dem.SR.boreal, filename=tif250k.SR.boreal, overwrite=TRUE)
-
-## Clean directory: keep only zip files
-lapply(grep(dir(file.path(dem250k), full.names=TRUE),
-            pattern="[.]zip$", value=TRUE, invert=TRUE), file.remove)
-
-##------------------------------------------------------------------------------
-##                                   50M_DEM
-##------------------------------------------------------------------------------
-## Unzip data
-invisible(sapply(dir(file.path(dem50k), pattern="[.]zip$",
-                     full.names=TRUE), unzip, exdir=tmpdir50k))
-
-## Note: dem(e) for East and dem(w) for West
-dem <- lapply(dir(tmpdir50k, pattern="[.]dem$", full.names=TRUE), raster)
-dem.all <- do.call(merge, dem)
-
-beginCluster(num.cpus)
-dem.all.boreal <- projectRaster(from=dem.all, crs=crs.boreal, method="bilinear")
-endCluster()
-
-elev.boreal <- clip.raster(dem.all.boreal, boreal.SR)
-
-writeRaster(elev.boreal, file.path(maps.dir, "cded", "elevation_50k.tif"))
-
-## Clean directory: keep only zip files
-lapply(grep(dir(file.path(dem50k), full.names=TRUE),
-            pattern="[.]zip$", value=TRUE, invert=TRUE), file.remove)
+## Load previously saved DEM objects
+load(file.path(maps.dir, "cded", "dem_SR_boreal_250k.RData"))
 
 ##------------------------------------------------------------------------------
 ##
