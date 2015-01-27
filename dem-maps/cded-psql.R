@@ -14,22 +14,26 @@ library(RPostgreSQL)
 # Based on:
 #  https://gis.stackexchange.com/questions/18254/loading-a-raster-into-a-postgis-2-0-database-on-windows
 #
-# NOTE: this assumes that the data are unzippd and live in
-#       the `tmp250k` directory specified in the
+# NOTE: this assumes that the data are unzippd and live in:
+#       - the `tmp50k` directories specified in `cded-reprocess-50k.R`
+#       - the `tmp250k` directories specified in `cded-reprocess-250k.R`
 #
+system(paste0("raster2pgsql -s 4269 -I -C -M ", file.path(tmpdir50k, "*.dem"),
+              " public.cded50k | psql -d canadamaps "), intern=TRUE, wait=TRUE)
+
 system(paste0("raster2pgsql -s 4269 -I -C -M ", file.path(tmpdir250k, "*.dem"),
-              " | psql -d cded250k "), intern=TRUE, wait=TRUE)
+              " public.cded250k | psql -d canadamaps "), intern=TRUE, wait=TRUE)
 
 # open database connection
 m <- dbDriver("PostgreSQL")
-con <- dbConnect(m, dbname="cded250k", host="localhost", port=5433,
-                 user="achubaty", password="7EP*ppiFar0UT")
+con <- dbConnect(m, dbname="canadamaps", host="localhost", port=5433,
+                 user="gisuser", password="D!u2E*heeY34")
 
 #
 dbListTables(con)
 
 # query database (could use dplyr directly I think)
-q="SELECT ST_AsText(the_geom) AS geom from ccsm_polygons LIMIT 10;"
+q=""
 rs = dbSendQuery(con, q)
 df = fetch(rs, n=-1)
 
