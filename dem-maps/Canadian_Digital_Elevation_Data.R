@@ -26,37 +26,6 @@ library(snow)
 
 if (download50k || download250k) library(RCurl)
 
-## Helper functions
-getOGR <- function(layer, dir) {
-  orig.dir = getwd()
-  setwd(dir)
-  out = readOGR(dsn=".", layer=layer)
-  setwd(orig.dir)
-  return(out)
-}
-
-## Define Study Region
-boreal = getOGR("NABoreal", file.path(maps.dir, "boreal"))
-boreal.can = boreal[boreal$COUNTRY=="CANADA",]
-crs.boreal = CRS(proj4string(boreal))
-study.region = c("British Columbia", "Alberta", "Saskatchewan")
-rm(boreal)
-
-# provicial boundaries
-load(file.path(maps.dir, "CAN_adm", "CAN_adm1.RData"))
-canada1 = gadm
-canada1.boreal = spTransform(canada1, crs.boreal)
-SR.boreal = canada1.boreal[na.omit(match(study.region, canada1.boreal$NAME_1)),]
-rm(canada1, gadm)
-
-# study area (correct for non-adjacent boundaries)
-SR.boreal.union.buff = gBuffer(SR.boreal, width=1e-5)
-boreal.SR = gIntersection(SR.boreal.union.buff, boreal.can, byid=TRUE)
-save(boreal.can, file=file.path(maps.dir, "boreal", "Rdata", "boreal.can.RData"))
-save(boreal.SR, file=file.path(maps.dir, "boreal", "Rdata", "boreal.SR.RData"))
-save(SR.boreal.union.buff, file=file.path(maps.dir, "boreal", "Rdata", "SR.boreal.union.buff.RData"))
-rm(boreal.can, SR.boreal.union.buff)
-
 ## Data directories
 dem50k = file.path(maps.dir, "cded", "50k_dem")
 dem250k = file.path(maps.dir, "cded", "250k_dem")
@@ -84,7 +53,6 @@ if (download250k) {
     source("~/Documents/GitHub/McIntire-lab/code/data-sources/cded-download-250k.R")
   }
 }
-
 
 ## Reprocess each ToI and reproject for new study area
 ##
