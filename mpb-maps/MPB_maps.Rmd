@@ -1,40 +1,35 @@
-# Mountain pine beetle outbreak maps
+---
+title: "Mountain pine beetle outbreak maps"
+author:
+- name: "Alex M. Chubaty"
+  affiliaton: |
+    Canadian Forest Service
+    Pacific Forestry Centre  
+    506 Burnside Road W  
+    Victoria, BC V8Z 1M5
+    +1.250.298.2347
+    alexander.chubaty@canada.ca
 
-**Alex M. Chubaty** and **Eliot Mcintire**
+- name: "Eliot J. B. McIntire"
+  affiliaton: |
+    Canadian Forest Service
+    Pacific Forestry Centre  
+    506 Burnside Road W  
+    Victoria, BC V8Z 1M5
+    +1.250.298.2374
+    eliot.mcintire@canada.ca
+---
 
-Canadian Forest Service  
-Pacific Forestry Centre  
-506 Burnside Road W  
-Victoria, BC V8Z 1M5
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)  # echo code chunks by default
+knitr::opts_chunk$set(cache = TRUE) # use cache by default
+knitr::opts_chunk$set(cache.path = "cache/") # path to cache directory
 
-Université Laval  
-Faculté de foresterie, de géographie et de géomatique  
-Département des sciences du bois et de la forêt  
-
-*email:* [Alexander.Chubaty@nrcan.gc.ca][1]  
-*phone:* +1.250.298.2347
-
-[1]: <mailto:Alexander.Chubaty@nrcan.gc.ca>
-
-------------------------------------------------------------------
-
-## Overview of MPB map data
-
-Descriptions of:
-
-- data sources
-- data collected
-- etc.
-
-```{r setup.workspace, echo=FALSE, message=FALSE}
-### SETUP R WORKING ENVIROMENT
-
-# load workspace
+# load workspace (incl. R packages and helper functions)
 source("workspace.maps.R")
 
 # additional options
 num.cpus = 4              # max cpus to use (overrides value set in workspace)
-use.cache = TRUE          # cache knitr results
 
 # options below only need to be changed if you want to reprocess the data
 # - e.g., you get new MPB map data
@@ -53,13 +48,21 @@ ext.maps = extent(x=-1027658, xmax=320751.9, ymin=5108872, ymax=6163350)
 res.maps = 1000           # map resolution, in metres
 ```
 
+## Overview of MPB map data
+
+Descriptions of:
+
+- data sources
+- data collected
+- etc.
+
 ## Processing the MPB map data
 
 ### Importing map data
 
 #### MPB `SpatialPoints` data
 
-```{r import.maps-points, echo=FALSE, cache=use.cache}
+```{r import.maps-points, echo=FALSE}
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -94,7 +97,7 @@ if (read.in.raw.maps) {
 
 #### MPB `SpatialPolygons` data
 
-```{r import.maps-polygons, echo=FALSE, cache=use.cache}
+```{r import.maps-polygons, echo=FALSE}
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -134,7 +137,7 @@ if (read.in.raw.maps) {
 
 #### Canadian boreal forest maps
 
-```{r import.maps-boreal, echo=FALSE, cache=use.cache}
+```{r import.maps-boreal, echo=FALSE}
 if (read.in.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -166,7 +169,7 @@ if (read.in.raw.maps) {
 
 Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
 
-```{r crs.boreal, echo=FALSE, cache=use.cache, results="markup"}
+```{r crs.boreal, echo=FALSE, results="markup"}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 if(!exists("crs.boreal")) {
@@ -181,7 +184,7 @@ if(!exists("crs.boreal")) {
 
 #### MPB `SpatialPoints` data
 
-```{r reproject.maps-points, echo=FALSE, cache=use.cache}
+```{r reproject.maps-points, echo=FALSE}
 if (reproj.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -236,7 +239,7 @@ if (reproj.raw.maps) {
 
 #### MPB `SpatialPolygons` data
 
-```{r reproject.maps-polygons, echo=FALSE, cache=use.cache}
+```{r reproject.maps-polygons, echo=FALSE}
 if (reproj.raw.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
 
@@ -275,7 +278,7 @@ if (reproj.raw.maps) {
 
 #### Canadian boreal forest maps
 
-```{r rasterize.maps-boreal, echo=FALSE, cache=use.cache}
+```{r rasterize.maps-boreal, echo=FALSE}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -300,7 +303,7 @@ if (rasterize.maps) {
 
 #### MPB `SpatialPoints` data
 
-```{r rasterize.maps-points, echo=FALSE, cache=use.cache}
+```{r rasterize.maps-points, echo=FALSE}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -353,7 +356,7 @@ if (rasterize.maps) {
 
 #### MPB `SpatialPolygons` data
 
-```{r rasterize.maps-polygons, echo=FALSE, cache=use.cache}
+```{r rasterize.maps-polygons, echo=FALSE}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -428,7 +431,7 @@ if (rasterize.maps) {
 
 ### Combine all MPB maps
 
-```{r combine.maps-all, echo=FALSE, cache=use.cache}
+```{r combine.maps-all, echo=FALSE}
 if (rasterize.maps) {
   if (!exists("WORKSPACE")) source("workspace.maps.R")
   
@@ -493,7 +496,7 @@ if (rasterize.maps) {
 
 **The Canadian boreal forest:**
 
-```{r plot.canada.boreal, fig.height=12, fig.width=16, echo=FALSE, cache=use.cache}
+```{r plot.canada.boreal, fig.height=12, fig.width=16, echo=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
@@ -514,7 +517,7 @@ rm(boreal.can)
 
 **The western Canadian boreal forest:**
 
-```{r plot.western.boreal, fig.height=12, fig.width=16, echo=FALSE, cache=use.cache}
+```{r plot.western.boreal, fig.height=12, fig.width=16, echo=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("boreal.west", "west.boreal"), rdata.path)
@@ -601,7 +604,7 @@ rm(bcab.all.boreal.raster.stack, west.boreal)
 
 #### MPB `RasterBrick` timeseries
 
-```{r plot.mpb.western.boreal.time.series, fig.height=12, fig.width=12, echo=FALSE}
+```{r plot.mpb.western.boreal.time.series, fig.height=12, fig.width=12, echo=FALSE, cache=FALSE}
 if (!exists("WORKSPACE")) source("workspace.maps.R")
 
 loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
@@ -611,14 +614,16 @@ latlongproj = CRS("+proj=longlat +datum=WGS84")
 brk.ll = projectRaster(bcab.all.boreal.raster.brick, crs=latlongproj)
 
 # replace NAs with zeros (WHY??)
-brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) { brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]]) }))
+brk.ll = brick(lapply(1:nlayers(brk.ll), function(x) { 
+  brk.ll[[x]][is.na(brk.ll[[x]])]<- 0; return(brk.ll[[x]]) 
+}))
 brk.ll@title <- "MPB intensity"
 brk.ll = writeRaster(brk.ll, filename=file.path(rdata.path, "mpb_brick_ll.grd"), overwrite=TRUE)
 
 #brk.ll = brick(file.path(rdata.path, "mpb_brick_ll.grd"))
 years = as.numeric(substr(names(bcab.all.boreal.raster.brick), 2, 5))
-t.strt = as.POSIXct(as.Date(paste(years,"-10-01",sep=""))) # why Oct 1?
-t.stop = as.POSIXct(as.Date(paste(years+1,"-10-01",sep=""))) # why Oct 1?
+t.strt = as.POSIXct(as.Date(paste(years,   "-10-01", sep=""))) # why Oct 1?
+t.stop = as.POSIXct(as.Date(paste(years+1, "-10-01", sep=""))) # why Oct 1?
 
 # random sample of spatial points
 sps = SpatialPointsDataFrame(spTransform(spsample(west.boreal, 1, type="random"), latlongproj), data=data.frame(dat=1))
@@ -638,6 +643,6 @@ ts.rts = rts(brk.ll, time=as.POSIXct(as.Date(t.strt)))
 plot(ts.rts, col=c("white", colours)) # this is a *garbage* way to plot a TS
 
 saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
-rm(bcab.all.boreal.raster.stack, brk.ll, ts.kml, ts.rts west.boreal)
+rm(bcab.all.boreal.raster.brick, brk.ll, ts.kml, ts.rts, west.boreal)
 ```
 

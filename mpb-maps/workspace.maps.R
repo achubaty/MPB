@@ -8,16 +8,18 @@ source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-obje
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
 
 reqd.pkgs = list("data.table",
+                 "magrittr",
                  "maps",
                  "mapdata",
                  "maptools",
-#                 "plotKML",
+                 "plotKML",
                  "raster",
                  "rgdal",
                  "rgeos",
                  "rts",
                  "shapefiles",
                  "snowfall",
+                 "SpaDES",
                  "spatstat",
                  "RColorBrewer")
 
@@ -52,7 +54,7 @@ getOGR <- function(layer, dir) {
   return(out)
 }
 
-num.cpus = 4            # maximum cpus to use
+num.cpus = 4 # maximum cpus to use
 
 read.in.raw.maps = FALSE
 reproj.raw.maps = FALSE
