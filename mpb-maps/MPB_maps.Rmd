@@ -21,6 +21,9 @@ author:
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
+options(repos = c(CRAN = "https://cran.rstudio.com/",
+                  NRCRAN = "http://132.156.149.95"))
+
 knitr::opts_chunk$set(echo = TRUE)  # echo code chunks by default
 knitr::opts_chunk$set(cache = TRUE) # use cache by default
 knitr::opts_chunk$set(cache.path = "cache/") # path to cache directory
