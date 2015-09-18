@@ -19,7 +19,6 @@ reqd.pkgs = list("data.table",
                  "rts",
                  "shapefiles",
                  "snowfall",
-                 "SpaDES",
                  "spatstat",
                  "RColorBrewer")
 
