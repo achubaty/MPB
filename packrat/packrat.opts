@@ -5,3 +5,5 @@ vcs.ignore.lib: TRUE
 vcs.ignore.src: FALSE
 external.packages: 
 local.repos: 
+load.external.packages.on.startup: TRUE
+ignored.packages: 
