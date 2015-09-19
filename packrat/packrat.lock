@@ -1,7 +1,7 @@
 PackratFormat: 1.4
 PackratVersion: 0.4.4
 RVersion: 3.2.2
-Repos: CRAN=http://cran.rstudio.com, NRCRAN=http://132.156.149.95
+Repos: CRAN=https://cran.rstudio.com/, NRCRAN=http://132.156.149.95
 
 Package: BH
 Source: CRAN
