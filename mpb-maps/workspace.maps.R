@@ -3,7 +3,6 @@
 ###
 library("devtools")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
-source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/plotting.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
 
@@ -12,7 +11,7 @@ reqd.pkgs = list("data.table",
                  "maps",
                  "mapdata",
                  "maptools",
-#                 "plotKML",
+                 "plotKML",
                  "raster",
                  "rgdal",
                  "rgeos",
@@ -33,7 +32,7 @@ if (OS == "Darwin") {
   if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch = 0)) {
     maps.dir = "/mnt/A105388/shared/data"
   } else {
-    maps.dir = "~/Documents/data/maps"
+    maps.dir = "~/Documents/data"
   }
   work.dir = "~/Documents/GitHub/MPB/mpb-maps"
 } else if (OS == "Windows") {
@@ -53,7 +52,7 @@ getOGR <- function(layer, dir) {
   return(out)
 }
 
-num.cpus = 4            # maximum cpus to use
+num.cpus = 4 # maximum cpus to use
 
 read.in.raw.maps = FALSE
 reproj.raw.maps = FALSE

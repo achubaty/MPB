@@ -1,24 +1,42 @@
 ---
 title: "Mountain pine beetle outbreak maps"
 author:
-  - "Alex M. Chubaty (alexander.chubaty@canada.ca)"
-  - "Eliot Mcintire (eliot.mcintire@canada.ca)"
-date: "October 19, 2016"
+- name: "Alex M. Chubaty"
+  affiliaton: |
+    Canadian Forest Service
+    Pacific Forestry Centre  
+    506 Burnside Road W  
+    Victoria, BC V8Z 1M5
+    +1.250.298.2347
+    alexander.chubaty@canada.ca
+- name: "Eliot J. B. McIntire"
+  affiliaton: |
+    Canadian Forest Service
+    Pacific Forestry Centre  
+    506 Burnside Road W  
+    Victoria, BC V8Z 1M5
+    +1.250.298.2374
+    eliot.mcintire@canada.ca
 output:
   pdf_document:
     toc: yes
     toc_depth: 3
+date: "October 19, 2016"
 ---
 
-```{r setup, include=FALSE}
-## SETUP R WORKING ENVIROMENT
+```{r setup, include=FALSE, message=FALSE}
+options(repos = c(CRAN = "https://cran.rstudio.com/",
+                  NRCRAN = "http://132.156.149.95"))
 
-# load workspace
+knitr::opts_chunk$set(echo = TRUE)  # echo code chunks by default
+knitr::opts_chunk$set(cache = TRUE) # use cache by default
+knitr::opts_chunk$set(cache.path = "cache/") # path to cache directory
+
+# load workspace (incl. R packages and helper functions)
 source("workspace.maps.R")
 
 # additional options
 num.cpus = 4              # max cpus to use (overrides value set in workspace)
-use.cache = TRUE          # cache knitr results
 
 # options below only need to be changed if you want to reprocess the data
 # - e.g., you get new MPB map data
@@ -643,6 +661,6 @@ ts.rts <- rts(brk.ll, time = as.POSIXct(as.Date(t.strt)))
 plot(ts.rts, col = c("white", colours)) # this is a *garbage* way to plot a TS
 
 saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
-rm(bcab.all.boreal.raster.stack, brk.ll, ts.kml, ts.rts west.boreal)
+rm(bcab.all.boreal.raster.brick, brk.ll, ts.kml, ts.rts, west.boreal)
 ```
 

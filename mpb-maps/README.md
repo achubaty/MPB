@@ -14,5 +14,5 @@ Université Laval
 Faculté de foresterie, de géographie et de géomatique  
 Département des sciences du bois et de la forêt
 
-email: <Alexander.Chubaty@nrcan.gc.ca>  
+email: <alexander.chubaty@canada.ca>  
 phone: +1.250.298.2347
