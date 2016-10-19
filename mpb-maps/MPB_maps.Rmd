@@ -28,9 +28,7 @@ date: "October 19, 2016"
 options(repos = c(CRAN = "https://cran.rstudio.com/",
                   NRCRAN = "http://132.156.149.95"))
 
-knitr::opts_chunk$set(echo = TRUE)  # echo code chunks by default
-knitr::opts_chunk$set(cache = TRUE) # use cache by default
-knitr::opts_chunk$set(cache.path = "cache/") # path to cache directory
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE, cache.path = "cache/")
 
 # load workspace (incl. R packages and helper functions)
 source("workspace.maps.R")
@@ -53,9 +51,6 @@ rasterize.maps = FALSE    # convert the maps to rasters
 ext.maps = extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
 
 res.maps = 1000           # map resolution, in metres
-
-## kntir chunk options
-knitr::opts_chunk$set(echo = FALSE, cache = use.cache)
 ```
 
 \newpage
