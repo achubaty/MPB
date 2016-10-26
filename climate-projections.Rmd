@@ -27,23 +27,30 @@ if (download) {
   library(RCurl)
   
   ## Get files of size zero
-  size.zero <- function(path = ".", size = 0) {
-    files = dir(path, full.names = TRUE, recursive = TRUE)
-    return(files[file.info(files)$size == size])
+  file.size <- function(file) {
+    return(file.info(file)$size)
   }
   
-  eol = ifelse(Sys.info()[["sysname"]] == "Windows", "\r\n", "\n")
+  eol <- ifelse(Sys.info()[["sysname"]] == "Windows", "\r\n", "\n")
   
   ## Define the ftp address (NOTE this address is temporary)
-  ftpsite <- 'ftp://ftp.nofc.cfs.nrcan.gc.ca/uploads/MPB/'
+  ftp.site <- 'ftp://ftp.nofc.cfs.nrcan.gc.ca/uploads/MPB/'
   
-  ftpfiles <- getURL(ftpsite, ftp.use.epsv = FALSE, dirlistonly = TRUE) %>%
+  ftp.files <- getURL(ftp.site, ftp.use.epsv = FALSE, dirlistonly = TRUE) %>%
     strsplit(split = eol) %>% 
     unlist()
   
-  for (f in ftpfiles) { 
-    ftppath <- file.path(ftpsite, f)
-    try(download.file(paste0(ftpsite, f), file.path(maps.dir, f)))
+  for (f in ftp.files) {
+    f.local <- file.path(maps.dir, f)
+    f.ftp <- file.path(ftp.site, f)
+    
+    if (!file.exists(f.local)) {
+      try(download.file(f.ftp, f.local))
+    } else {
+      if (file.size(f.local) == 0) {
+        try(download.file(f.ftp, f.local))
+      }
+    }
   }
 }
 ```
