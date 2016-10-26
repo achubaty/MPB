@@ -54,7 +54,7 @@ reqd.pkgs = list("data.table",
 loadPackages(reqd.pkgs, install = FALSE, quiet = TRUE)
 
 # set work dirs based on computer used
-OS = Sys.info()[["sysname"]]
+OS <- Sys.info()[["sysname"]]
 if (OS == "Darwin") {
   maps.dir = "~/Documents/data/maps"
   work.dir = "~/Documents/GitHub/MPB/mpb-maps"
