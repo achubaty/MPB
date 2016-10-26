@@ -131,3 +131,28 @@ s each infested cell has probability of being detected ($P_{detect} = 0.90$) and
 ### Other model applications
 
 Also explored different combinations of 'do nothing' and 'business as usual' for different amounts of level 1 and level 2 control.
+
+## Comments
+
+From email discussions.
+
+### from Barry
+
+- Their model is a "twitch model" describing fast dynamics of eruption, not the slow dynamics of coupled forest-insect feedbacks.
+  The long-range "slow-the-spread" cannot be answered without forest depletion and climate change as drivers.
+
+- Formulated at a resolution of 16 ha and representing establishment & eruption as a simple logistic process removes a lot of detail.
+  It’s going to be good enough over large extents and small time frames where details don’t matter. Hence the quality of their validations in BC and AB. OTOH a lot of their simulated stochasticity (those wide confidence intervals) is going to come from (mis) representing a continuous growth process as binary.
+  That misrepresentation error grows as time horizon (and other process uncertainty) grows.
+
+- The single biggest limitation in their modeling approach is that it doesn’t connect to forest depletion and regrowth, and has no capacity to connect to other people’s models of forest growth, weather, climate, fire occurrence, and so on.
+
+- Note that they "reinvented the wheel"" of trying to re-estimate the weather effect on r value.
+  `SpaDES` seeks to avoid that duplicity.
+
+- Note that they have no capacity for dynamically re-parameterizing their efficacy model when the 2015, 2016 data come in.
+  Recall that question: "We think we're better now in the last three years than the first seven years. Can you re-estimate your detection and control efficacy parameters?".
+  Allan’s reply was that it required a boatload of GIS data pre-processing, none of it scripted.
+  Again, that’s what `SpaDES` workflows are for.
+
+- re: habitat connectivity -- The primary agent for increased fragmentation is likely to be … fire. Hence the notes from last week bout the FortMac fires and the CLAWR.
