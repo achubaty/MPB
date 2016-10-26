@@ -28,20 +28,67 @@ date: "October 19, 2016"
 options(repos = c(CRAN = "https://cran.rstudio.com/",
                   NRCRAN = "http://132.156.149.95"))
 
-knitr::opts_chunk$set(echo = FALSE, cache = TRUE, cache.path = "cache/")
+knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
+                      message = FALSE, warning = FALSE)
 
-# load workspace (incl. R packages and helper functions)
-source("workspace.maps.R")
+library("devtools")
+source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
+source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
+source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
+
+reqd.pkgs = list("data.table",
+                 "magrittr",
+                 "maps",
+                 "mapdata",
+                 "maptools",
+                 "plotKML",
+                 "raster",
+                 "rgdal",
+                 "rgeos",
+                 "rts",
+                 "shapefiles",
+                 "snowfall",
+                 "spatstat",
+                 "RColorBrewer")
+
+loadPackages(reqd.pkgs, install = FALSE, quiet = TRUE)
+
+# set work dirs based on computer used
+OS = Sys.info()[["sysname"]]
+if (OS == "Darwin") {
+  maps.dir = "~/Documents/data/maps"
+  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
+} else if (OS == "Linux") {
+  if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch = 0)) {
+    maps.dir = "/mnt/A105388/shared/data"
+  } else {
+    maps.dir = "~/Documents/data/shared"
+  }
+  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
+} else if (OS == "Windows") {
+  maps.dir = "//W-VIC-A105388/shared/data"
+  work.dir = "~/GitHub/MPB/mpb-maps"
+} else {
+  stop("Which operating system are you using?")
+}
+setwd(work.dir)
+rdata.path = file.path(maps.dir, "MPB", "Rmaps")
+
+getOGR <- function(layer, dir) {
+  orig.dir = getwd()
+  setwd(dir)
+  out = readOGR(dsn = ".", layer = layer)
+  setwd(orig.dir)
+  return(out)
+}
 
 # additional options
-num.cpus = 4              # max cpus to use (overrides value set in workspace)
+num.cpus = 4              # max cpus to use
 
 # options below only need to be changed if you want to reprocess the data
 # - e.g., you get new MPB map data
 # - e.g., you want to change the resolution/extent/etc. of the maps
 #        (before rerunning just to change res, can you `clip` out a subset?)
-#
-# NOTE: changes here override the values stored in the workspace script
 #
 read.in.raw.maps = FALSE  # read in raw maps from data
 reproj.raw.maps = FALSE   # reproject raw maps to `boreal`
@@ -71,8 +118,6 @@ Descriptions of:
 
 ```{r import.maps-points}
 if (read.in.raw.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   ### Read in raw maps, and save them as individual files
   ### - this may take a while...grab a coffee or something
   sfInit(cpus = num.cpus, parallel = TRUE)
@@ -106,8 +151,6 @@ if (read.in.raw.maps) {
 
 ```{r import.maps-polygons}
 if (read.in.raw.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   ### Read in raw maps, and save them as individual files
   ### - this may take a while...grab a coffee or something
   sfInit(cpus = num.cpus, parallel = TRUE)
@@ -146,8 +189,6 @@ if (read.in.raw.maps) {
 
 ```{r import.maps-boreal}
 if (read.in.raw.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   f <- file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData")
   if (file.exists(f)) {
     load(file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData"))
@@ -177,8 +218,6 @@ if (read.in.raw.maps) {
 Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
 
 ```{r crs.boreal, results="markup"}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 if (!exists("crs.boreal")) {
   loadObjects("boreal", rdata.path)
   crs.boreal <- CRS(proj4string(boreal))
@@ -193,8 +232,6 @@ if (!exists("crs.boreal")) {
 
 ```{r reproject.maps-points}
 if (reproj.raw.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -248,9 +285,7 @@ if (reproj.raw.maps) {
 
 ```{r reproject.maps-polygons}
 if (reproj.raw.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
-  if(!exists("crs.boreal")) {
+  if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
     rm(boreal)
@@ -287,8 +322,6 @@ if (reproj.raw.maps) {
 
 ```{r rasterize.maps-boreal}
 if (rasterize.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -312,8 +345,6 @@ if (rasterize.maps) {
 
 ```{r rasterize.maps-points}
 if (rasterize.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -364,8 +395,6 @@ if (rasterize.maps) {
 
 ```{r rasterize.maps-polygons}
 if (rasterize.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -443,8 +472,6 @@ if (rasterize.maps) {
 
 ```{r combine.maps-all}
 if (rasterize.maps) {
-  if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-  
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -507,8 +534,6 @@ if (rasterize.maps) {
 **The Canadian boreal forest:**
 
 ```{r plot.canada.boreal, fig.height=12, fig.width=16}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
 darkgreen <- col2rgb("darkgreen")/255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha = 0.5)
@@ -528,8 +553,6 @@ rm(boreal.can)
 **The western Canadian boreal forest:**
 
 ```{r plot.western.boreal, fig.height=12, fig.width=16}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 loadObjects(c("boreal.west", "west.boreal"), rdata.path)
 darkgreen <- col2rgb("darkgreen")/255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha = 0.5)
@@ -551,8 +574,6 @@ rm(boreal.west, west.boreal)
 #### MPB `SpatialPoints` data
 
 ```{r plot.mpb.western.boreal.points, fig.height=10, fig.width=12, eval=FALSE}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal"), rdata.path)
 
 plot(west.boreal)
@@ -570,8 +591,6 @@ rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal)
 #### MPB `SpatialPolygons` data
 
 ```{r plot.mpb.western.boreal.polygons, fig.height=10, fig.width=12, eval=FALSE}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal"), rdata.path)
 plot(west.boreal)
 colours <- brewer.pal(n = 9, name = "YlOrRd")
@@ -587,8 +606,6 @@ rm(ab.poly.boreal, bc.poly.boreal, west.boreal)
 #### MPB `RasterStack`
 
 ```{r plot.mpb.western.boreal.raster.stack, fig.height=12, fig.width=12}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 loadObjects(c("bcab.all.boreal.raster.stack", "west.boreal"), rdata.path)
 colours <- brewer.pal(n = 9, name = "YlOrRd")
 years <- substr(names(bcab.all.boreal.raster.stack), 2, 5)
@@ -615,8 +632,6 @@ rm(bcab.all.boreal.raster.stack, west.boreal)
 #### MPB `RasterBrick` timeseries
 
 ```{r plot.mpb.western.boreal.time.series, fig.height=12, fig.width=12}
-if (!exists(".__WORKSPACE__.")) source("workspace.maps.R")
-
 loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
 
 # `spsample` needs planar coordinates, so need to reproject to latlong
