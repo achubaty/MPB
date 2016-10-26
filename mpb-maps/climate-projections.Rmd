@@ -11,7 +11,13 @@ knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
 
 library(magrittr)
 
-maps.dir <- '~/Documents/Data/shared/MPB/climate'
+maps.dir <- if (Sys.info()[["sysname"]] == "Darwin") {
+    '~/Documents/Data/shared/MPB/climate'
+  } else if (Sys.info()[["sysname"]] == "Linux") {
+    '~/Documents/Data/shared/MPB/climate'
+  } else if (Sys.info()[["sysname"]] == "Windows") {
+    '//W-VIC-A105388/shared/data/MPB/climate'
+  }
 if (!file.exists(maps.dir)) stop("maps dir does not exist.")
 
 download = FALSE
