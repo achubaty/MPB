@@ -44,7 +44,7 @@ scenarios <- data.frame(
 knitr::kable(scenarios)
 ```
 
-For each of the four indices, there are 1981-2010 normals plus the projections from two RCP scenarios (either 4.5 or 8.5), covering a span of 120 years, split into30-year frames.
+For each of the four indices, there are 1981-2010 normals plus the projections from two RCP scenarios (either 4.5 or 8.5), covering a span of 120 years, split into 30-year frames.
 
 All maps are projected using LCC and cover all of Canada.
 

@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Overview
 
-My notes on the `MPBSpread` model presented at the fRI MPB Workshop in held Edmonton, AB on October 26, 2016.
+My notes on the `MPBSpread` model presented at the fRI MPB Workshop held in Edmonton, AB on October 26, 2016.
 
 This workshop was live streamed at [youtube.com/watch?v=ChdU__G21Cs](https://www.youtube.com/watch?v=ChdU__G21Cs).
 
@@ -27,7 +27,6 @@ This workshop was live streamed at [youtube.com/watch?v=ChdU__G21Cs](https://www
 Barry's summary:
 
 > logistic stochastic cellular automaton at 16 ha resolution, driven by numerous environmental variables known to have nonlinear influence on probability of establishment.
-
 
 ## Model construction
 
