@@ -1,0 +1,92 @@
+---
+title: "Mountain Pine Beetle Climatic Suitability Maps"
+author: "Alex M. Chubaty, Barry J. Cooke, Eliot J. B. McIntire"
+date: "October 26, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
+                      message = FALSE, warning = FALSE)
+
+library(magrittr)
+
+maps.dir <- '~/Documents/Data/shared/MPB/climate'
+if (!file.exists(maps.dir)) stop("maps dir does not exist.")
+
+download = FALSE
+```
+
+## Overview
+
+We have 7 MPB climate scenarios (using four different indices: `S`, `L`, `R`, `G`) ready to use as model drivers.
+The Logan suitability index (`L`) is based on summer temperatures.
+The Regniere suitability index (`R`) is based on MPB cold tolerance (*i.e.*, winter survival).
+The Safranyik suitability index (`S`) is based on aspects of both summer temperatures and winter survival.
+Finally, the composite SLR index (`G`) takes the harmonic mean of the `S`, `L`, and `R` models.
+
+```{r scenario-table}
+scenarios <- data.frame(
+  index = c('S', 'L', 'R', 'G'),
+  description = c('Safranyik', 'Logan', 'Regniere', 'Composite'),
+  stringsAsFactors = FALSE
+)
+knitr::kable(scenarios)
+```
+
+For each of the four indices, there are 1981-2010 normals plus the projections from two RCP scenarios (either 4.5 or 8.5), covering a span of 120 years, split into30-year frames.
+
+All maps are projected using LCC and cover all of Canada.
+
+## Data source
+
+Maps were produced in BioSim (*need info!*).
+
+They were uploaded to and retrieved from the [NoFC FTP site](ftp://ftp.nofc.cfs.nrcan.gc.ca/uploads/MPB) on 26 October 2016.
+
+```{r download-data, cache=FALSE}
+if (download) {
+  library(RCurl)
+  
+  ## Get files of size zero
+  file.size <- function(file) {
+    return(file.info(file)$size)
+  }
+  
+  eol <- ifelse(Sys.info()[["sysname"]] == "Windows", "\r\n", "\n")
+  
+  ## Define the ftp address (NOTE this address is temporary)
+  ftp.site <- 'ftp://ftp.nofc.cfs.nrcan.gc.ca/uploads/MPB/'
+  
+  ftp.files <- getURL(ftp.site, ftp.use.epsv = FALSE, dirlistonly = TRUE) %>%
+    strsplit(split = eol) %>% 
+    unlist()
+  
+  for (f in ftp.files) {
+    f.local <- file.path(maps.dir, f)
+    f.ftp <- file.path(ftp.site, f)
+    
+    if (!file.exists(f.local)) {
+      try(download.file(f.ftp, f.local))
+    } else {
+      if (file.size(f.local) == 0) {
+        try(download.file(f.ftp, f.local))
+      }
+    }
+  }
+}
+```
+
+## Load maps
+
+```{r load-maps}
+library(raster)
+
+files <- dir(path = maps.dir, pattern = '[.]tif', full.names = TRUE)
+```
+
+## Plot maps
+
+```{r plot-maps}
+
+```
