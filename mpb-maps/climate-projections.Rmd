@@ -2,7 +2,11 @@
 title: "Mountain Pine Beetle Climatic Suitability Maps"
 author: "Alex M. Chubaty, Barry J. Cooke, Eliot J. B. McIntire"
 date: "October 26, 2016"
-output: pdf_document
+output: 
+  pdf_document: 
+    fig_caption: yes
+    toc: yes
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
@@ -85,14 +89,18 @@ if (download) {
 
 ## Load maps
 
-```{r load-maps}
+```{r load-maps, echo=TRUE}
 library(raster)
 
 files <- dir(path = maps.dir, pattern = '[.]tif', full.names = TRUE)
+
+maps <- lapply(files, function(f) {
+  raster(f)
+})
 ```
 
 ## Plot maps
 
 ```{r plot-maps}
-
+lapply(maps, plot)
 ```
