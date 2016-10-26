@@ -1,0 +1,134 @@
+---
+title: "MPBSpread"
+author: "Alex M. Chubaty"
+date: "October 26, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overview
+
+My notes on the `MPBSpread` model presented at the fRI MPB Workshop in held Edmonton, AB on October 26, 2016.
+
+This workshop was live streamed at [youtube.com/watch?v=ChdU__G21Cs](https://www.youtube.com/watch?v=ChdU__G21Cs).
+
+**Presenter:** Clive [something]
+
+- `MPBSpread` is a spatially explicit model on a forest landscape
+- 10-20 year horizon
+- uses 400 m x 400 m (16 ha) cells
+- stochasticity
+- no life history; only dispersal (with mortality) within and among stands
+- univoltine dynamics
+
+Barry's summary:
+
+> logistic stochastic cellular automaton at 16 ha resolution, driven by numerous environmental variables known to have nonlinear influence on probability of establishment.
+
+
+## Model construction
+
+The model calculates the probability of successful colonization of unoccupied cell $i$ at time $t$:
+
+$$P_{i,t} = HQ_i \sum_{j=1}^{n}{BEF_{j,t} G_{j,t} W_{i,j}}$$
+
+- $HQ_i$ is habitat quality scaled from $0$ to $1$;
+
+    - $HQ_i = P A D L$
+    - $P$ is the percentage of susceptible pine (data source??)
+    - $A$ is age [of cell??]
+    - $D$ is density [of pine??]
+    - $L$ is a location factor [??]
+
+- $BEF_{j,t}$ is a 'beetle export factor', which is an index of dispersal from occupied cell, scaled from $0$ to $1$;
+
+    - linear increase then exponential decline
+
+- $G_{j,t}$ is a directional scaler for wind, between $0$ and $1$;
+
+    - circular frequency distribution of wind directions (biased eastward)
+
+- $W_{i,j}$ is a weighting factor for distance from unoccupied to occupied cells, between $0$ and $1$.
+
+    - approx. exponential decline, but it's modified to be non-monotonic (flat-tailed distribution) that declines from weight $1$ at distance $0$ km to near $0$ at $10$ km.
+
+Cumulative probability of occurrence follows a logistic curve, with two different curves defined for:
+
+1. 'experienced' pine, which has an evolutionary history of MPB outbreak (*i.e.*, BC);
+2. 'naive' pine, which doesn't have this history (*i.e.*, AB)
+
+Experienced pine has a lower curve than naive pine (MPB less likely to occur in a cell).
+
+### Model summary
+
+- captures short-distance "diffusive" dispersal as well as larger-distance "jumps" [unclear how...]
+- model accounts for:
+
+    - infested trees at stand and landscape levels
+    - stand susceptibility
+    - [beetle] mortality
+    - MPB reproductive output (including climate effects)
+    - habitat connectivity
+    - [beetle] dispersal
+    - beetle control
+
+## Implementing control
+
+- **level 1:**
+
+    - cells where infestation detected $\le 2$ years of establishment
+    - a proportion of green attack trees is removed
+    
+- **level 2:**
+
+    - cells with infestation $\ge 3$ years and $\le 7$ km from a road; else no treatment
+    - all trees removed
+
+## Application control
+
+- "leading edge focused"
+- begin with cell at easternmost  longitude and highest latitude
+- proceed sequentially by longitude to southernmost cell, then onte northernmost cell to the west
+- continue until all cells sampled or total area allocated for control in that year is reached
+s each infested cell has probability of being detected ($P_{detect} = 0.90$) and subsequent probability of successful eradication ($P_{eradicate} = 0.65$)
+
+## Model validation
+
+`MPBSpread` validated using BC survey data 1999 for the Burns Lake -- Quesnel -- etc. region.
+
+- 10 model runs to account for stochasticity
+- get means and 95% confidence intervals for two metrics:
+
+    1. total area infested
+    2. total pine killed
+
+- spread projections were compared to data
+
+## Model application
+
+`MPBSpread` applied to AB region using 2008-2015 data from Alberta Agriculture and Forestry.
+
+- used 'naive' pine curve for thresholds
+- used 2008 data to set initial conditions
+- two scenarios considered:
+
+    1. 'do nothing'
+    2. 'business as usual'
+    
+        - level 1 control: 10,000 ha
+        - level 2 control: 1,500 ha in 2008 increasing to 3,000 ha in 2017
+        - $P_{detect} = 0.90$
+        - $P_{eradicate} = 0.65$
+
+### Conclusions
+
+1. survey data match reasonably well;
+2. control does make a difference;
+3. control efficacy is not immediately apparent -- it takes time to manifest.
+
+### Other model applications
+
+Also explored different combinations of 'do nothing' and 'business as usual' for different amounts of level 1 and level 2 control.
