@@ -1,0 +1,52 @@
+---
+title: "Mountain Pine Beetle Climatic Suitability Maps"
+author: "Alex M. Chubaty, Barry J. Cooke, Eliot J. B. McIntire"
+date: "October 26, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(magrittr)
+
+maps.dir <- '~/Documents/Data/shared/MPB/climate'
+if (!file.exists(maps.dir)) stop("maps dir does not exist.")
+
+download = FALSE
+```
+
+## Data source
+
+Maps were produced in BioSim (need info!).
+
+They were uploaded to and retrieved from the [NoFC FTP site](ftp://ftp.nofc.cfs.nrcan.gc.ca/uploads/MPB) on 26 October 2016.
+
+```{r download-data}
+if (download) {
+  library(RCurl)
+  
+  ## Get files of size zero
+  size.zero <- function(path = ".", size = 0) {
+    files = dir(path, full.names = TRUE, recursive = TRUE)
+    return(files[file.info(files)$size == size])
+  }
+  
+  eol = ifelse(Sys.info()[["sysname"]] == "Windows", "\r\n", "\n")
+  
+  ## Define the ftp address (NOTE this address is temporary)
+  ftpsite <- 'ftp://ftp.nofc.cfs.nrcan.gc.ca/uploads/MPB/'
+  
+  ftpfiles <- getURL(ftpsite, ftp.use.epsv = FALSE, dirlistonly = TRUE) %>%
+    strsplit(split = eol) %>% 
+    unlist()
+  
+  for (f in ftpfiles) { 
+    ftppath <- file.path(ftpsite, f)
+    try(download.file(paste0(ftpsite, f), file.path(maps.dir, f)))
+  }
+}
+```
+
+## Plot maps
+
