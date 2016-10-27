@@ -237,7 +237,7 @@ if (!exists("crs.boreal")) {
 #### MPB `SpatialPoints` data
 
 ```{r reproject.maps-points}
-if (reproj.raw.maps) {
+if (isTRUE(reproj.raw.maps)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -290,7 +290,7 @@ if (reproj.raw.maps) {
 #### MPB `SpatialPolygons` data
 
 ```{r reproject.maps-polygons}
-if (reproj.raw.maps) {
+if (isTRUE(reproj.raw.maps)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
