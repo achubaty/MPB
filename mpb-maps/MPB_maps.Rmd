@@ -25,7 +25,12 @@ date: "October 19, 2016"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
-if (grepl("W-VIC", Sys.getenv("COMPUTERNAME"))) {
+## determine OS and whether we are on a CFS machine
+CFS <- grepl("W-VIC", Sys.info()[["nodename"]])
+OS <- Sys.info()[["sysname"]]
+
+## set R and kntir options
+if (isTRUE(CFS)) {
   options(repos = c(CRAN = "https://cran.rstudio.com/",
                     NRCRAN = "http://132.156.149.95"))
 } else {
@@ -35,6 +40,7 @@ if (grepl("W-VIC", Sys.getenv("COMPUTERNAME"))) {
 knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
                       message = FALSE, warning = FALSE)
 
+## attach packages
 library("data.table")
 library("devtools")
 library("magrittr")
@@ -52,29 +58,9 @@ library("spatstat")
 library("RColorBrewer")
 
 # additional helper functions
+source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-data.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
-
-# set work dirs based on computer used
-OS <- Sys.info()[["sysname"]]
-if (OS == "Darwin") {
-  maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
-} else if (OS == "Linux") {
-  if (pmatch("W-VIC", Sys.info()[["nodename"]], nomatch = 0)) {
-    maps.dir = "/mnt/A105388/shared/data"
-  } else {
-    maps.dir = "~/Documents/data/shared"
-  }
-  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
-} else if (OS == "Windows") {
-  maps.dir = "//W-VIC-A105388/shared/data"
-  work.dir = "~/GitHub/MPB/mpb-maps"
-} else {
-  stop("Which operating system are you using?")
-}
-setwd(work.dir)
-rdata.path = file.path(maps.dir, "MPB", "Rmaps")
 
 getOGR <- function(layer, dir) {
   orig.dir = getwd()
@@ -84,17 +70,37 @@ getOGR <- function(layer, dir) {
   return(out)
 }
 
+# set work dirs based on computer used
+if (OS == "Darwin") {
+  maps.dir = "~/Documents/data/maps"
+  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
+} else if (OS == "Linux") {
+  if (isTRUE(CFS)) {
+    maps.dir = "/mnt/A105388/shared/data"
+  } else {
+    maps.dir = "~/Documents/Data/shared"
+  }
+  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
+} else if (OS == "Windows") {
+  maps.dir = "//W-VIC-A105388/shared/data"
+  work.dir = "~/GitHub/MPB/mpb-maps"
+} else {
+  stop("Which operating system are you using?")
+}
+setwd(work.dir)
+rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
+
 # additional options
-num.cpus = 4              # max cpus to use
+num.cpus <- 4              # max cpus to use
 
 # options below only need to be changed if you want to reprocess the data
 # - e.g., you get new MPB map data
 # - e.g., you want to change the resolution/extent/etc. of the maps
 #        (before rerunning just to change res, can you `clip` out a subset?)
 #
-read.in.raw.maps = FALSE  # read in raw maps from data
-reproj.raw.maps = FALSE   # reproject raw maps to `boreal`
-rasterize.maps = FALSE    # convert the maps to rasters
+read.in.raw.maps <- FALSE  # read in raw maps from data
+reproj.raw.maps <- FALSE   # reproject raw maps to `boreal`
+rasterize.maps <- FALSE    # convert the maps to rasters
 
 # map extent obtained using `locator(2)` on 'west.boreal' map
 ext.maps = extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
@@ -119,7 +125,7 @@ Descriptions of:
 #### MPB `SpatialPoints` data
 
 ```{r import.maps-points}
-if (read.in.raw.maps) {
+if (isTRUE(read.in.raw.maps)) {
   ### Read in raw maps, and save them as individual files
   ### - this may take a while...grab a coffee or something
   sfInit(cpus = num.cpus, parallel = TRUE)
@@ -152,7 +158,7 @@ if (read.in.raw.maps) {
 #### MPB `SpatialPolygons` data
 
 ```{r import.maps-polygons}
-if (read.in.raw.maps) {
+if (isTRUE(read.in.raw.maps)) {
   ### Read in raw maps, and save them as individual files
   ### - this may take a while...grab a coffee or something
   sfInit(cpus = num.cpus, parallel = TRUE)
@@ -190,18 +196,16 @@ if (read.in.raw.maps) {
 #### Canadian boreal forest maps
 
 ```{r import.maps-boreal}
-if (read.in.raw.maps) {
+if (isTRUE(read.in.raw.maps)) {
   f <- file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData")
   if (file.exists(f)) {
     load(file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData"))
   } else {
-    if (os == "windows") {
-      system("cd ~/GitHub/McIntire-lab && git pull", intern = TRUE, wait = TRUE)
-      source("~/GitHub/McIntire-lab/code/data-sources/boreal.R")
-    } else {
-      system("cd ~/Documents/GitHub/McIntire-lab && git pull", intern = TRUE, wait = TRUE)
-      source("~/Documents/GitHub/McIntire-lab/code/data-sources/boreal.R")
-    }
+    url <- "http://cfs.nrcan.gc.ca/common/boreal.zip"
+    dl.data(url, dest = maps.dir, unzip = TRUE)
+    
+    boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
+    boreal.can <- boreal[boreal$COUNTRY == "CANADA",]
   }
   rm(f)
   
