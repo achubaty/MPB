@@ -25,33 +25,35 @@ date: "October 19, 2016"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
-options(repos = c(CRAN = "https://cran.rstudio.com/",
-                  NRCRAN = "http://132.156.149.95"))
+if (grepl("W-VIC", Sys.getenv("COMPUTERNAME"))) {
+  options(repos = c(CRAN = "https://cran.rstudio.com/",
+                    NRCRAN = "http://132.156.149.95"))
+} else {
+  options(repos = c(CRAN = "https://cran.rstudio.com/"))
+}
 
 knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
                       message = FALSE, warning = FALSE)
 
+library("data.table")
 library("devtools")
-source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/load-packages.R")
+library("magrittr")
+library("maps")
+library("mapdata")
+library("maptools")
+library("plotKML")
+library("raster")
+library("rgdal")
+library("rgeos")
+library("rts")
+library("shapefiles")
+library("snowfall")
+library("spatstat")
+library("RColorBrewer")
+
+# additional helper functions
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
-
-reqd.pkgs = list("data.table",
-                 "magrittr",
-                 "maps",
-                 "mapdata",
-                 "maptools",
-                 "plotKML",
-                 "raster",
-                 "rgdal",
-                 "rgeos",
-                 "rts",
-                 "shapefiles",
-                 "snowfall",
-                 "spatstat",
-                 "RColorBrewer")
-
-loadPackages(reqd.pkgs, install = FALSE, quiet = TRUE)
 
 # set work dirs based on computer used
 OS <- Sys.info()[["sysname"]]
