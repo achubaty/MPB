@@ -19,6 +19,8 @@ Development of a Mountain Pine Beetle spread model
 
 *in progress*
 
+- The Safranyik *et al.* (1999) model has been ported to GNU Fortran by Bill Riel and Alex Chubaty in the [safranyik-mpb repository](https://github.com/achubaty/safranyik-mpb); elements of which are of interest to the development of this model.
+
 ## Notes
 
 Notes on various related topics and models are in [notes/](https://github.com/achubaty/MPB/tree/master/notes).
@@ -29,4 +31,6 @@ All presentations related to this work are in [presentations/](https://github.co
 
 ## References
 
-Literature citations and references are included for each sub-component of the prjoect.
+Additonal literature citations and references are included within each sub-component of the project.
+
+Safranyik, L., Barclay, H. J., Thomson, A. J., & Riel, W. G. (1999). A population dynamics model for the mountain pine beetle, *Dendroctonus ponderosae* Hopk. (Coleoptera: Scolytidae) (Information Report BC-X-386). Victoria, BC.
