@@ -21,7 +21,7 @@ output:
   pdf_document:
     toc: yes
     toc_depth: 3
-date: "October 19, 2016"
+date: "October 27, 2016"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
@@ -29,7 +29,7 @@ date: "October 19, 2016"
 CFS <- grepl("W-VIC", Sys.info()[["nodename"]])
 OS <- Sys.info()[["sysname"]]
 
-## set R and kntir options
+## set R and knitr options
 if (isTRUE(CFS)) {
   options(repos = c(CRAN = "https://cran.rstudio.com/",
                     NRCRAN = "http://132.156.149.95"))
@@ -71,7 +71,7 @@ getOGR <- function(layer, dir) {
   return(out)
 }
 
-# set work dirs based on computer used
+## set work dirs based on computer used
 if (OS == "Darwin") {
   maps.dir = "~/Documents/data/maps"
   work.dir = "~/Documents/GitHub/MPB/mpb-maps"
@@ -91,7 +91,7 @@ if (OS == "Darwin") {
 setwd(work.dir)
 rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
 
-# additional options
+## additional options
 num.cpus <- 4              # max cpus to use
 
 # options below only need to be changed if you want to reprocess the data
@@ -104,9 +104,9 @@ reproj.raw.maps <- FALSE   # reproject raw maps to `boreal`
 rasterize.maps <- FALSE    # convert the maps to rasters
 
 # map extent obtained using `locator(2)` on 'west.boreal' map
-ext.maps = extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
+ext.maps <- extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
 
-res.maps = 1000           # map resolution, in metres
+res.maps <- 1000           # map resolution, in metres
 ```
 
 \newpage
@@ -670,8 +670,8 @@ colours <- brewer.pal(n = 9, name = "YlOrRd")
 ts.kml <- new("RasterBrickTimeSeries", variable = "X", sampled = sps, rasters = brk.ll,
               TimeSpan.begin = t.strt, TimeSpan.end = t.stop)
 dims <- dim(brk.ll)
-plotKML(ts.kml, colour_scale = c(rep("black",2),heat.colors(12)[12:1]),
-        pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
+#plotKML(ts.kml, colour_scale = c(rep("black",2), heat.colors(12)[12:1]),
+#        pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
 
 # `rts` timeseries
 ts.rts <- rts(brk.ll, time = as.POSIXct(as.Date(t.strt)))
