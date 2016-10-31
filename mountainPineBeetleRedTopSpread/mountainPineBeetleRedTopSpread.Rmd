@@ -1,0 +1,137 @@
+---
+title: "Mountain Pine Beetle Red Top Spread Model"
+author: "Barry J. Cooke and Alex M. Chubaty"
+date: "August 13, 2015"
+output: html_document
+---
+
+The goal of this model is to simulate the spread of mountain pine beetle outbreaks as a function of the growth and dispersal of beetle-killed trees, called "red tops".
+Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question.
+Berryman (1979) was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowtone National Parks in MO and WY the 1960s.
+Consequently, the module offers the option of using any of four possible interpretations.
+Two addiitonal options are forthcoming at the time of writing.
+The first of these is a high-order polynomial fit to Berryaman's hand-drawn curve.
+The second is the linearized multi-niche model of Berryman (1999), which, oddly & inexplicably, held endemic-niche dynamics as a fast process (`R[t] ~ X[t-1]`), and epidemic-niche dynamics as a lagged process (`R[t] ~ X[t-2]`).
+
+Calculating the initial density of red tops and the effect of growth in their number requires read and write access to a forest landscape of some sort.
+
+Dispersal is currently a stub.
+
+-----
+
+### Install and load necessary packages
+
+Install the most recent version of the `SpaDES` package.
+
+```{r install-spades, echo=TRUE, eval=FALSE}
+options(repos = c(CRAN = "https://cran.rstudio.com/",
+                  NRCRAN = "http://132.156.149.95")) # NRCAN access only
+
+# most recent stable version:
+install.packages("SpaDES")
+
+# the most recent development version (unstable):
+devtools::install_github("PredictiveEcology/SpaDES", ref="development")
+```
+
+Load the packages needed to run the code blocks in this document.
+
+```{r setup, echo=FALSE, message=FALSE}
+# load packages
+library(igraph) # this exports `magrittr`'s pipe, but using magrittr here causes conflicts.
+library(SpaDES)
+
+# set user working directory
+if (Sys.info()[["user"]]=="achubaty") setwd("~/Dropbox/Barry Cooke/MPB_spread/")
+```
+
+Additional packages loaded automatically by the modules do not need to be explicitly loaded at this point:
+
+```{r module-packages, eval=FALSE}
+library(ggplot2)
+library(RandomFields) # temporarily used to generate random maps
+library(raster)
+library(RColorBrewer)
+```
+
+### Simulation setup
+
+#### Berryman's 1979 data (fitted)
+
+```{r berryman1979fit}
+clearPlot()
+
+simB79fit <- simInit(
+  times=list(start=0.0, end=10.0, timeunit="year"),
+  params=list(
+    .globals=list(stackName="landscape", climateMap="climate"),
+    MPBRedTopGrowth_B79fit=list(.plotInitialTime=1, .plotInterval=1),
+    MPBRedTopLandscape=list(.plotInitialTime=1, .plotInterval=1, nx=100, ny=100),
+    MPBRedTopClimate=list(.plotInitialTime=1, .plotInterval=1, nx=100, ny=100, updateInterval=1),
+    MPBRedTopMassAttacks=list(.plotInitialTime=1, .plotInterval=NA),
+    MPBRedTopImpacts=list(.plotInitialTime=1, .plotInterval=1)
+  ),
+  modules=list("MPBRedTopLandscape",
+               "MPBRedTopClimate",
+               "MPBRedTopMassAttacks",
+               "MPBRedTopDispersal_Null",
+               "MPBRedTopGrowth_B79fit", ## specify which growth module is used
+               "MPBRedTopImpacts"),
+  paths=list(modulePath="./modules")
+) %>% spades(., debug=FALSE)
+```
+
+Simulation diagrams:
+
+```{r berryman1979fit-diagrams}
+moduleDiagram(simB79fit)
+objectDiagram(simB79fit)
+eventDiagram(simB79fit, startDate="0000-06-01") # startDate required
+```
+
+#### Berryman's 1979 data (forced)
+
+```{r berryman1979forced}
+clearPlot()
+
+simB79forced <- simInit(
+  times=list(start=0.0, end=10.0, timeunit="year"),
+  params=list(
+    .globals=list(stackName="landscape", climateMap="climate"),
+    MPBRedTopGrowth_B79forced=list(.plotInitialTime=1, .plotInterval=1),
+    MPBRedTopLandscape=list(.plotInitialTime=1, .plotInterval=1, nx=100, ny=100),
+    MPBRedTopClimate=list(.plotInitialTime=1, .plotInterval=1, nx=100, ny=100, updateInterval=1),
+    MPBRedTopMassAttacks=list(.plotInitialTime=1, .plotInterval=NA),
+    MPBRedTopImpacts=list(.plotInitialTime=1, .plotInterval=1)
+  ),
+  modules=list("MPBRedTopLandscape",
+               "MPBRedTopMassAttacks",
+               "MPBRedTopClimate",
+               "MPBRedTopDispersal_Null",
+               "MPBRedTopGrowth_B79forced", ## specify which growth module is used
+               "MPBRedTopImpacts"),
+  paths=list(modulePath="./modules")
+) %>% spades(., debug=FALSE)
+```
+
+Simulation diagrams:
+
+```{r berryman1979forced-diagrams}
+moduleDiagram(simB79forced)
+objectDiagram(simB79forced)
+eventDiagram(simB79forced, startDate="0000-06-01") # startDate required
+```
+
+#### [add other simulations here]
+
+add the other simulations (with different growth and dispersal types) here.
+
+# Literature Cited
+
+**need to create a `bibliography.bib` file with the references!** and then add the following to the yaml header:
+
+```
+bibliography: bibliography.bib
+```
+
+"Berryman 1979","Berryman 1999","Powell & Bentz 2009","Trczinski & Reid 2009","MacQuarrie & Cooke 2011","Cooke et al. 2016","Cooke et al. 2016"
