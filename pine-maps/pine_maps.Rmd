@@ -1,0 +1,93 @@
+---
+title: "Pine maps"
+author: "Alex Chubaty"
+date: "October 31, 2016"
+output: pdf_document
+bibliography: bibliography.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, echo = FALSE)
+
+library(magrittr)
+library(RCurl)
+library(raster)
+library(rasterVis)
+
+os <- tolower(Sys.info()[["sysname"]])
+user <- tolower(Sys.info()[["user"]])
+
+maps.dir <- if (user == "achubaty") {
+  if (os == "darwin") {
+    "~/Documents/shared"
+  } else if (os == "linux") {
+    "~/Documents/shared"
+  } else if (os == "windows") {
+    "/shared"
+  } else {
+    stop("unable to automatically change working directory: ",
+         "unknown operating system.")
+  }
+}
+
+download.data <- FALSE
+```
+
+## Yemshanov pine map
+
+From @Yemshanov:2012ea.
+
+```{r yemshanov-download}
+pineMap_dir <- file.path(maps.dir, "Yemshanov_pine_map")
+
+if (isTRUE(download.data)) {
+  if (!dir.exists(pineMap_dir)) {
+    dir.create(pineMap_dir)
+  }
+  
+  # the paper describing the data set is here (behind a paywall):
+  #  http://link.springer.com/article/10.1007/s10661-011-2293-2
+  #
+  # but I have made it available via Dropbox:
+  #  https://www.dropbox.com/s/uh7g570gns1dpn3/yemshanov.etal_2012.pdf
+  #
+  
+  ## download files
+  eol <- ifelse(os == "windows", "\r\n", "\n")
+  url <- "ftp://ftp.nofc.cfs.nrcan.gc.ca/downloads/Cooke/Yemshanov_pine_map/" ## temporory
+  paper_url <- "https://www.dropbox.com/s/uh7g570gns1dpn3/yemshanov.etal_2012.pdf?dl=1"
+  paper <- basename(paper_url)
+  fileNames <- unlist(strsplit(getURL(url, dirlistonly = TRUE), split = eol))
+  lapply(fileNames, function(f) {
+    if (!file.exists(file.path(pineMap_dir, f))) {
+      download.file(paste0(url, f), destfile = file.path(pineMap_dir, f))
+    }
+  })
+  if (!file.exists(file.path(pineMap_dir, paper))) {
+     download.file(paper_url, destfile = file.path(pineMap_dir, paper))
+  }
+}
+```
+
+Plotting using `raster` package looks OK but not great:
+
+```{r yemshanov-plot}
+## load the map
+pineMap_file <- dir(pineMap_dir, pattern = "[.]flt$", full.names = TRUE)
+pineMap_raster <- raster(pineMap_file)
+
+## plot the map
+# if the plot looks messed up it's likely due to corrupted download
+plot(pineMap_raster)
+```
+
+Using `rasterVis` package, it's much nicer:
+
+```{r yemshanov-plot-rasterVis}
+myTheme <- rasterTheme(region = brewer.pal('Greens', n = 9)[3:9])
+levelplot(pineMap_raster, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
+```
+
+# References
+
+<!-- automatically generated using bibliography.bib -->

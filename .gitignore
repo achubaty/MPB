@@ -3,6 +3,8 @@
 .Rhistory
 .Rproj.user
 .log
+*_cache/
+*_files/
 cache/
 figure/
 figures/
