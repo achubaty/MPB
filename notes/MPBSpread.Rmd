@@ -77,12 +77,16 @@ $$P_{i,t} = HQ_i \sum_{j=1}^{n}{BEF_{j,t} G_{j,t} W_{i,j}}$$
 
     - approx. exponential decline, but it's modified to be non-monotonic (flat-tailed distribution) that declines from weight $1$ at distance $0$ km to near $0$ at $10$ km.
 
+![](images/MPBSpread-model-curves.png)
+
 Cumulative probability of occurrence follows a logistic curve, with two different curves defined for:
 
 1. 'experienced' pine, which has an evolutionary history of MPB outbreak (*i.e.*, BC);
 2. 'naive' pine, which doesn't have this history (*i.e.*, AB)
 
 Experienced pine has a lower curve than naive pine (MPB less likely to occur in a cell).
+
+![](images/MPBSpread-AB-BC-curves.png)
 
 ### Model summary
 
