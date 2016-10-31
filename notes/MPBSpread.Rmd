@@ -3,7 +3,7 @@ title: "MPBSpread"
 author: "Alex M. Chubaty"
 date: "October 26, 2016"
 output: pdf_document
-bibliography: bibliography.bib
+bibliography: MPBSpread.bib
 ---
 
 ```{r setup, include=FALSE}
