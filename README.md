@@ -13,12 +13,15 @@ Development of a Mountain Pine Beetle spread model
 - Climate projections are in [climate-maps/](https://github.com/achubaty/MPB/tree/master/climate-maps)
 - Digital elevation models are in [dem-maps/](https://github.com/achubaty/MPB/tree/master/dem-maps)
 - MPB outbreak maps and climate suitability projections are in [mpb-maps/](https://github.com/achubaty/MPB/tree/master/mpb-maps)
+- Pine maps are in [pine-maps/](https://github.com/achubaty/MPB/tree/master/pine-maps)
 - Wind maps have yet to be developed.
 
 ## Model development
 
 *in progress*
 
+- An early version of a red-top spread model is in [mountainPineBeetleRedTopSpread/](https://github.com/achubaty/MPB/tree/master/mountainPineBeetleRedTopSpread)
+- Modelling MPB reproductive biology (from data) is in [r-values/](https://github.com/achubaty/MPB/tree/master/r-values)
 - The Safranyik *et al.* (1999) model has been ported to GNU Fortran by Bill Riel and Alex Chubaty in the [safranyik-mpb repository](https://github.com/achubaty/safranyik-mpb); elements of which are of interest to the development of this model.
 
 ## Notes
