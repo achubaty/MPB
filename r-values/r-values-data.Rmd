@@ -1,0 +1,33 @@
+---
+title: "Calculating R-values and mapping trends"
+author: "Alex M. Chubaty"
+date: "October 31, 2016"
+output: pdf_document
+bibliography: r-values-data.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+**This file was originally emailed from ELizabeth Campbell as a Word attachment sent on March 12, 2014.**
+
+An R-value is calculated by summing counts of all live MPB larvae, pupae, and adults of the same generation (overwinter adult survival was assumed relatively rare) across all trees in the stand, and dividing that value by the total number of adult MPB entrance holes on all trees (just beyond each entrance hole is the nuptual chamber where beetle mating takes place).
+The R-value is thus a measure of beetle reproductive success: the number of living offspring produced per mated female near the end of a typical generation time, a 1-year cycle from about July to June the next year.
+
+Population growth trends from stand R-values were interpreted by the Canadian Forest Service as follows:  
+
+- Decreasing beetle population: $r \leq 2.5$
+- Static beetle population:     $2.5 < r \leq 4.0$
+- Increasing beetle population: $r > 4.0 $
+
+Two key assumptions underlie the derivation of threshold values used to classify R-values into the aforementioned population trend classes.
+First, they assume a female:male ratio of 2:1 and thus, population estimates based on number of females (using number of entrance holes and number brood produced per mated female) need to be adjusted accordingly (Ried 1962).
+Second, they assume ≥ 40% of beetles die during dispersal from natal host and/or during the colonization of new hosts when population are small because small population size diffuse signals that facilitate mass attacks and allow beetles to over come the natural defences of healthy trees (Cole and Amman 1969; Amman and Cole 1983). 
+
+The AB SRD assigns R-values calculated from their field data into four, more or less, arbitrary categories representing relative reproductive success; these categories imply no direct relationship to beetle population growth trends:
+
+- Low success:       $r \leq 1.9$
+- Moderate success:  $1.9 < r \leq 4.9$
+- High success:      $4.9 < R-value \leq 9.9$
+- Very high sucess:  $r > 9.9$
