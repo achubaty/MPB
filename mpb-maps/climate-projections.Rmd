@@ -7,6 +7,7 @@ output:
     fig_caption: yes
     toc: yes
     toc_depth: 3
+bibliography: climate-projections.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -30,10 +31,12 @@ download = FALSE
 ## Overview
 
 We have 7 MPB climate scenarios (using four different indices: `S`, `L`, `R`, `G`) ready to use as model drivers.
-The Logan suitability index (`L`) is based on summer temperatures.
-The Regniere suitability index (`R`) is based on MPB cold tolerance (*i.e.*, winter survival).
-The Safranyik suitability index (`S`) is based on aspects of both summer temperatures and winter survival.
+The Logan suitability index (`L`) is based on summer temperatures [@Logan:2003fr].
+The Regniere suitability index (`R`) is based on MPB cold tolerance (*i.e.*, winter survival) [@Regniere:2007ip].
+The Safranyik suitability index (`S`) is based on aspects of both summer temperatures and winter survival [@Safranyik:1975bk].
 Finally, the composite SLR index (`G`) takes the harmonic mean of the `S`, `L`, and `R` models.
+
+These are described in further detail in @Nealis:2008gc, and of course in their respective publications cited above.
 
 ```{r scenario-table}
 scenarios <- data.frame(
@@ -102,5 +105,5 @@ maps <- lapply(files, function(f) {
 ## Plot maps
 
 ```{r plot-maps}
-lapply(maps, plot)
+#lapply(maps, plot)
 ```
