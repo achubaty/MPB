@@ -37,6 +37,7 @@ The Safranyik suitability index (`S`) is based on aspects of both summer tempera
 Finally, the composite SLR index (`G`) takes the harmonic mean of the `S`, `L`, and `R` models.
 
 These are described in further detail in @Nealis:2008gc, and of course in their respective publications cited above.
+BioSim was used to generate the maps [see @Bentz:2010bs; @Logan:2003fr; @Safranyik:2010ce].
 
 ```{r scenario-table}
 scenarios <- data.frame(
