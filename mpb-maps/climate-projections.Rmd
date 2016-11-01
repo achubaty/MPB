@@ -108,3 +108,7 @@ maps <- lapply(files, function(f) {
 ```{r plot-maps}
 #lapply(maps, plot)
 ```
+
+# References
+
+<!-- automatically generated using climate-projections.bib -->
