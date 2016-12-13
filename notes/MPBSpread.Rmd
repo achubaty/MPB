@@ -16,6 +16,8 @@ My notes on the `MPBSpread` model presented at the fRI MPB Workshop held in Edmo
 
 This workshop was live streamed at [youtube.com/watch?v=ChdU__G21Cs](https://www.youtube.com/watch?v=ChdU__G21Cs).
 
+PDF slides are available from [fRI](https://friresearch.ca/sites/default/files/MPBEP_2016_10_workshop%20presentation%203%20MPBSpread%20spatially%20explicit%20cellular%20model.pdf).
+
 **Presenter:** Clive Welham (UBC)
 
 - `MPBSpread` is a spatially explicit model on a forest landscape
