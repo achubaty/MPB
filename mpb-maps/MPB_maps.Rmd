@@ -94,6 +94,8 @@ if (USER == "achubaty") {
 setwd(work.dir)
 rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
 
+stopifnot(dir.exists(maps.dir), dir.exists(rdata.path), dir.exists(work.dir))
+
 ## additional options
 num.cpus <- parallel::detectCores() / 2 ## max cpus to use
 
