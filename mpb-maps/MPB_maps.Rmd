@@ -39,7 +39,7 @@ if (isTRUE(CFS)) {
 }
 
 knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
-                      message = FALSE, warning = FALSE)
+                      message = FALSE, warning = FALSE, fig.path = "figures")
 
 ## attach packages
 library(data.table)
@@ -93,8 +93,9 @@ if (USER == "achubaty") {
 }
 setwd(work.dir)
 rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
+fig.path <- file.path(work.dir, "figures")
 
-stopifnot(dir.exists(maps.dir), dir.exists(rdata.path), dir.exists(work.dir))
+stopifnot(all(dir.exists(c(fig.path, maps.dir, rdata.path, work.dir))))
 
 ## additional options
 num.cpus <- parallel::detectCores() / 2 ## max cpus to use
@@ -560,7 +561,7 @@ rm(darkgreen)
 plot(canada1.boreal)
 plot(boreal.can, col = col.bor, add = TRUE)
 
-png("../figures/boreal.can.png", type = "cairo", width = 1600, height = 1200)
+png(file.path(fig.path, "boreal.can.png"), type = "cairo", width = 1600, height = 1200)
 plot(canada1.boreal)
 plot(boreal.can, col = col.bor, add = TRUE)
 dev.off()
@@ -579,7 +580,7 @@ rm(darkgreen)
 plot(west.boreal)
 plot(boreal.west, col = col.bor, add = TRUE)
 
-png("../figures/boreal.west.png", type = "cairo", width = 1600, height = 1200)
+png(file.path(fig.path, "boreal.west.png"), type = "cairo", width = 1600, height = 1200)
 plot(west.boreal)
 plot(boreal.west, col = col.bor, add = TRUE)
 dev.off()
@@ -634,7 +635,7 @@ plot(bcab.all.boreal.raster.stack, subset, main = years, legend = FALSE, axes = 
      col = c("white", colours), addfun = function(x) plot(west.boreal, add = TRUE))
 #legend("topright", legend = years[subset], fill = colours)
 
-png("../figures/bcab.all.boreal.raster.stack.png", type = "cairo", width = 2400, height = 1600)
+png(file.path(fig.path, "bcab.all.boreal.raster.stack.png"), type = "cairo", width = 2400, height = 1600)
 plot(bcab.all.boreal.raster.stack, subset, main = years, cex.main = 3,
      legend = FALSE, axes = FALSE, col = c("white", colours),
      addfun = function(x) plot(west.boreal, add = TRUE))
