@@ -7,7 +7,7 @@ bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache = TRUE, echo = FALSE)
+knitr::opts_chunk$set(cache = TRUE, echo = FALSE, eval = TRUE)
 
 library(magrittr)
 library(RCurl)

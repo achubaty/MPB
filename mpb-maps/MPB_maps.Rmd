@@ -28,6 +28,7 @@ date: "October 27, 2016"
 ## determine OS and whether we are on a CFS machine
 CFS <- grepl("W-VIC", Sys.info()[["nodename"]])
 OS <- Sys.info()[["sysname"]]
+USER <- Sys.info()[["user"]]
 
 ## set R and knitr options
 if (isTRUE(CFS)) {
@@ -58,13 +59,13 @@ library(snowfall)
 library(spatstat)
 library(RColorBrewer)
 
-# additional helper functions
+## additional helper functions
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-data.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
 
 getOGR <- function(layer, dir) {
-  orig.dir = getwd()
+  orig.dir <- getwd()
   setwd(dir)
   out = readOGR(dsn = ".", layer = layer)
   setwd(orig.dir)
@@ -72,21 +73,23 @@ getOGR <- function(layer, dir) {
 }
 
 ## set work dirs based on computer used
-if (OS == "Darwin") {
-  maps.dir = "~/Documents/data/maps"
-  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
-} else if (OS == "Linux") {
-  if (isTRUE(CFS)) {
-    maps.dir = "/mnt/A105388/shared/data"
+if (USER == "achubaty") {
+  if (OS == "Darwin") {
+    maps.dir <- "~/Documents/data/maps"
+    work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
+  } else if (OS == "Linux") {
+    if (isTRUE(CFS)) {
+      maps.dir <- "/mnt/A105388/shared/data"
+    } else {
+      maps.dir <- "~/Documents/Data/shared"
+    }
+    work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
+  } else if (OS == "Windows") {
+    maps.dir <- "//W-VIC-A105388/shared/data"
+    work.dir <- "~/GitHub/MPB/mpb-maps"
   } else {
-    maps.dir = "~/Documents/Data/shared"
+    stop("Which operating system are you using?")
   }
-  work.dir = "~/Documents/GitHub/MPB/mpb-maps"
-} else if (OS == "Windows") {
-  maps.dir = "//W-VIC-A105388/shared/data"
-  work.dir = "~/GitHub/MPB/mpb-maps"
-} else {
-  stop("Which operating system are you using?")
 }
 setwd(work.dir)
 rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
@@ -211,6 +214,12 @@ if (isTRUE(read.in.raw.maps)) {
   rm(f)
   
   west.provs <- c("Alberta", "British Columbia", "Saskatchewan")
+  
+  boreal.west <- foo()    ## INCOMPLETE
+  canada1.boreal <- foo() ## INCOMPLETE
+  canada2.boreal <- foo() ## INCOMPLETE
+  west.boreal <- foo()    ## INCOMPLETE
+  west2.boreal <- foo()   ## INCOMPLETE
   
   ### Save these new map objects for later use
   objects2save <- c("boreal", "boreal.can", "boreal.west",
@@ -617,19 +626,16 @@ loadObjects(c("bcab.all.boreal.raster.stack", "west.boreal"), rdata.path)
 colours <- brewer.pal(n = 9, name = "YlOrRd")
 years <- substr(names(bcab.all.boreal.raster.stack), 2, 5)
 last9 <- (length(years) - 8):length(years) # the last 9 years
-last9 <- last9[last9 > 0]
-
-#subset = 1:length(years)
-subset = last9
+subset <- last9[last9 > 0]
 
 plot(bcab.all.boreal.raster.stack, subset, main = years, legend = FALSE, axes = FALSE,
-     col = c("white", colours), addfun = function(x) { plot(west.boreal, add = TRUE) } )
+     col = c("white", colours), addfun = function(x) plot(west.boreal, add = TRUE))
 #legend("topright", legend = years[subset], fill = colours)
 
 png("../figures/bcab.all.boreal.raster.stack.png", type = "cairo", width = 2400, height = 1600)
 plot(bcab.all.boreal.raster.stack, subset, main = years, cex.main = 3,
      legend = FALSE, axes = FALSE, col = c("white", colours),
-     addfun = function(x) { plot(west.boreal, add = TRUE) } )
+     addfun = function(x) plot(west.boreal, add = TRUE))
 #legend("topright", legend = years[subset], fill = colours)
 dev.off()
 
@@ -680,4 +686,3 @@ plot(ts.rts, col = c("white", colours)) # this is a *garbage* way to plot a TS
 saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
 rm(bcab.all.boreal.raster.brick, brk.ll, ts.kml, ts.rts, west.boreal)
 ```
-
