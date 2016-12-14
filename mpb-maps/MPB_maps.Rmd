@@ -95,7 +95,7 @@ setwd(work.dir)
 rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
 
 ## additional options
-num.cpus <- 4              # max cpus to use
+num.cpus <- parallel::detectCores() / 2 ## max cpus to use
 
 # options below only need to be changed if you want to reprocess the data
 # - e.g., you get new MPB map data
@@ -373,10 +373,10 @@ if (rasterize.maps) {
   rasterize.mpb <- function(x,...) {
     rasterize(x = x, y = west.boreal.raster,
               field = if (any(colnames(x@data) == "NUM_TREES")) {
-                  x@data$NUM_TREES
-                } else {
-                  x@data$num_trees
-                },
+                x@data$NUM_TREES
+              } else {
+                x@data$num_trees
+              },
               fun = "sum", ...)
   }
   

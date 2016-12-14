@@ -15,6 +15,7 @@ knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
                       message = FALSE, warning = FALSE)
 
 library(magrittr)
+library(raster)
 
 maps.dir <- if (Sys.info()[["sysname"]] == "Darwin") {
     '~/Documents/Data/shared/MPB/climate'
@@ -94,13 +95,9 @@ if (download) {
 ## Load maps
 
 ```{r load-maps, echo=TRUE}
-library(raster)
-
 files <- dir(path = maps.dir, pattern = '[.]tif', full.names = TRUE)
 
-maps <- lapply(files, function(f) {
-  raster(f)
-})
+maps <- lapply(files, function(f) raster(f))
 ```
 
 ## Plot maps
