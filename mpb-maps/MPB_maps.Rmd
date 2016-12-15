@@ -94,6 +94,7 @@ if (USER == "achubaty") {
 setwd(work.dir)
 rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
 fig.path <- file.path(work.dir, "figures")
+if (!dir.exists(fig.path)) dir.create(fig.path)
 
 stopifnot(all(dir.exists(c(fig.path, maps.dir, rdata.path, work.dir))))
 
