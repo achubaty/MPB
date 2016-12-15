@@ -531,14 +531,14 @@ if (rasterize.maps) {
 #                                        overwrite = TRUE)
     
 #  names(bcab.all.boreal.raster.brick) <- substr(names(bcab.poly.boreal.raster.stack), 2, 5)
-  names(bcab.all.boreal.raster.stack) <- substr(names(bcab.poly.boreal.raster.stack), 2, 5)
+#  names(bcab.all.boreal.raster.stack) <- substr(names(bcab.poly.boreal.raster.stack), 2, 5)
   
   # bcab.all.boreal.raster.brick <- writeRaster(bcab.all.boreal.raster.brick,
   #                                             filename = file.path(rdata.path, "mpb_brick.grd"),
   #                                             overwrite = TRUE)
-  bcab.all.boreal.raster.stack <- writeRaster(bcab.all.boreal.raster.stack,
-                                              filename = file.path(rdata.path, "bcab.all.boreal.raster.stack.grd"),
-                                              overwrite = TRUE)
+  writeRaster(bcab.all.boreal.raster.stack,
+              filename = file.path(rdata.path, "bcab.all.boreal.raster.stack.grd"),
+              overwrite = TRUE)
     
   saveObjects(c(#"bcab.all.boreal.raster.brick",
                 "bcab.all.boreal.raster.stack"), rdata.path)
