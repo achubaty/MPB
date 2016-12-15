@@ -291,10 +291,6 @@ if (isTRUE(reproj.raw.maps)) {
   
     # save these new map objects for later use
     saveObjects(c("ab.pnts.boreal", "bc.pnts.boreal"), rdata.path)
-  
-    # clean up workspace
-    rm(ab.pnts.boreal, bc.pnts.boreal)
-    .cleanup()
   sfStop()
 
   ### MERGE AB AND BC POINTSs
@@ -314,10 +310,11 @@ if (isTRUE(reproj.raw.maps)) {
     names(bcab.pnts.boreal) <- substr(names(bc.pnts.boreal)[wh.bc], 2, 5)
     
     saveObjects("bcab.pnts.boreal", rdata.path)
-    rm(ab.pnts.boreal, bc.pnts.boreal)
   sfStop()
   
-  rm(ab.pnts, bc.pnts, wh.ab, wh.bc)
+  ## cleanup workspace
+  rm(ab.pnts, ab.pnts.boreal, bc.pnts, bc.pnts.boreal, bcab.pnts.boreal, wh.ab, wh.bc)
+  .cleanup()
 }
 ```
 
@@ -350,8 +347,8 @@ if (isTRUE(reproj.raw.maps)) {
   ## cleanup workspace
   rm(ab.poly, bc.poly)
   .cleanup()
-
-  ### merging poly data can't be done at this point -- will merge rasters
+  
+  warning("Incomplete: merging poly data can't be done at this point")
 }
 ```
 
