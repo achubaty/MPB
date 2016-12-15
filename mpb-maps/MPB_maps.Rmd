@@ -39,7 +39,7 @@ if (isTRUE(CFS)) {
 }
 
 knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
-                      message = FALSE, warning = FALSE, fig.path = "figures")
+                      message = FALSE, warning = FALSE, fig.path = "figures/")
 
 ## attach packages
 library(data.table)
