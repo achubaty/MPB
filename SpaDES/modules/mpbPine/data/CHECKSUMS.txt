@@ -1,0 +1,8 @@
+"file" "checksum" "algorithm"
+"west.boreal.RData" "79a176f476969365" "xxhash64"
+"Yemshanov_pine_map.flt" "f9ccd6d495f34b41" "xxhash64"
+"Yemshanov_pine_map.flt.aux.xml" "82b3a0ef1ae4fec7" "xxhash64"
+"Yemshanov_pine_map.flt.ovr" "45cd5b79e3a3d3c7" "xxhash64"
+"Yemshanov_pine_map.hdr" "37a18f948ff25bfe" "xxhash64"
+"Yemshanov_pine_map.prj" "b62a3bae656b02f0" "xxhash64"
+"Yemshanov_pine_map.stx" "0fc85921097903f8" "xxhash64"
