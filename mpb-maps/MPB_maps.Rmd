@@ -208,48 +208,58 @@ if (isTRUE(read.in.raw.maps)) {
 }
 ```
 
+#### Canadian administrative boundaries
+
+```{r can_adm}
+if (isTRUE(read.in.raw.maps)) {
+  adm.path <- file.path(maps.dir, "CAN_adm")
+  scales <- 0:3
+  for (s in scales) {
+    assign(paste0("CAN_adm", s),
+           raster::getData('GADM', path = adm.path, country = "Canada", level = s),
+           envir = .GlobalEnv)
+    save(list = paste0("CAN_adm", s), file = file.path(rdata.path, paste0("CAN_adm", s, ".Rdata")))
+  }
+}
+```
+
 #### Canadian boreal forest maps
 
 ```{r import.maps-boreal}
 if (isTRUE(read.in.raw.maps)) {
-  f <- file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData")
-  if (file.exists(f)) {
-    load(file.path(maps.dir, "boreal", "Rdata", "crs.boreal.RData"))
-  } else {
+  f <- file.path(maps.dir, "boreal", "NABoreal.shp")
+  if (!file.exists(f)) {
     url <- "http://cfs.nrcan.gc.ca/common/boreal.zip"
     dl.data(url, dest = maps.dir, unzip = TRUE)
-    
+  }
+  
+  files <- file.path(rdata.path, c("boreal.RData", "boreal.can.RData", "boreal.west.RData"))
+  if (!all(file.exists(files))) {
+    load(f)
     boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
     boreal.can <- boreal[boreal$COUNTRY == "CANADA",]
+    crs.boreal <- CRS(proj4string(boreal))
   }
-  rm(f)
+  rm(f, files)
   
   west.provs <- c("Alberta", "British Columbia", "Saskatchewan")
-  
-  boreal.west <- foo()    ## INCOMPLETE
-  canada1.boreal <- foo() ## INCOMPLETE
-  canada2.boreal <- foo() ## INCOMPLETE
-  west.boreal <- foo()    ## INCOMPLETE
-  west2.boreal <- foo()   ## INCOMPLETE
+  canada1.west <- CAN_adm1[CAN_adm1$NAME_1 %in% west.provs, ]
+  canada2.west <- CAN_adm2[CAN_adm2$NAME_1 %in% west.provs, ]
+
+  west.boreal <- spTransform(canada1.west, CRSobj =  crs.boreal)
+  west2.boreal <- spTransform(canada2.west, CRSobj =  crs.boreal)
+  canada1.boreal <- spTransform(CAN_adm1, CRSobj =  crs.boreal)
+  canada2.boreal <- spTransform(CAN_adm2, CRSobj =  crs.boreal)
+  boreal.west <- intersect(boreal, west.boreal)
   
   ### Save these new map objects for later use
   objects2save <- c("boreal", "boreal.can", "boreal.west",
+                    "canada1.west", "canada2.west",
                     "canada1.boreal", "canada2.boreal",
                     "west.boreal", "west2.boreal")
   saveObjects(objects2save, rdata.path)
   rm(list = objects2save)
   rm(objects2save)
-}
-```
-
-Boreal forest map data uses the `crs.boreal` projection below. We reproject the Canadian administrative boundaries maps to use this projection:
-
-```{r crs.boreal, results="markup"}
-if (!exists("crs.boreal")) {
-  loadObjects("boreal", rdata.path)
-  crs.boreal <- CRS(proj4string(boreal))
-  print(crs.boreal)
-  rm(boreal)
 }
 ```
 
