@@ -233,13 +233,14 @@ if (isTRUE(read.in.raw.maps)) {
     dl.data(url, dest = maps.dir, unzip = TRUE)
   }
   
-  files <- file.path(rdata.path, c("boreal.RData", "boreal.can.RData", "boreal.west.RData"))
-  if (!all(file.exists(files))) {
-    load(f)
+  files <- file.path(rdata.path, c("boreal.RData", "boreal.can.RData"))
+  if (all(file.exists(files))) {
+    lapply(files, load)
+  } else {
     boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
     boreal.can <- boreal[boreal$COUNTRY == "CANADA",]
-    crs.boreal <- CRS(proj4string(boreal))
   }
+  crs.boreal <- CRS(proj4string(boreal))
   rm(f, files)
   
   west.provs <- c("Alberta", "British Columbia", "Saskatchewan")
@@ -260,6 +261,7 @@ if (isTRUE(read.in.raw.maps)) {
   saveObjects(objects2save, rdata.path)
   rm(list = objects2save)
   rm(objects2save)
+  .cleanup()
 }
 ```
 
