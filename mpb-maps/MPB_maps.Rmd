@@ -64,11 +64,16 @@ source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-d
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
 source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/sysmem.R")
 
+#' manual garbage collection to free recently unallocated memory 
+.cleanup <- function() {
+  for (i in 1:10) gc()
+}
+
+#' readOGR without having ]to manually change working directory
 getOGR <- function(layer, dir) {
   orig.dir <- getwd()
-  setwd(dir)
-  out = readOGR(dsn = ".", layer = layer)
-  setwd(orig.dir)
+  setwd(dir); on.exit(setwd(orig.dir))
+  out <- readOGR(dsn = ".", layer = layer)
   return(out)
 }
 
@@ -159,6 +164,7 @@ if (isTRUE(read.in.raw.maps)) {
   
     # clean up workspace
     rm(ab.pnts, ab.pnts.dir.shp, ab.pnts.files, bc.pnts, bc.pnts.dir.shp, bc.pnts.files, omit)
+    .cleanup()
   sfStop()
 }
 ```
@@ -194,6 +200,7 @@ if (isTRUE(read.in.raw.maps)) {
     # clean up workspace
     rm(ab.poly, ab.poly.dir.shp, ab.poly.files)
     rm(bc.poly, bc.poly.dir.shp, bc.poly.files)
+    .cleanup()
   sfStop()
   
   # manual garbage collection to free recently unallocated memory
@@ -275,6 +282,7 @@ if (isTRUE(reproj.raw.maps)) {
   
     # clean up workspace
     rm(ab.pnts.boreal, bc.pnts.boreal)
+    .cleanup()
   sfStop()
 
   ### MERGE AB AND BC POINTSs
@@ -327,10 +335,9 @@ if (isTRUE(reproj.raw.maps)) {
     rm(ab.poly.boreal, bc.poly.boreal)
   sfStop()
   
+  ## cleanup workspace
   rm(ab.poly, bc.poly)
-  
-  # manual garbage collection to free recently unallocated memory
-  for (i in 1:10) gc()
+  .cleanup()
 
   ### merging poly data can't be done at this point -- will merge rasters
 }
@@ -341,7 +348,7 @@ if (isTRUE(reproj.raw.maps)) {
 #### Canadian boreal forest maps
 
 ```{r rasterize.maps-boreal}
-if (rasterize.maps) {
+if (isTRUE(rasterize.maps)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -353,18 +360,21 @@ if (rasterize.maps) {
   west.empty.raster <- raster(extent(west.boreal))
   res(west.empty.raster) <- res.maps
   west.boreal.raster <- rasterize(west.boreal, west.empty.raster,
-                                 filename = file.path(rdata.path, "west_boreal.grd"))
+                                 filename = file.path(rdata.path, "west_boreal.grd"),
+                                 overwrite = TRUE)
   
   saveObjects("west.boreal.raster", rdata.path)
   
+  ## cleanup workspace
   rm(west.boreal, west.boreal.raster, west.empty.raster)
+  .cleanup()
 }
 ```
 
 #### MPB `SpatialPoints` data
 
 ```{r rasterize.maps-points}
-if (rasterize.maps) {
+if (isTRUE(rasterize.maps)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -381,7 +391,7 @@ if (rasterize.maps) {
               } else {
                 x@data$num_trees
               },
-              fun = "sum", ...)
+              fun = "sum", overwrite = TRUE, ...)
   }
   
   sfInit(cpus = num.cpus, parallel = TRUE)
@@ -407,14 +417,16 @@ if (rasterize.maps) {
     rm(bcab.pnts.boreal.raster.stack)
   sfStop()
 
+  ## cleanup workspace
   rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal.raster)
+  .cleanup()
 }
 ```
 
 #### MPB `SpatialPolygons` data
 
 ```{r rasterize.maps-polygons}
-if (rasterize.maps) {
+if (isTRUE(rasterize.maps)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -475,6 +487,7 @@ if (rasterize.maps) {
               filename = file.path(rdata.path, "bcab_poly_boreal.grd"), overwrite = TRUE)
   saveObjects("bcab.poly.boreal.raster.stack", rdata.path)
   
+  ## cleanup workspace
   objects2rm <- c("ab.poly.boreal", "bc.poly.boreal",
                   "ab.poly.boreal.raster.stack", "ab.poly.boreal.raster.unstack",
                   "bc.poly.boreal.raster.stack", "bc.poly.boreal.raster.unstack",
@@ -482,16 +495,14 @@ if (rasterize.maps) {
                   "west.boreal.raster", "wh.ab", "wh.bc")
   rm(list = objects2rm)
   rm(objects2rm)
-  
-  # manual garbage collection to free recently unallocated memory
-  for (i in 1:10) gc()
+  .cleanup()
 }
 ```
 
 ### Combine all MPB maps
 
 ```{r combine.maps-all}
-if (rasterize.maps) {
+if (isTRUE(rasterize.maps)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -543,9 +554,11 @@ if (rasterize.maps) {
   saveObjects(c(#"bcab.all.boreal.raster.brick",
                 "bcab.all.boreal.raster.stack"), rdata.path)
   
+  ## cleanup workspace
   rm(all, #bcab.all.boreal.raster.brick,
      bcab.pnts.boreal.raster.stack, bcab.poly.boreal.raster.stack,
      bcab.all.boreal.raster.stack, wh.pnts, wh.poly)
+  .cleanup()
 }
 ```
 
@@ -557,7 +570,7 @@ if (rasterize.maps) {
 
 ```{r plot.canada.boreal, fig.height=12, fig.width=16}
 loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
-darkgreen <- col2rgb("darkgreen")/255
+darkgreen <- col2rgb("darkgreen") / 255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha = 0.5)
 rm(darkgreen)
 
