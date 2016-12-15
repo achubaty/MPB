@@ -16,6 +16,7 @@ knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
 
 library(magrittr)
 library(raster)
+library(RCurl)
 
 maps.dir <- if (Sys.info()[["sysname"]] == "Darwin") {
     '~/Documents/Data/shared/MPB/climate'
@@ -61,8 +62,6 @@ They were uploaded to and retrieved from the [NoFC FTP site](ftp://ftp.nofc.cfs.
 
 ```{r download-data, cache=FALSE}
 if (download) {
-  library(RCurl)
-  
   ## Get files of size zero
   file.size <- function(file) {
     return(file.info(file)$size)
