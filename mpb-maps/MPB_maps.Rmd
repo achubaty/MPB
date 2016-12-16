@@ -21,17 +21,17 @@ output:
   pdf_document:
     toc: yes
     toc_depth: 3
-date: "October 27, 2016"
+date: "December 16, 2016"
 ---
 
 ```{r setup, include=FALSE, message=FALSE}
 ## determine OS and whether we are on a CFS machine
-CFS <- grepl("W-VIC", Sys.info()[["nodename"]])
-OS <- Sys.info()[["sysname"]]
-USER <- Sys.info()[["user"]]
+._CFS_. <- grepl("W-VIC", Sys.info()[["nodename"]])
+._OS_. <- Sys.info()[["sysname"]]
+._USER_. <- Sys.info()[["user"]]
 
 ## set R and knitr options
-if (isTRUE(CFS)) {
+if (isTRUE(._CFS_.)) {
   options(repos = c(CRAN = "https://cran.rstudio.com/",
                     NRCRAN = "http://132.156.149.95"))
 } else {
@@ -78,18 +78,18 @@ getOGR <- function(layer, dir) {
 }
 
 ## set work dirs based on computer used
-if (USER == "achubaty") {
-  if (OS == "Darwin") {
+if (._USER_. == "achubaty") {
+  if (._OS_. == "Darwin") {
     maps.dir <- "~/Documents/data/maps"
     work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
-  } else if (OS == "Linux") {
-    if (isTRUE(CFS)) {
+  } else if (._OS_. == "Linux") {
+    if (isTRUE(._CFS_.)) {
       maps.dir <- "/mnt/A105388/shared/data"
     } else {
       maps.dir <- "~/Documents/Data/shared"
     }
     work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
-  } else if (OS == "Windows") {
+  } else if (._OS_. == "Windows") {
     maps.dir <- "//W-VIC-A105388/shared/data"
     work.dir <- "~/GitHub/MPB/mpb-maps"
   } else {
@@ -104,21 +104,21 @@ if (!dir.exists(fig.path)) dir.create(fig.path)
 stopifnot(all(dir.exists(c(fig.path, maps.dir, rdata.path, work.dir))))
 
 ## additional options
-num.cpus <- parallel::detectCores() / 2 ## max cpus to use
+._NUM_CPUS_. <- parallel::detectCores() / 2 ## max cpus to use
 
 # options below only need to be changed if you want to reprocess the data
 # - e.g., you get new MPB map data
 # - e.g., you want to change the resolution/extent/etc. of the maps
 #        (before rerunning just to change res, can you `clip` out a subset?)
 #
-read.in.raw.maps <- FALSE  # read in raw maps from data
-reproj.raw.maps <- FALSE   # reproject raw maps to `boreal`
-rasterize.maps <- FALSE    # convert the maps to rasters
+._MAPS_USERAW_. <- FALSE  ## read in raw maps from data
+._MAPS_REPROJ_. <- FALSE  ## reproject raw maps to `boreal`
+._MAPS_MKRSTR_. <- FALSE  ## convert the maps to rasters
 
 # map extent obtained using `locator(2)` on 'west.boreal' map
-ext.maps <- extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
+._EXT_MAPS_. <- extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
 
-res.maps <- 1000           # map resolution, in metres
+._RES_MAPS_. <- 1000       # map resolution, in metres
 ```
 
 \newpage
@@ -137,11 +137,11 @@ Descriptions of:
 
 #### MPB `SpatialPoints` data
 
-```{r import.maps-points}
-if (isTRUE(read.in.raw.maps)) {
+```{r import-maps-points}
+if (isTRUE(._MAPS_USERAW_.)) {
   ### Read in raw maps, and save them as individual files
   ### - this may take a while...grab a coffee or something
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(rgdal)
     sfLibrary(sp)
       
@@ -164,18 +164,19 @@ if (isTRUE(read.in.raw.maps)) {
   
     # clean up workspace
     rm(ab.pnts, ab.pnts.dir.shp, ab.pnts.files, bc.pnts, bc.pnts.dir.shp, bc.pnts.files, omit)
-    .cleanup()
   sfStop()
+
+  .cleanup()
 }
 ```
 
 #### MPB `SpatialPolygons` data
 
-```{r import.maps-polygons}
-if (isTRUE(read.in.raw.maps)) {
+```{r import-maps-polygons}
+if (isTRUE(._MAPS_USERAW_.)) {
   ### Read in raw maps, and save them as individual files
   ### - this may take a while...grab a coffee or something
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(rgdal)
     sfLibrary(sp)
     
@@ -200,21 +201,18 @@ if (isTRUE(read.in.raw.maps)) {
     # clean up workspace
     rm(ab.poly, ab.poly.dir.shp, ab.poly.files)
     rm(bc.poly, bc.poly.dir.shp, bc.poly.files)
-    .cleanup()
   sfStop()
   
-  # manual garbage collection to free recently unallocated memory
-  for (i in 1:10) gc()
+  .cleanup()
 }
 ```
 
 #### Canadian administrative boundaries
 
 ```{r can_adm}
-if (isTRUE(read.in.raw.maps)) {
+if (isTRUE(._MAPS_USERAW_.)) {
   adm.path <- file.path(maps.dir, "CAN_adm")
-  scales <- 0:3
-  for (s in scales) {
+  for (s in 0:3) {
     assign(paste0("CAN_adm", s),
            raster::getData('GADM', path = adm.path, country = "Canada", level = s),
            envir = .GlobalEnv)
@@ -225,8 +223,8 @@ if (isTRUE(read.in.raw.maps)) {
 
 #### Canadian boreal forest maps
 
-```{r import.maps-boreal}
-if (isTRUE(read.in.raw.maps)) {
+```{r import-maps-boreal}
+if (isTRUE(._MAPS_USERAW_.)) {
   f <- file.path(maps.dir, "boreal", "NABoreal.shp")
   if (!file.exists(f)) {
     url <- "http://cfs.nrcan.gc.ca/common/boreal.zip"
@@ -235,7 +233,7 @@ if (isTRUE(read.in.raw.maps)) {
   
   files <- file.path(rdata.path, c("boreal.RData", "boreal.can.RData"))
   if (all(file.exists(files))) {
-    lapply(files, load)
+    lapply(files, load, envir = .GlobalEnv)
   } else {
     boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
     boreal.can <- boreal[boreal$COUNTRY == "CANADA",]
@@ -269,8 +267,8 @@ if (isTRUE(read.in.raw.maps)) {
 
 #### MPB `SpatialPoints` data
 
-```{r reproject.maps-points}
-if (isTRUE(reproj.raw.maps)) {
+```{r reproject-maps-points}
+if (isTRUE(._MAPS_REPROJ_.)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -280,7 +278,7 @@ if (isTRUE(reproj.raw.maps)) {
   loadObjects(c("ab.pnts", "bc.pnts"), rdata.path)
   
   ### REPROJECT AB, BC SO THEY ARE BOTH IN THE `boreal` PROJECTION
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(rgdal)
     
     ab.pnts.boreal <- sfClusterApplyLB(ab.pnts, spTransform, crs.boreal)
@@ -292,21 +290,24 @@ if (isTRUE(reproj.raw.maps)) {
     # save these new map objects for later use
     saveObjects(c("ab.pnts.boreal", "bc.pnts.boreal"), rdata.path)
   sfStop()
+  .cleanup()
 
   ### MERGE AB AND BC POINTSs
   wh.ab <- na.omit(pmatch(names(bc.pnts.boreal), names(ab.pnts.boreal)))
   wh.bc <- na.omit(pmatch(substr(names(ab.pnts.boreal), 1, 4), names(bc.pnts.boreal)))
   
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(sp)
     sfExport("ab.pnts.boreal", "bc.pnts.boreal", "crs.boreal", "wh.ab", "wh.bc")  
     
     bcab.pnts.boreal <- sfClusterApplyLB(1:length(wh.ab), function(x) {
       out <-  merge(bc.pnts.boreal[[wh.bc[x]]], ab.pnts.boreal[[wh.ab[x]]], all = TRUE)
       coordinates(out) <- ~ coords.x1 + coords.x2
-      out$ntrees <- ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees),out$num_trees, NA))
+      out$ntrees <- ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees), out$num_trees, NA))
       return(out)})
-    bcab.pnts.boreal <- sfClusterApplyLB(bcab.pnts.boreal, function(x) {proj4string(x) <- crs.boreal; return(x)})
+    bcab.pnts.boreal <- sfClusterApplyLB(bcab.pnts.boreal, function(x) {
+      proj4string(x) <- crs.boreal; return(x)
+    })
     names(bcab.pnts.boreal) <- substr(names(bc.pnts.boreal)[wh.bc], 2, 5)
     
     saveObjects("bcab.pnts.boreal", rdata.path)
@@ -320,8 +321,8 @@ if (isTRUE(reproj.raw.maps)) {
 
 #### MPB `SpatialPolygons` data
 
-```{r reproject.maps-polygons}
-if (isTRUE(reproj.raw.maps)) {
+```{r reproject-maps-polygons}
+if (isTRUE(._MAPS_REPROJ_.)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -331,7 +332,7 @@ if (isTRUE(reproj.raw.maps)) {
   loadObjects(c("ab.poly", "bc.poly"), rdata.path)
   
   ### REPROJECT AB AND BC SO THEY ARE BOTH IN THE `boreal` PROJECTION
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(rgdal)
     ab.poly.boreal <- sfClusterApplyLB(ab.poly, spTransform, crs.boreal)
     names(ab.poly.boreal) <- names(ab.poly)
@@ -356,21 +357,16 @@ if (isTRUE(reproj.raw.maps)) {
 
 #### Canadian boreal forest maps
 
-```{r rasterize.maps-boreal}
-if (isTRUE(rasterize.maps)) {
-  if (!exists("crs.boreal")) {
-    loadObjects("boreal", rdata.path)
-    crs.boreal <- CRS(proj4string(boreal))
-    rm(boreal)
-  }
-
+```{r rasterize-maps-boreal}
+if (isTRUE(._MAPS_MKRSTR_.)) {
   loadObjects("west.boreal", rdata.path)
   
-  west.empty.raster <- raster(extent(west.boreal))
-  res(west.empty.raster) <- res.maps
-  west.boreal.raster <- rasterize(west.boreal, west.empty.raster,
-                                 filename = file.path(rdata.path, "west_boreal.grd"),
-                                 overwrite = TRUE)
+  west.empty.raster <- raster(extent(west.boreal), resolution = ._RES_MAPS_.)
+  west.boreal.raster <- suppressWarnings(
+    rasterize(west.boreal, west.empty.raster,
+              filename = file.path(rdata.path, "west_boreal.grd"),
+              overwrite = TRUE)
+  )
   
   saveObjects("west.boreal.raster", rdata.path)
   
@@ -382,16 +378,9 @@ if (isTRUE(rasterize.maps)) {
 
 #### MPB `SpatialPoints` data
 
-```{r rasterize.maps-points}
-if (isTRUE(rasterize.maps)) {
-  if (!exists("crs.boreal")) {
-    loadObjects("boreal", rdata.path)
-    crs.boreal <- CRS(proj4string(boreal))
-    rm(boreal)
-  }
-  
-  loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "bcab.pnts.boreal",
-                "west.boreal.raster"), rdata.path)
+```{r rasterize-maps-points}
+if (isTRUE(._MAPS_MKRSTR_.)) {
+  loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "bcab.pnts.boreal", "west.boreal.raster"), rdata.path)
   
   rasterize.mpb <- function(x,...) {
     rasterize(x = x, y = west.boreal.raster,
@@ -403,7 +392,7 @@ if (isTRUE(rasterize.maps)) {
               fun = "sum", overwrite = TRUE, ...)
   }
   
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(raster)
     sfExport("west.boreal.raster")
     
@@ -434,14 +423,8 @@ if (isTRUE(rasterize.maps)) {
 
 #### MPB `SpatialPolygons` data
 
-```{r rasterize.maps-polygons}
-if (isTRUE(rasterize.maps)) {
-  if (!exists("crs.boreal")) {
-    loadObjects("boreal", rdata.path)
-    crs.boreal <- CRS(proj4string(boreal))
-    rm(boreal)
-  }
-  
+```{r rasterize-maps-polygons}
+if (isTRUE(._MAPS_MKRSTR_.)) {
   loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal.raster"), rdata.path)
   
   ### we arbitrarily picked 1000 trees per 1ha
@@ -450,25 +433,25 @@ if (isTRUE(rasterize.maps)) {
     rasterize(x = x, y = y, field = field, fun = fun, ...)
   }
   
-  sfInit(cpus = num.cpus, parallel = TRUE)
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(raster)
     sfExport("west.boreal.raster")
     
-    ab.poly.boreal.raster.stack <- stack(sfClusterApplyLB(ab.poly.boreal, change.res))
-    names(ab.poly.boreal.raster.stack) <- names(ab.poly.boreal)
+    ab.poly.boreal.raster.stack <- stack(sfClusterApplyLB(ab.poly.boreal, change.res)) %>% 
+      setNames(ab.poly.boreal)
     # several rasters have no values because they were in southern Alberta
     notNAs <- which(sapply(1:nlayers(ab.poly.boreal.raster.stack),
                            function(x) {
                              unique(!is.na(which.min(ab.poly.boreal.raster.stack[[x]])))
                           }))
-    ab.poly.boreal.raster.stack <- ab.poly.boreal.raster.stack[[notNAs]] # remove the NA layers
-    names(ab.poly.boreal.raster.stack) <- unlist(strsplit(names(ab.poly.boreal),"poly"))[notNAs]
+    ab.poly.boreal.raster.stack <- ab.poly.boreal.raster.stack[[notNAs]] %>% 
+      setNames(unlist(strsplit(names(ab.poly.boreal),"poly"))[notNAs])
     writeRaster(ab.poly.boreal.raster.stack,
-              filename = file.path(rdata.path, "ab_poly_boreal.grd"), overwrite = TRUE)
+                filename = file.path(rdata.path, "ab_poly_boreal.grd"), overwrite = TRUE)
     saveObjects("ab.poly.boreal.raster.stack", rdata.path)
       
-    bc.poly.boreal.raster.stack <- stack(sfClusterApplyLB(bc.poly.boreal, change.res))
-    names(bc.poly.boreal.raster.stack) <- names(bc.poly.boreal)
+    bc.poly.boreal.raster.stack <- stack(sfClusterApplyLB(bc.poly.boreal, change.res)) %>%
+      setNames(bc.poly.boreal)
     writeRaster(bc.poly.boreal.raster.stack,
                 filename = file.path(rdata.path, "bc_poly_boreal.grd"), overwrite = TRUE)
     saveObjects("bc.poly.boreal.raster.stack", rdata.path)
@@ -489,8 +472,8 @@ if (isTRUE(rasterize.maps)) {
                  ab.poly.boreal.raster.unstack[[wh.ab[x]]])
     return(out)
   })
-  bcab.poly.boreal.raster.stack <- stack(bcab.poly.boreal.raster.unstack)
-  names(bcab.poly.boreal.raster.stack) <- names(bc.poly.boreal.raster.stack)
+  bcab.poly.boreal.raster.stack <- stack(bcab.poly.boreal.raster.unstack) %>%
+    setNames(bc.poly.boreal.raster.stack)
   
   writeRaster(bcab.poly.boreal.raster.stack,
               filename = file.path(rdata.path, "bcab_poly_boreal.grd"), overwrite = TRUE)
@@ -510,8 +493,8 @@ if (isTRUE(rasterize.maps)) {
 
 ### Combine all MPB maps
 
-```{r combine.maps-all}
-if (isTRUE(rasterize.maps)) {
+```{r combine-maps-all}
+if (isTRUE(._MAPS_MKRSTR_.)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
     crs.boreal <- CRS(proj4string(boreal))
@@ -540,33 +523,30 @@ if (isTRUE(rasterize.maps)) {
     }
   }
   
-  all <- lapply(all, function(x) { x[is.na(x)] <- 0; return(x) })
-  all <- lapply(all, function(x) { x[x > 0] <- log(x[x > 0]) + 10; return(x) })
-  names(all) <- substr(names(bcab.poly.boreal.raster.stack), 2, 5)
+  all <- lapply(all, function(x) {
+    x[is.na(x)] <- 0; return(x)
+  }) %>% lapply(., function(x) {
+    x[x > 0] <- log(x[x > 0]) + 10
+    return(x)
+  }) %>% setNames(substr(names(bcab.poly.boreal.raster.stack), 2, 5))
   
-  bcab.all.boreal.raster.stack <- stack(all)
-#  bcab.all.boreal.raster.brick <- brick(all) # won't keep in memory; won't let me specify file
-#  bcab.all.boreal.raster.brick <- brick(bcab.all.boreal.raster.stack,
-#                                        filename = file.path(rdata.path, "mpb_brick.grd"),
-#                                        overwrite = TRUE)
+  bcab.all.boreal.raster.stack <- stack(all) %>%
+    setNames(substr(names(bcab.poly.boreal.raster.stack), 2, 5))
+  bcab.all.boreal.raster.brick <- brick(bcab.all.boreal.raster.stack,
+                                        filename = file.path(rdata.path, "bcab.all.boreal.raster.brick.grd"),
+                                        overwrite = TRUE) %>%
+    setNames(substr(names(bcab.poly.boreal.raster.stack), 2, 5))
     
-#  names(bcab.all.boreal.raster.brick) <- substr(names(bcab.poly.boreal.raster.stack), 2, 5)
-#  names(bcab.all.boreal.raster.stack) <- substr(names(bcab.poly.boreal.raster.stack), 2, 5)
-  
-  # bcab.all.boreal.raster.brick <- writeRaster(bcab.all.boreal.raster.brick,
-  #                                             filename = file.path(rdata.path, "mpb_brick.grd"),
-  #                                             overwrite = TRUE)
-  writeRaster(bcab.all.boreal.raster.stack,
-              filename = file.path(rdata.path, "bcab.all.boreal.raster.stack.grd"),
-              overwrite = TRUE)
+  bcab.all.boreal.raster.stack <- writeRaster(bcab.all.boreal.raster.stack,
+                                              filename = file.path(rdata.path, "bcab.all.boreal.raster.stack.grd"),
+                                              overwrite = TRUE)
     
-  saveObjects(c(#"bcab.all.boreal.raster.brick",
-                "bcab.all.boreal.raster.stack"), rdata.path)
+  saveObjects(c("bcab.all.boreal.raster.brick", "bcab.all.boreal.raster.stack"), rdata.path)
   
   ## cleanup workspace
-  rm(all, #bcab.all.boreal.raster.brick,
+  rm(all, bcab.all.boreal.raster.brick, bcab.all.boreal.raster.stack,
      bcab.pnts.boreal.raster.stack, bcab.poly.boreal.raster.stack,
-     bcab.all.boreal.raster.stack, wh.pnts, wh.poly)
+     wh.pnts, wh.poly)
   .cleanup()
 }
 ```
@@ -577,7 +557,7 @@ if (isTRUE(rasterize.maps)) {
 
 **The Canadian boreal forest:**
 
-```{r plot.canada.boreal, fig.height=12, fig.width=16}
+```{r plot-canada.boreal, fig.height=12, fig.width=16}
 loadObjects(c("boreal.can", "canada1.boreal"), rdata.path)
 darkgreen <- col2rgb("darkgreen") / 255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha = 0.5)
@@ -596,7 +576,7 @@ rm(boreal.can)
 
 **The western Canadian boreal forest:**
 
-```{r plot.western.boreal, fig.height=12, fig.width=16}
+```{r plot-western.boreal, fig.height=12, fig.width=16}
 loadObjects(c("boreal.west", "west.boreal"), rdata.path)
 darkgreen <- col2rgb("darkgreen")/255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha = 0.5)
@@ -617,7 +597,7 @@ rm(boreal.west, west.boreal)
 
 #### MPB `SpatialPoints` data
 
-```{r plot.mpb.western.boreal.points, fig.height=10, fig.width=12, eval=FALSE}
+```{r plot-mpb.western.boreal.points, fig.height=10, fig.width=12, eval=FALSE}
 loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "west.boreal"), rdata.path)
 
 plot(west.boreal)
@@ -634,7 +614,7 @@ rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal)
 
 #### MPB `SpatialPolygons` data
 
-```{r plot.mpb.western.boreal.polygons, fig.height=10, fig.width=12, eval=FALSE}
+```{r plot-mpb.western.boreal.polygons, fig.height=10, fig.width=12, eval=FALSE}
 loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal"), rdata.path)
 plot(west.boreal)
 colours <- brewer.pal(n = 9, name = "YlOrRd")
@@ -649,7 +629,7 @@ rm(ab.poly.boreal, bc.poly.boreal, west.boreal)
 
 #### MPB `RasterStack`
 
-```{r plot.mpb.western.boreal.raster.stack, fig.height=12, fig.width=12}
+```{r plot-mpb.western.boreal.raster.stack, fig.height=12, fig.width=12}
 loadObjects(c("bcab.all.boreal.raster.stack", "west.boreal"), rdata.path)
 colours <- brewer.pal(n = 9, name = "YlOrRd")
 years <- substr(names(bcab.all.boreal.raster.stack), 2, 5)
@@ -672,45 +652,46 @@ rm(bcab.all.boreal.raster.stack, west.boreal)
 
 #### MPB `RasterBrick` timeseries
 
-```{r plot.mpb.western.boreal.time.series, fig.height=12, fig.width=12}
+```{r plot-mpb.western.boreal.time.series, fig.height=12, fig.width=12}
 loadObjects(c("bcab.all.boreal.raster.brick", "west.boreal"), rdata.path)
 
 # `spsample` needs planar coordinates, so need to reproject to latlong
-latlongproj <- CRS("+proj=longlat +datum=WGS84")
-brk.ll <- projectRaster(bcab.all.boreal.raster.brick, crs = latlongproj)
+crs.latlon <- CRS("+proj=longlat +datum=WGS84")
+brick.latlon <- projectRaster(bcab.all.boreal.raster.brick, crs = crs.latlon)
 
 # replace NAs with zeros (WHY??)
-brk.ll <- brick(lapply(1:nlayers(brk.ll), function(x) {
-  brk.ll[[x]][is.na(brk.ll[[x]])] <- 0
-  return(brk.ll[[x]])
+brick.latlon <- brick(lapply(1:nlayers(brick.latlon), function(x) {
+  brick.latlon[[x]][is.na(brick.latlon[[x]])] <- 0
+  return(brick.latlon[[x]])
 }))
-brk.ll@title <- "MPB intensity"
-brk.ll <- writeRaster(brk.ll, filename = file.path(rdata.path, "mpb_brick_ll.grd"), overwrite = TRUE)
+brick.latlon@title <- "MPB intensity"
+brick.latlon <- writeRaster(brick.latlon, filename = file.path(rdata.path, "mpb_brick_latlon.grd"), overwrite = TRUE)
 
-#brk.ll <- brick(file.path(rdata.path, "mpb_brick_ll.grd"))
+#brick.latlon <- brick(file.path(rdata.path, "mpb_brick_latlon.grd"))
 years <- as.numeric(substr(names(bcab.all.boreal.raster.brick), 2, 5))
-t.strt <- as.POSIXct(as.Date(paste(years, "-10-01", sep = ""))) # why Oct 1?
-t.stop <- as.POSIXct(as.Date(paste(years + 1, "-10-01", sep = ""))) # why Oct 1?
+t.strt <- as.POSIXct(as.Date(paste(years, "-10-01", sep = "")))     ## why Oct 1?
+t.stop <- as.POSIXct(as.Date(paste(years + 1, "-10-01", sep = ""))) ## why Oct 1?
 
 # random sample of spatial points
 sps <- spsample(west.boreal, 1, type = "random") %>% 
-  spTransform(latlongproj) %>%
+  spTransform(crs.latlon) %>%
   SpatialPointsDataFrame(data = data.frame(dat = 1))
 
 # colour palette
 colours <- brewer.pal(n = 9, name = "YlOrRd")
 
 # `plotKML` timeseries
-ts.kml <- new("RasterBrickTimeSeries", variable = "X", sampled = sps, rasters = brk.ll,
+ts.kml <- new("RasterBrickTimeSeries", variable = "X", sampled = sps, rasters = brick.latlon,
               TimeSpan.begin = t.strt, TimeSpan.end = t.stop)
-dims <- dim(brk.ll)
+dims <- dim(brick.latlon)
 #plotKML(ts.kml, colour_scale = c(rep("black",2), heat.colors(12)[12:1]),
 #        pngwidth = dims[1], pngheight = dims[2], pngpointsize = 14)
 
 # `rts` timeseries
-ts.rts <- rts(brk.ll, time = as.POSIXct(as.Date(t.strt)))
+ts.rts <- rts(brick.latlon, time = as.POSIXct(as.Date(t.strt)))
 plot(ts.rts, col = c("white", colours)) # this is a *garbage* way to plot a TS
 
-saveObjects(c("brk.ll", "ts.kml", "ts.rts"), rdata.path)
-rm(bcab.all.boreal.raster.brick, brk.ll, ts.kml, ts.rts, west.boreal)
+saveObjects(c("brick.latlon", "ts.kml", "ts.rts"), rdata.path)
+rm(bcab.all.boreal.raster.brick, brick.latlon, ts.kml, ts.rts, west.boreal)
+.cleanup()
 ```
