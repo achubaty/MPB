@@ -148,16 +148,16 @@ if (isTRUE(._MAPS_USERAW_.)) {
     ### AB points maps
     ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot")
     ab.pnts.dir.shp <- unique(sapply(strsplit(ab.pnts.files, "\\."), function(x) x[[1]]))
-    ab.pnts <- sfClusterApplyLB(ab.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb"))
-    names(ab.pnts) <- substr(sapply(strsplit(ab.pnts.dir.shp,"_"), function(x) x[[3]]), 1, 4)
+    ab.pnts <- sfClusterApplyLB(ab.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>%
+      setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4))
     
     ### BC points maps
     bc.pnts.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "spot")
     bc.pnts.dir.shp <- unique(sapply(strsplit(bc.pnts.files, "\\."), function(x) x[[1]]))
     omit <- which(match(bc.pnts.dir.shp, "ibm_spot_data_northernpoints_removed", nomatch = 0) == 1)
     if (length(omit) > 0) bc.pnts.dir.shp <- bc.pnts.dir.shp[-omit]
-    bc.pnts = sfClusterApplyLB(bc.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC"))
-    names(bc.pnts) <- sapply(strsplit(bc.pnts.dir.shp, "_"), function(x) x[[3]])
+    bc.pnts = sfClusterApplyLB(bc.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>%
+      setNames(sapply(strsplit(bc.pnts.dir.shp, "_"), function(x) x[[3]]))
   
     # save for later use
     saveObjects(c("ab.pnts", "bc.pnts"), rdata.path)
@@ -183,8 +183,8 @@ if (isTRUE(._MAPS_USERAW_.)) {
     ### AB poly maps
     ab.poly.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "poly")
     ab.poly.dir.shp <- unique(sapply(strsplit(ab.poly.files, "\\."), function(x) x[[1]]))
-    ab.poly <- sfClusterApplyLB(ab.poly.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb"))
-    names(ab.poly) <- substr(sapply(strsplit(ab.poly.dir.shp,"_"), function(x) x[[3]]), 1, 4)
+    ab.poly <- sfClusterApplyLB(ab.poly.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>%
+      setNames(substr(sapply(strsplit(ab.poly.dir.shp, "_"), function(x) x[[3]]), 1, 4))
     
     # save these new map objects for later use
     saveObjects("ab.poly", rdata.path)
@@ -192,8 +192,8 @@ if (isTRUE(._MAPS_USERAW_.)) {
     ### BC poly maps
     bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "poly")
     bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
-    bc.poly <- sfClusterApplyLB(bc.poly.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC"))
-    names(bc.poly) <- sapply(strsplit(bc.poly.dir.shp, "_"), function(x) x[[3]])
+    bc.poly <- sfClusterApplyLB(bc.poly.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>%
+      setNames(sapply(strsplit(bc.poly.dir.shp, "_"), function(x) x[[3]]))
     
     # save these new map objects for later use
     saveObjects("bc.poly", rdata.path)
@@ -281,12 +281,11 @@ if (isTRUE(._MAPS_REPROJ_.)) {
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(rgdal)
     
-    ab.pnts.boreal <- sfClusterApplyLB(ab.pnts, spTransform, crs.boreal)
-    bc.pnts.boreal <- sfClusterApplyLB(bc.pnts, spTransform, crs.boreal)
-  
-    names(ab.pnts.boreal) <- names(ab.pnts)
-    names(bc.pnts.boreal) <- names(bc.pnts)
-  
+    ab.pnts.boreal <- sfClusterApplyLB(ab.pnts, spTransform, crs.boreal) %>%
+      setNames(names(ab.pnts))
+    bc.pnts.boreal <- sfClusterApplyLB(bc.pnts, spTransform, crs.boreal) %>% 
+      setNames(names(bc.pnts))
+
     # save these new map objects for later use
     saveObjects(c("ab.pnts.boreal", "bc.pnts.boreal"), rdata.path)
   sfStop()
@@ -304,11 +303,11 @@ if (isTRUE(._MAPS_REPROJ_.)) {
       out <-  merge(bc.pnts.boreal[[wh.bc[x]]], ab.pnts.boreal[[wh.ab[x]]], all = TRUE)
       coordinates(out) <- ~ coords.x1 + coords.x2
       out$ntrees <- ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees), out$num_trees, NA))
-      return(out)})
-    bcab.pnts.boreal <- sfClusterApplyLB(bcab.pnts.boreal, function(x) {
+      return(out)}) %>%
+      sfClusterApplyLB(., function(x) {
       proj4string(x) <- crs.boreal; return(x)
-    })
-    names(bcab.pnts.boreal) <- substr(names(bc.pnts.boreal)[wh.bc], 2, 5)
+    }) %>%
+      setNames(substr(names(bc.pnts.boreal)[wh.bc], 2, 5))
     
     saveObjects("bcab.pnts.boreal", rdata.path)
   sfStop()
@@ -334,12 +333,12 @@ if (isTRUE(._MAPS_REPROJ_.)) {
   ### REPROJECT AB AND BC SO THEY ARE BOTH IN THE `boreal` PROJECTION
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
     sfLibrary(rgdal)
-    ab.poly.boreal <- sfClusterApplyLB(ab.poly, spTransform, crs.boreal)
-    names(ab.poly.boreal) <- names(ab.poly)
+    ab.poly.boreal <- sfClusterApplyLB(ab.poly, spTransform, crs.boreal) %>%
+      setNames(names(ab.poly))
     saveObjects("ab.poly.boreal", rdata.path)
   
-    bc.poly.boreal <- sfClusterApplyLB(bc.poly, spTransform, crs.boreal)
-    names(bc.poly.boreal) <- names(bc.poly)
+    bc.poly.boreal <- sfClusterApplyLB(bc.poly, spTransform, crs.boreal) %>% 
+      setNames(names(bc.poly))
     saveObjects("bc.poly.boreal", rdata.path)
   
     rm(ab.poly.boreal, bc.poly.boreal)
@@ -396,20 +395,20 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     sfLibrary(raster)
     sfExport("west.boreal.raster")
     
-    ab.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(ab.pnts.boreal, rasterize.mpb))
-    names(ab.pnts.boreal.raster.stack) <- names(ab.pnts.boreal)
+    ab.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(ab.pnts.boreal, rasterize.mpb)) %>%
+      setNames(names(ab.pnts.boreal))
     writeRaster(ab.pnts.boreal.raster.stack, file.path(rdata.path, "ab_pnts_boreal.grd"), overwrite = TRUE)
     saveObjects("ab.pnts.boreal.raster.stack", rdata.path)
     rm(ab.pnts.boreal.raster.stack)
   
-    bc.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(bc.pnts.boreal, rasterize.mpb))
-    names(bc.pnts.boreal.raster.stack) <- names(bc.pnts.boreal)
+    bc.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(bc.pnts.boreal, rasterize.mpb)) %>% 
+      setNames(names(bc.pnts.boreal))
     writeRaster(bc.pnts.boreal.raster.stack, file.path(rdata.path, "bc_pnts_boreal.grd"), overwrite = TRUE)
     saveObjects("bc.pnts.boreal.raster.stack", rdata.path)
     rm(bc.pnts.boreal.raster.stack)
     
-    bcab.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(bcab.pnts.boreal, rasterize.mpb))
-    names(bcab.pnts.boreal.raster.stack) <- names(bcab.pnts.boreal)
+    bcab.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(bcab.pnts.boreal, rasterize.mpb)) %>%
+      names(names(bcab.pnts.boreal))
     writeRaster(bcab.pnts.boreal.raster.stack, file.path(rdata.path, "bcab_pnts_boreal.grd"), overwrite = TRUE)
     saveObjects("bcab.pnts.boreal.raster.stack", rdata.path)
     rm(bcab.pnts.boreal.raster.stack)
@@ -445,7 +444,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
                              unique(!is.na(which.min(ab.poly.boreal.raster.stack[[x]])))
                           }))
     ab.poly.boreal.raster.stack <- ab.poly.boreal.raster.stack[[notNAs]] %>% 
-      setNames(unlist(strsplit(names(ab.poly.boreal),"poly"))[notNAs])
+      setNames(unlist(strsplit(names(ab.poly.boreal), "poly"))[notNAs])
     writeRaster(ab.poly.boreal.raster.stack,
                 filename = file.path(rdata.path, "ab_poly_boreal.grd"), overwrite = TRUE)
     saveObjects("ab.poly.boreal.raster.stack", rdata.path)
