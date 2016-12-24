@@ -1,15 +1,15 @@
 ## Set options
-CFS <- grepl("W-VIC", Sys.info()[["nodename"]])
-OS <- Sys.info()[["sysname"]]
+._CFS_. <- grepl("W-VIC", Sys.info()[["nodename"]])
+._OS_. <- Sys.info()[["sysname"]]
 
-maps.dir <- if (OS == "Windows") {
+maps.dir <- if (._OS_. == "Windows") {
   "//W-VIC-A105388/shared/data"
-} else if (OS == "Darwin") {
+} else if (._OS_. == "Darwin") {
   "~/Documents/shared"
-} else if (OS == "Linux") {
-  ifelse(isTRUE(CFS), "/mnt/A105388/shared/data", "~/Documents/shared")
+} else if (._OS_. == "Linux") {
+  ifelse(isTRUE(._CFS_.), "/mnt/A105388/shared/data", "~/Documents/Data/shared")
 }
-if (!dir.exists(maps.dir)) stop("maps.dir does not exist.")
+stopifnot(dir.exists(maps.dir))
 
 download50k = FALSE
 download250k = FALSE
@@ -17,7 +17,7 @@ download250k = FALSE
 reprocess50k = FALSE
 reprocess250k = FALSE
 
-num.cpus = 4
+num.cpus = parallel::detectCores() / 2
 
 ## Libaries
 library(devtools)
@@ -58,7 +58,15 @@ if (reprocess250k) {
 }
 
 ## Load previously saved DEM objects
-load(file.path(maps.dir, "cded", "dem_SR_boreal_250k.RData"))
+f <- file.path(maps.dir, "cded", "dem_all_250k.RData")
+fr <- file.path(maps.dir, "cded", "dem_all_250k.grd")
+if (file.exists(f)) {
+  load(f)
+} else if (file.exists(fr)) {
+  dem_all_250k <- raster(fr)
+} else {
+  stop("Unable to load file. Are you sure you have it in your maps.dir?")
+}
 
 ##------------------------------------------------------------------------------
 ## from Jean; incomplete!
