@@ -74,7 +74,7 @@ simB79fit <- simInit(
     mpbClimate = list(.plotInitialTime = 1, .plotInterval = 1, nx = 100, ny = 100, updateInterval = 1),
     mpbMassAttacks = list(.plotInitialTime = 1, .plotInterval = NA)
   ),
-  modules = list("mpbRandomLandscapes",
+  modules = list("mpbRandomLandscapes", #mpbPine,
                  "mpbClimate",
                  "mpbMassAttacks",
                  "mpbRedTopDispersal",
@@ -106,11 +106,11 @@ simB79forced <- simInit(
     MPBRedTopMassAttacks = list(.plotInitialTime = 1, .plotInterval = NA),
     MPBRedTopImpacts = list(.plotInitialTime = 1, .plotInterval = 1)
   ),
-    modules = list("mpbRandomLandscapes",
-                 "mpbClimate",
-                 "mpbMassAttacks",
-                 "mpbRedTopDispersal",
-                 "mpbGrowth_B79forced"),
+    modules = list("mpbRandomLandscapes", #mpbPine,
+                   "mpbClimate",
+                   "mpbMassAttacks",
+                   "mpbRedTopDispersal",
+                   "mpbGrowth_B79forced"),
   paths = list(modulePath = "./modules")
 ) %>% spades(., debug = FALSE)
 ```
