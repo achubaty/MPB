@@ -141,90 +141,34 @@ Descriptions of:
 
 ```{r import-maps-points}
 if (isTRUE(._MAPS_USERAW_.)) {
-  ### AB points maps
-  ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot")
-  ab.pnts.dir.shp <- unique(sapply(strsplit(ab.pnts.files, "\\."), function(x) x[[1]]))
-  ab.pnts.list <- lapply(ab.pnts.dir.shp, getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>%
-    setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4))
-  
-  ## manual cleanup required because colnames differ each year
-  ## we want to keep the YEAR and the NUM_TREES
-  ab.pnts <- ab.pnts.list[[1]][, c("SURVYEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES"))
-  ab.pnts <- ab.pnts.list[[2]][, c("SURV_YEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[3]][, c("SURVYEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[4]][, c("SURVYEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[5]][, c("SURVYEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[6]][, c("SURVYEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[7]][, c("SURVYEAR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[8]][, c("BEETLE_YR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[9]][, c("BEETLE_YR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[10]][, c("BEETLE_YR", "NUM_TREES")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[11]][, c("survyear", "num_trees")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
-  ab.pnts <- ab.pnts.list[[12]][, c("survyear", "num_trees")] %>%
-    set_names(c("YEAR", "NUM_TREES")) %>% 
-    spRbind(ab.pnts, .)
+  ### Read in raw maps, and save them as individual files 
+  ### - this may take a while...grab a coffee or something 
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
+    sfLibrary(rgdal) 
+    sfLibrary(sp) 
+       
+    ### AB points maps 
+    ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot") 
+    ab.pnts.dir.shp <- unique(sapply(strsplit(ab.pnts.files, "\\."), function(x) x[[1]])) 
+    ab.pnts <- sfClusterApplyLB(ab.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>% 
+      setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4)) 
+     
+    ### BC points maps 
+    bc.pnts.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "spot") 
+    bc.pnts.dir.shp <- unique(sapply(strsplit(bc.pnts.files, "\\."), function(x) x[[1]])) 
+    omit <- which(match(bc.pnts.dir.shp, "ibm_spot_data_northernpoints_removed", nomatch = 0) == 1) 
+    if (length(omit) > 0) bc.pnts.dir.shp <- bc.pnts.dir.shp[-omit] 
+    bc.pnts = sfClusterApplyLB(bc.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>% 
+      setNames(sapply(strsplit(bc.pnts.dir.shp, "_"), function(x) x[[3]])) 
+   
+    # save for later use 
+    saveObjects(c("ab.pnts", "bc.pnts"), rdata.path) 
+   
+    # clean up workspace 
+    rm(ab.pnts, ab.pnts.dir.shp, ab.pnts.files,
+       bc.pnts, bc.pnts.dir.shp, bc.pnts.files, omit)
+  sfStop()
 
-  ### BC points maps
-  bc.pnts.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "spot")
-  bc.pnts.dir.shp <- unique(sapply(strsplit(bc.pnts.files, "\\."), function(x) x[[1]]))
-  omit <- which(match(bc.pnts.dir.shp, "ibm_spot_data_northernpoints_removed", nomatch = 0) == 1)
-  if (length(omit) > 0) bc.pnts.dir.shp <- bc.pnts.dir.shp[-omit]
-  bc.pnts.list <- lapply(bc.pnts.dir.shp, getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>%
-    setNames(sapply(strsplit(bc.pnts.dir.shp, "_"), function(x) x[[3]]))
-  
-  ## manual cleanup required because colnames differ each year
-  ## we want to keep the YEAR and the NUM_TREES
-  bc.pnts <- bc.pnts.list[[1]][, c("YEAR", "NUM_TREES")]
-  bc.pnts <- bc.pnts.list[[2]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(ab.pnts, .)
-  bc.pnts <- bc.pnts.list[[3]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[4]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[5]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[6]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[7]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[8]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[9]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[10]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[11]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-  bc.pnts <- bc.pnts.list[[12]][, c("YEAR", "NUM_TREES")] %>%
-    spRbind(bc.pnts, .)
-
-  # save for later use
-  saveObjects(c("ab.pnts", "ab.pnts.list", "bc.pnts", "bc.pnts.list"), rdata.path)
-  
-  # clean up workspace
-  rm(ab.pnts, ab.pnts.dir.shp, ab.pnts.files, ab.pnts.list,
-     bc.pnts, bc.pnts.dir.shp, bc.pnts.files, bc.pnts.list, omit)
   .cleanup()
 }
 ```
@@ -233,94 +177,33 @@ if (isTRUE(._MAPS_USERAW_.)) {
 
 ```{r import-maps-polygons}
 if (isTRUE(._MAPS_USERAW_.)) {
-  ### AB poly maps
-  ab.poly.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "poly")
-  ab.poly.dir.shp <- unique(sapply(strsplit(ab.poly.files, "\\."), function(x) x[[1]]))
-  ab.poly.list <- lapply(ab.poly.dir.shp, getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>%
-    setNames(substr(sapply(strsplit(ab.poly.dir.shp, "_"), function(x) x[[3]]), 1, 4))
+    sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
+    sfLibrary(rgdal) 
+    sfLibrary(sp) 
+     
+    ### AB poly maps 
+    ab.poly.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "poly") 
+    ab.poly.dir.shp <- unique(sapply(strsplit(ab.poly.files, "\\."), function(x) x[[1]])) 
+    ab.poly <- sfClusterApplyLB(ab.poly.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>% 
+      setNames(substr(sapply(strsplit(ab.poly.dir.shp, "_"), function(x) x[[3]]), 1, 4)) 
+     
+    # save these new map objects for later use 
+    saveObjects("ab.poly", rdata.path) 
+   
+    ### BC poly maps 
+    bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "poly") 
+    bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]])) 
+    bc.poly <- sfClusterApplyLB(bc.poly.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>% 
+      setNames(sapply(strsplit(bc.poly.dir.shp, "_"), function(x) x[[3]]))
     
-  ## manual cleanup required because colnames differ each year
-  ## we want to keep the YEAR and the NUM_TREES
-  ab.poly.list <- lapply(ab.poly.list, function(x) {
-    if ("NUM_TREES" %in% names(x)) {
-      x %>% 
-        .[, c("SURVYEAR", "NUM_TREES")] %>%
-        set_names(c("YEAR", "NUM_TREES")) %>% 
-        spChFIDs(., paste(.$YEAR, row.names(.), sep = "."))
-    } else {
-      rnames <- rownames(as(x, "data.frame"))
-      df <- data.frame(NUM_TREES = rep(NA_integer_, NROW(x))) %>% 
-        set_rownames(rnames)
-      spCbind(x, df) %>% 
-        .[, c("SURVYEAR", "NUM_TREES")] %>%
-        set_names(c("YEAR", "NUM_TREES")) %>% 
-        spChFIDs(., paste(.$YEAR, row.names(.), sep = "."))
-    }
-  })
-  ab.poly <- ab.poly.list[[1]]
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[2]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[3]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[4]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[5]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[6]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[7]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[8]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[9]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[10]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[11]])
-  ab.poly <- spRbind(ab.poly, ab.poly.list[[12]])
-
-  # save these new map objects for later use
-  saveObjects(c("ab.poly", "ab.poly.list"), rdata.path)
+    # save these new map objects for later use 
+    saveObjects("bc.poly", rdata.path) 
+     
+    # clean up workspace 
+    rm(ab.poly, ab.poly.dir.shp, ab.poly.files) 
+    rm(bc.poly, bc.poly.dir.shp, bc.poly.files) 
+  sfStop()
   
-  ### BC poly maps
-  bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "poly")
-  bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
-  bc.poly.list <- lapply(bc.poly.dir.shp, getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>%
-    setNames(sapply(strsplit(bc.poly.dir.shp, "_"), function(x) x[[3]]))
-  
-  ## manual cleanup required because colnames differ each year
-  ## we want to keep the YEAR and the NUM_TREES
-  bc.poly.list <- lapply(bc.poly.list, function(x) {
-    if ("NUM_TREES" %in% names(x)) {
-      x %>% 
-        .[, c("YEAR", "NUM_TREES")] %>%
-        spChFIDs(., paste(.$YEAR, row.names(.), sep = "."))
-    } else {
-      rnames <- rownames(as(x, "data.frame"))
-      df <- data.frame(NUM_TREES = rep(NA_integer_, NROW(x))) %>% 
-        set_rownames(rnames)
-      spCbind(x, df) %>% 
-        .[, c("YEAR", "NUM_TREES")] %>%
-        spChFIDs(., paste(.$YEAR, row.names(.), sep = "."))
-    }
-  })
-  bc.poly.list <- lapply(bc.poly.list, function(x) {
-    x$YEAR <- as.character(x$YEAR) %>% as.numeric()
-    return(x)
-  })
-  bc.poly <- bc.poly.list[[1]]
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[2]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[3]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[4]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[5]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[6]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[7]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[8]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[9]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[10]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[11]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[12]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[13]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[14]])
-  bc.poly <- spRbind(bc.poly, bc.poly.list[[15]])
-
-  # save these new map objects for later use
-  saveObjects("bc.poly", "bc.poly.list", rdata.path)
-  
-  # clean up workspace
-  rm(ab.poly, ab.poly.dir.shp, ab.poly.files, ab.poly.list,
-     bc.poly, bc.poly.dir.shp, bc.poly.files, bc.poly.list)
   .cleanup()
 }
 ```
@@ -418,7 +301,7 @@ if (isTRUE(._MAPS_REPROJ_.)) {
     sfExport("ab.pnts.boreal", "bc.pnts.boreal", "crs.boreal", "wh.ab", "wh.bc")  
     
     bcab.pnts.boreal <- sfClusterApplyLB(1:length(wh.ab), function(x) {
-      out <- merge(bc.pnts.boreal[[wh.bc[x]]], ab.pnts.boreal[[wh.ab[x]]])
+      out <- merge(bc.pnts.boreal[[wh.bc[x]]], ab.pnts.boreal[[wh.ab[x]]]) ## TO DO
       coordinates(out) <- ~ coords.x1 + coords.x2
       out$ntrees <- ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees), out$num_trees, NA))
       return(out)
