@@ -419,15 +419,12 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
 
 ```{r rasterize-maps-points}
 if (isTRUE(._MAPS_MKRSTR_.)) {
-  loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "bcab.pnts.boreal", "west.boreal.raster"), rdata.path)
+  loadObjects(c("ab.pnts.boreal", "bc.pnts.boreal", "bcab.pnts.boreal"), rdata.path)
+  suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
   rasterize.mpb <- function(x,...) {
     rasterize(x = x, y = west.boreal.raster,
-              field = if (any(colnames(x@data) == "NUM_TREES")) {
-                x@data$NUM_TREES
-              } else {
-                x@data$num_trees
-              },
+              field = as.numeric(x@data$NUM_TREES),
               fun = "sum", overwrite = TRUE, ...)
   }
   
@@ -439,23 +436,26 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
       setNames(names(ab.pnts.boreal))
     writeRaster(ab.pnts.boreal.raster.stack, file.path(rdata.path, "ab_pnts_boreal.grd"), overwrite = TRUE)
     saveObjects("ab.pnts.boreal.raster.stack", rdata.path)
-    rm(ab.pnts.boreal.raster.stack)
+    rm(ab.pnts.boreal, ab.pnts.boreal.raster.stack)
+    .cleanup()
   
     bc.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(bc.pnts.boreal, rasterize.mpb)) %>% 
       setNames(names(bc.pnts.boreal))
     writeRaster(bc.pnts.boreal.raster.stack, file.path(rdata.path, "bc_pnts_boreal.grd"), overwrite = TRUE)
     saveObjects("bc.pnts.boreal.raster.stack", rdata.path)
-    rm(bc.pnts.boreal.raster.stack)
+    rm(bc.pnts.boreal, bc.pnts.boreal.raster.stack)
+    .cleanup()
     
     bcab.pnts.boreal.raster.stack <- stack(sfClusterApplyLB(bcab.pnts.boreal, rasterize.mpb)) %>%
-      names(names(bcab.pnts.boreal))
+      set_names(names(bcab.pnts.boreal))
     writeRaster(bcab.pnts.boreal.raster.stack, file.path(rdata.path, "bcab_pnts_boreal.grd"), overwrite = TRUE)
     saveObjects("bcab.pnts.boreal.raster.stack", rdata.path)
-    rm(bcab.pnts.boreal.raster.stack)
+    rm(bcab.pnts.boreal, bcab.pnts.boreal.raster.stack)
+    .cleanup()
   sfStop()
 
   ## cleanup workspace
-  rm(ab.pnts.boreal, bc.pnts.boreal, west.boreal.raster)
+  rm(west.boreal.raster)
   .cleanup()
 }
 ```
@@ -464,7 +464,8 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
 
 ```{r rasterize-maps-polygons}
 if (isTRUE(._MAPS_MKRSTR_.)) {
-  loadObjects(c("ab.poly.boreal", "bc.poly.boreal", "west.boreal.raster"), rdata.path)
+  loadObjects(c("ab.poly.boreal", "bc.poly.boreal"), rdata.path)
+  suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
   ### we arbitrarily picked 1000 trees per 1ha
   ###   This NEEDS to be revisited.
@@ -476,9 +477,10 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     sfLibrary(raster)
     sfExport("west.boreal.raster")
     
-    ab.poly.boreal.raster.stack <- stack(sfClusterApplyLB(ab.poly.boreal, change.res)) %>% 
+    ab.poly.boreal.raster.stack <- sfClusterApplyLB(ab.poly.boreal, change.res) %>%
+      stack() %>%
       setNames(ab.poly.boreal)
-    # several rasters have no values because they were in southern Alberta
+    ## several rasters have no values because they were in southern Alberta
     notNAs <- which(sapply(1:nlayers(ab.poly.boreal.raster.stack), function(x) {
       unique(!is.na(which.min(ab.poly.boreal.raster.stack[[x]])))
     }))
@@ -488,16 +490,17 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
                 filename = file.path(rdata.path, "ab_poly_boreal.grd"), overwrite = TRUE)
     saveObjects("ab.poly.boreal.raster.stack", rdata.path)
       
-    bc.poly.boreal.raster.stack <- stack(sfClusterApplyLB(bc.poly.boreal, change.res)) %>%
+    bc.poly.boreal.raster.stack <- sfClusterApplyLB(bc.poly.boreal, change.res) %>%
+      stack() %>%
       setNames(bc.poly.boreal)
     writeRaster(bc.poly.boreal.raster.stack,
                 filename = file.path(rdata.path, "bc_poly_boreal.grd"), overwrite = TRUE)
     saveObjects("bc.poly.boreal.raster.stack", rdata.path)
-    
     rm(change.res, notNAs)
   sfStop()
+  .cleanup()
   
-  ### merge ab and bc polygons
+  ### merge ab and bc polygon rasters
   ab.poly.boreal.raster.unstack <- unstack(ab.poly.boreal.raster.stack)
   bc.poly.boreal.raster.unstack <- unstack(bc.poly.boreal.raster.stack)
   
