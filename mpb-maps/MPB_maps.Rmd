@@ -225,7 +225,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
     assign(paste0("CAN_adm", s),
            raster::getData('GADM', path = adm.path, country = "Canada", level = s),
            envir = .GlobalEnv)
-    save(list = paste0("CAN_adm", s), file = file.path(rdata.path, paste0("CAN_adm", s, ".Rdata")))
+    save(list = paste0("CAN_adm", s), file = file.path(adm.path, paste0("CAN_adm", s, ".Rdata")))
   }
 }
 ```
