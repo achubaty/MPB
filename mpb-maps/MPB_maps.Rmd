@@ -498,6 +498,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     saveObjects("bc.poly.boreal.raster.stack", rdata.path)
     rm(change.res, notNAs)
   sfStop()
+  rm("ab.poly.boreal", "bc.poly.boreal")
   .cleanup()
   
   ### merge ab and bc polygon rasters
@@ -521,8 +522,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   saveObjects("bcab.poly.boreal.raster.stack", rdata.path)
   
   ## cleanup workspace
-  objects2rm <- c("ab.poly.boreal", "bc.poly.boreal",
-                  "ab.poly.boreal.raster.stack", "ab.poly.boreal.raster.unstack",
+  objects2rm <- c("ab.poly.boreal.raster.stack", "ab.poly.boreal.raster.unstack",
                   "bc.poly.boreal.raster.stack", "bc.poly.boreal.raster.unstack",
                   "bcab.poly.boreal.raster.stack", "bcab.poly.boreal.raster.unstack", 
                   "west.boreal.raster", "wh.ab", "wh.bc")
