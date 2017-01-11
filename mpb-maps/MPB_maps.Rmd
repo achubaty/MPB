@@ -386,7 +386,7 @@ if (isTRUE(._MAPS_REPROJ_.)) {
     }) %>%
       setNames(names(bc.poly.boreal)[wh.bc])
     
-    saveObjects("bcab.pnts.boreal", rdata.path)
+    saveObjects("bcab.poly.boreal", rdata.path)
   sfStop()
   .cleanup()
 }
