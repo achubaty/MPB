@@ -151,16 +151,24 @@ if (isTRUE(._MAPS_USERAW_.)) {
     ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot") 
     ab.pnts.dir.shp <- unique(sapply(strsplit(ab.pnts.files, "\\."), function(x) x[[1]])) 
     ab.pnts <- sfClusterApplyLB(ab.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "ab_mpb")) %>% 
-      setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4)) 
+      setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4)) %>%
+      lapply(., function(x) {
+        names(x) <- toupper(names(x))
+        return(x)
+      })
      
     ### BC points maps 
     bc.pnts.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "spot") 
     bc.pnts.dir.shp <- unique(sapply(strsplit(bc.pnts.files, "\\."), function(x) x[[1]])) 
     omit <- which(match(bc.pnts.dir.shp, "ibm_spot_data_northernpoints_removed", nomatch = 0) == 1) 
     if (length(omit) > 0) bc.pnts.dir.shp <- bc.pnts.dir.shp[-omit] 
-    bc.pnts = sfClusterApplyLB(bc.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>% 
-      setNames(sapply(strsplit(bc.pnts.dir.shp, "_"), function(x) x[[3]])) 
-   
+    bc.pnts <- sfClusterApplyLB(bc.pnts.dir.shp, fun = getOGR, dir = file.path(maps.dir, "MPB", "province_BC")) %>% 
+      setNames(sapply(strsplit(bc.pnts.dir.shp, "_"), function(x) x[[3]])) %>%
+        lapply(., function(x) {
+        names(x) <- toupper(names(x))
+        return(x)
+      })
+    
     # save for later use 
     saveObjects(c("ab.pnts", "bc.pnts"), rdata.path) 
    
@@ -177,7 +185,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
 
 ```{r import-maps-polygons}
 if (isTRUE(._MAPS_USERAW_.)) {
-    sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
     sfLibrary(rgdal) 
     sfLibrary(sp) 
      
@@ -292,27 +300,28 @@ if (isTRUE(._MAPS_REPROJ_.)) {
   sfStop()
   .cleanup()
 
-  ### MERGE AB AND BC POINTSs
+  ### MERGE AB AND BC POINTS
   wh.ab <- na.omit(match(names(bc.pnts.boreal), names(ab.pnts.boreal)))
   wh.bc <- na.omit(match(substr(names(ab.pnts.boreal), 1, 4), names(bc.pnts.boreal)))
   
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
+    sfLibrary(maptools)
     sfLibrary(sp)
     sfExport("ab.pnts.boreal", "bc.pnts.boreal", "crs.boreal", "wh.ab", "wh.bc")  
     
     bcab.pnts.boreal <- sfClusterApplyLB(1:length(wh.ab), function(x) {
-      out <- merge(bc.pnts.boreal[[wh.bc[x]]], ab.pnts.boreal[[wh.ab[x]]]) ## TO DO
-      coordinates(out) <- ~ coords.x1 + coords.x2
-      out$ntrees <- ifelse(!is.na(out$NUM_TREES), out$NUM_TREES, ifelse(!is.na(out$num_trees), out$num_trees, NA))
+      out <- spRbind(bc.pnts.boreal[[wh.bc[x]]][, "NUM_TREES"], ab.pnts.boreal[[wh.ab[x]]][, "NUM_TREES"])
       return(out)
     }) %>%
       sfClusterApplyLB(., function(x) {
-      proj4string(x) <- crs.boreal; return(x)
+      proj4string(x) <- crs.boreal
+      return(x)
     }) %>%
-      setNames(substr(names(bc.pnts.boreal)[wh.bc], 2, 5))
+      setNames(names(bc.pnts.boreal)[wh.bc])
     
     saveObjects("bcab.pnts.boreal", rdata.path)
   sfStop()
+  .cleanup()
   
   ## cleanup workspace
   rm(ab.pnts, ab.pnts.boreal, bc.pnts, bc.pnts.boreal, bcab.pnts.boreal, wh.ab, wh.bc)
@@ -334,23 +343,52 @@ if (isTRUE(._MAPS_REPROJ_.)) {
   
   ### REPROJECT AB AND BC SO THEY ARE BOTH IN THE `boreal` PROJECTION
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
+    sfLibrary(magrittr)
     sfLibrary(rgdal)
-    ab.poly.boreal <- sfClusterApplyLB(ab.poly, spTransform, crs.boreal) %>%
+    sfLibrary(rgeos)
+    sfExport("crs.boreal")
+    
+    ab.poly.boreal <- sfClusterApplyLB(ab.poly, function(x) {
+      spTransform(x, crs.boreal) %>% 
+        gBuffer(., byid = TRUE, width = 0)
+    }) %>% 
       setNames(names(ab.poly))
+    stopifnot(all(sapply(ab.poly.boreal, gIsValid)))
     saveObjects("ab.poly.boreal", rdata.path)
+    rm(ab.poly)
   
-    bc.poly.boreal <- sfClusterApplyLB(bc.poly, spTransform, crs.boreal) %>% 
+    bc.poly.boreal <- sfClusterApplyLB(bc.poly, function(x) {
+      spTransform(x, crs.boreal) %>% 
+        gBuffer(., byid = TRUE, width = 0)
+    }) %>% 
       setNames(names(bc.poly))
+    stopifnot(all(sapply(bc.poly.boreal, gIsValid)))
     saveObjects("bc.poly.boreal", rdata.path)
-  
-    rm(ab.poly.boreal, bc.poly.boreal)
+    rm(bc.poly)
   sfStop()
-  
-  ## cleanup workspace
-  rm(ab.poly, bc.poly)
   .cleanup()
   
-  warning("Incomplete: merging poly data can't be done at this point")
+  ### MERGE AB AND BC POLYGONS
+  wh.ab <- na.omit(match(names(bc.poly.boreal), names(ab.poly.boreal)))
+  wh.bc <- na.omit(match(substr(names(ab.poly.boreal), 1, 4), names(bc.poly.boreal)))
+  
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
+    sfLibrary(sp)
+    sfLibrary(raster)
+    sfExport("ab.poly.boreal", "bc.poly.boreal", "crs.boreal", "wh.ab", "wh.bc")  
+    
+    bcab.pnts.boreal <- sfClusterApplyLB(1:length(wh.ab), function(x) {
+      union(bc.poly.boreal[[wh.bc[x]]], ab.poly.boreal[[wh.ab[x]]])
+    }) %>%
+      sfClusterApplyLB(., function(x) {
+      proj4string(x) <- crs.boreal
+      return(x)
+    }) %>%
+      setNames(names(bc.pnts.boreal)[wh.bc])
+    
+    saveObjects("bcab.pnts.boreal", rdata.path)
+  sfStop()
+  .cleanup()
 }
 ```
 
