@@ -384,7 +384,7 @@ if (isTRUE(._MAPS_REPROJ_.)) {
       proj4string(x) <- crs.boreal
       return(x)
     }) %>%
-      setNames(names(bc.pnts.boreal)[wh.bc])
+      setNames(names(bc.poly.boreal)[wh.bc])
     
     saveObjects("bcab.pnts.boreal", rdata.path)
   sfStop()
