@@ -467,9 +467,8 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   loadObjects(c("ab.poly.boreal", "bc.poly.boreal"), rdata.path)
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
-  ### we arbitrarily picked 1000 trees per 1ha
-  ###   This NEEDS to be revisited.
-  change.res <- function(x, y = west.boreal.raster, field = 1000, fun = "last", ...) {
+  ### we use 1125 trees per 1ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
+  change.res <- function(x, y = west.boreal.raster, field = 1125, fun = "last", ...) {
     rasterize(x = x, y = y, field = field, fun = fun, ...)
   }
   
