@@ -7,30 +7,46 @@ bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}
+## determine OS and whether we are on a CFS machine
+._CFS_. <- grepl("W-VIC", Sys.info()[["nodename"]])
+._OS_. <- Sys.info()[["sysname"]]
+._USER_. <- Sys.info()[["user"]]
+
+## set R and knitr options
+if (isTRUE(._CFS_.)) {
+  options(repos = c(CRAN = "https://cran.rstudio.com/",
+                    NRCRAN = "http://132.156.149.95"))
+} else {
+  options(repos = c(CRAN = "https://cran.rstudio.com/"))
+}
+
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, eval = TRUE)
 
+## load and attach required packages
 library(magrittr)
 library(RCurl)
 library(raster)
 library(rasterVis)
 
-os <- tolower(Sys.info()[["sysname"]])
-user <- tolower(Sys.info()[["user"]])
-
-maps.dir <- if (user == "achubaty") {
-  if (os == "darwin") {
-    "~/Documents/shared"
-  } else if (os == "linux") {
-    "~/Documents/shared"
-  } else if (os == "windows") {
-    "/shared"
+# set work dirs based on computer used
+if (._USER_. == "achubaty") {
+  if (._OS_. == "Darwin") {
+    maps.dir <- "~/Documents/data/maps"
+  } else if (._OS_. == "Linux") {
+    if (isTRUE(._CFS_.)) {
+      maps.dir <- "/mnt/A105388/shared/data"
+    } else {
+      maps.dir <- "~/Documents/Data/shared"
+    }
+  } else if (._OS_. == "Windows") {
+    maps.dir <- "//W-VIC-A105388/shared/data"
   } else {
-    stop("unable to automatically change working directory: ",
-         "unknown operating system.")
+    stop("Which operating system are you using?")
   }
 }
 
 download.data <- FALSE
+pineMap.dir <- file.path(maps.dir, "Yemshanov_pine_map")
 ```
 
 ## Yemshanov pine map
@@ -38,11 +54,9 @@ download.data <- FALSE
 From @Yemshanov:2012ea.
 
 ```{r yemshanov-download}
-pineMap_dir <- file.path(maps.dir, "Yemshanov_pine_map")
-
 if (isTRUE(download.data)) {
-  if (!dir.exists(pineMap_dir)) {
-    dir.create(pineMap_dir)
+  if (!dir.exists(pineMap.dir)) {
+    dir.create(pineMap.dir)
   }
   
   # the paper describing the data set is here (behind a paywall):
@@ -59,12 +73,12 @@ if (isTRUE(download.data)) {
   paper <- basename(paper_url)
   fileNames <- unlist(strsplit(getURL(url, dirlistonly = TRUE), split = eol))
   lapply(fileNames, function(f) {
-    if (!file.exists(file.path(pineMap_dir, f))) {
-      download.file(paste0(url, f), destfile = file.path(pineMap_dir, f))
+    if (!file.exists(file.path(pineMap.dir, f))) {
+      download.file(paste0(url, f), destfile = file.path(pineMap.dir, f))
     }
   })
-  if (!file.exists(file.path(pineMap_dir, paper))) {
-     download.file(paper_url, destfile = file.path(pineMap_dir, paper))
+  if (!file.exists(file.path(pineMap.dir, paper))) {
+     download.file(paper_url, destfile = file.path(pineMap.dir, paper))
   }
 }
 ```
@@ -73,7 +87,7 @@ Plotting using `raster` package looks OK but not great:
 
 ```{r yemshanov-plot}
 ## load the map
-pineMap_file <- dir(pineMap_dir, pattern = "[.]flt$", full.names = TRUE)
+pineMap_file <- dir(pineMap.dir, pattern = "[.]flt$", full.names = TRUE)
 pineMap_raster <- raster(pineMap_file)
 
 ## plot the map
