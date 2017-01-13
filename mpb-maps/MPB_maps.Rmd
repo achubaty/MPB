@@ -477,8 +477,8 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     sfExport("west.boreal.raster")
     
     ab.poly.boreal.raster.stack <- sfClusterApplyLB(ab.poly.boreal, change.res) %>%
-      stack() %>%
-      setNames(ab.poly.boreal)
+      setNames(names(ab.poly.boreal)) %>%
+      stack()
     ## several rasters have no values because they were in southern Alberta
     notNAs <- which(sapply(1:nlayers(ab.poly.boreal.raster.stack), function(x) {
       unique(!is.na(which.min(ab.poly.boreal.raster.stack[[x]])))
@@ -490,8 +490,8 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     saveObjects("ab.poly.boreal.raster.stack", rdata.path)
       
     bc.poly.boreal.raster.stack <- sfClusterApplyLB(bc.poly.boreal, change.res) %>%
-      stack() %>%
-      setNames(bc.poly.boreal)
+      setNames(names(bc.poly.boreal)) %>%
+      stack()
     writeRaster(bc.poly.boreal.raster.stack,
                 filename = file.path(rdata.path, "bc_poly_boreal.grd"), overwrite = TRUE)
     saveObjects("bc.poly.boreal.raster.stack", rdata.path)
@@ -514,7 +514,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     return(out)
   })
   bcab.poly.boreal.raster.stack <- stack(bcab.poly.boreal.raster.unstack) %>%
-    setNames(bc.poly.boreal.raster.stack)
+    setNames(names(bc.poly.boreal.raster.stack))
   
   writeRaster(bcab.poly.boreal.raster.stack,
               filename = file.path(rdata.path, "bcab_poly_boreal.grd"), overwrite = TRUE)
