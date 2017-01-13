@@ -2,7 +2,7 @@
 # Everything in this file gets sourced during simInit, and all functions and objects
 #  are put into the simList. To use objects and functions, use sim$xxx.
 defineModule(sim, list(
-  name = "MPBRedTopGrowth_B79fit",
+  name = "mpbGrowth_B79fit",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
   authors = c(person(c("Barry", "J"), "Cooke", email = "Barry.Cooke@canada.ca", role = c("aut", "cre")),
@@ -15,43 +15,45 @@ defineModule(sim, list(
   citation = list(),
   reqdPkgs = list("ggplot2"),
   parameters = rbind(
-    defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
-    defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
+    defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
+    defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
     defineParameter("growthInterval", "numeric", 1, NA, NA, "This describes the interval time between growth events")
   ),
-  inputObjects = data.frame(objectName = c(globals(sim)$stackName, "massAttacksT", "massAttacksTminus1"),
-                            objectClass = c("RasterStack", "RasterLayer", "RasterLayer"),
-                            other = c(NA_character_, NA_character_, NA_character_),
-                            stringsAsFactors = FALSE),
-  outputObjects = data.frame(objectName = c("Berryman1979data", "massAttacksT", "massAttacksTminus1"),
-                             objectClass = c("data.frame", "RasterLayer", "RasterLayer"),
-                             other = c(NA_character_, NA_character_, NA_character_),
-                             stringsAsFactors = FALSE)
+  inputObjects = rbind(
+    expectsInput("pineMap", "RasterLayer", desc = "Map of pine available for MPB."),
+    expectsInput("massAttacksT", "RasterLayer", desc = ""),
+    expectsInput("massAttacksTminus1", "RasterLayer", desc = "")
+  ),
+  outputObjects = rbind(
+    createsOutput("Berryman1979data", "data.frame", desc = ""),
+    createsOutput("massAttacksT", "RasterLayer", desc = ""),
+    createsOutput("massAttacksTminus1", "RasterLayer", desc = "")
+  )
 ))
 
 ## event types
 #   - type `init` is required for initiliazation
 
-doEvent.MPBRedTopGrowth_B79fit = function(sim, eventTime, eventType, debug = FALSE) {
+doEvent.mpbGrowth_B79fit = function(sim, eventTime, eventType, debug = FALSE) {
   switch(eventType,
     "init" = {
       ### check for more detailed object dependencies:
       ### (use `checkObject` or similar)
   
       # do stuff for this event
-      sim <- sim$MPBRedTopGrowth_B79fitInit(sim)
+      sim <- sim$mpbGrowth_B79fitInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim) + P(sim)$.plotInitialTime, "MPBRedTopGrowth_B79fit", "plot")
-      sim <- scheduleEvent(sim, start(sim) + P(sim)$.saveInitialTime, "MPBRedTopGrowth_B79fit", "save")
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbGrowth_B79fit", "plot")
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbGrowth_B79fit", "save")
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
   
-      sim <- sim$MPBRedTopGrowth_B79fitPlot(sim)
+      sim <- sim$mpbGrowth_B79fitPlot(sim)
   
       # e.g., call your custom functions/methods here
       # you can define your own methods below this `doEvent` function
@@ -59,7 +61,7 @@ doEvent.MPBRedTopGrowth_B79fit = function(sim, eventTime, eventType, debug = FAL
       # schedule future event(s)
   
       # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "MPBRedTopGrowth_B79fit", "plot")
+      # sim <- scheduleEvent(sim, time(sim) + increment, "mpbGrowth_B79fit", "plot")
   
       # ! ----- STOP EDITING ----- ! #
   },
@@ -73,7 +75,7 @@ doEvent.MPBRedTopGrowth_B79fit = function(sim, eventTime, eventType, debug = FAL
     # schedule future event(s)
 
     # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + increment, "MPBRedTopGrowth_B79fit", "save")
+    # sim <- scheduleEvent(sim, time(sim) + increment, "mpbGrowth_B79fit", "save")
 
     # ! ----- STOP EDITING ----- ! #
   },
@@ -89,7 +91,7 @@ doEvent.MPBRedTopGrowth_B79fit = function(sim, eventTime, eventType, debug = FAL
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 ### template initilization
-MPBRedTopGrowth_B79fitInit <- function(sim) {
+mpbGrowth_B79fitInit <- function(sim) {
 
   # # ! ----- EDIT BELOW ----- ! #
 
@@ -109,7 +111,7 @@ MPBRedTopGrowth_B79fitInit <- function(sim) {
 }
 
 ### template for save events
-MPBRedTopGrowth_B79fitSave <- function(sim) {
+mpbGrowth_B79fitSave <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
   sim <- saveFiles(sim)
@@ -119,7 +121,7 @@ MPBRedTopGrowth_B79fitSave <- function(sim) {
 }
 
 ### template for plot events
-MPBRedTopGrowth_B79fitPlot <- function(sim) {
+mpbGrowth_B79fitPlot <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
 
@@ -138,14 +140,14 @@ MPBRedTopGrowth_B79fitPlot <- function(sim) {
     geom_hline(aes(yintercept = 0))
 
   ### below is unique to this module
-  gg <- gg +
+  gg_fit <- gg +
     stat_smooth(aes(x = laggedlog10redTopsObserved,
                     y = log10changeInRedTopsObserved),
                 method = "lm",
                 formula = y ~ poly(x, 3, raw = TRUE))
 
   ### Plot it!
-  Plot(gg)
+  Plot(gg_fit)
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))

@@ -42,7 +42,7 @@ devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = 
 
 Load the packages needed to run the code blocks in this document.
 
-```{r attach-spades, echo=FALSE, message=FALSE}
+```{r attach-spades, echo=FALSE, eval=TRUE, message=FALSE}
 # load packages
 library(igraph) # this exports `magrittr`'s pipe, but using magrittr here causes conflicts.
 library(SpaDES)
@@ -53,7 +53,7 @@ Additional packages loaded automatically by the modules do not need to be explic
 
 ```{r module-packages}
 library(ggplot2)
-library(RandomFields) # temporarily used to generate random maps
+library(RandomFields)
 library(raster)
 library(RColorBrewer)
 ```
@@ -66,20 +66,18 @@ library(RColorBrewer)
 clearPlot()
 
 simB79fit <- simInit(
-  times = list(start = 0.0, end = 10.0, timeunit = "year"),
+  times = list(start = 2011, end = 2020, timeunit = "year"),
   params = list(
-    .globals = list(stackName = "landscape", climateMap = "climate"),
-    mpbGrowth_B79fit = list(.plotInitialTime = 1, .plotInterval = 1),
-    mpbRandomLandscapes = list(.plotInitialTime = 1, .plotInterval = 1, nx = 100, ny = 100),
-    mpbClimate = list(.plotInitialTime = 1, .plotInterval = 1, nx = 100, ny = 100, updateInterval = 1),
-    mpbMassAttacks = list(.plotInitialTime = 1, .plotInterval = NA)
+    #mpbClimate = list(studyArea = studyArea),
+    #mpbPine = list(studyArea = studyArea),
+    mpbRandomLandscapes = list(studyArea = studyArea)
   ),
-  modules = list("mpbRandomLandscapes", #mpbPine,
-                 "mpbClimate",
+  modules = list("mpbRandomLandscapes",
+                 #"mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
                  "mpbMassAttacks",
                  "mpbRedTopDispersal",
                  "mpbGrowth_B79fit"),
-  paths = list(modulePath = "./modules")
+  paths = list(modulePath = ".")
 ) %>% spades(., debug = FALSE)
 ```
 
@@ -97,21 +95,18 @@ eventDiagram(simB79fit)
 clearPlot()
 
 simB79forced <- simInit(
-  times = list(start = 0.0, end = 10.0, timeunit = "year"),
+  times = list(start = 2011, end = 2020, timeunit = "year"),
   params = list(
-    .globals = list(stackName = "landscape", climateMap = "climate"),
-    MPBRedTopGrowth_B79forced = list(.plotInitialTime = 1, .plotInterval = 1),
-    MPBRedTopLandscape = list(.plotInitialTime = 1, .plotInterval = 1, nx = 100, ny = 100),
-    MPBRedTopClimate = list(.plotInitialTime = 1, .plotInterval = 1, nx = 100, ny = 100, updateInterval = 1),
-    MPBRedTopMassAttacks = list(.plotInitialTime = 1, .plotInterval = NA),
-    MPBRedTopImpacts = list(.plotInitialTime = 1, .plotInterval = 1)
+    #mpbClimate = list(studyArea = studyArea),
+    #mpbPine = list(studyArea = studyArea),
+    mpbRandomLandscapes = list(studyArea = studyArea)
   ),
-    modules = list("mpbRandomLandscapes", #mpbPine,
-                   "mpbClimate",
-                   "mpbMassAttacks",
-                   "mpbRedTopDispersal",
-                   "mpbGrowth_B79forced"),
-  paths = list(modulePath = "./modules")
+  modules = list("mpbRandomLandscapes",
+                 #"mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
+                 "mpbMassAttacks",
+                 "mpbRedTopDispersal",
+                 "mpbGrowth_B79forced"),
+  paths = list(modulePath = ".")
 ) %>% spades(., debug = FALSE)
 ```
 

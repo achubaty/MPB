@@ -32,11 +32,22 @@ times <- list(start = 2011, end = 2020)
 params <- list(
   ##
 )
-#modules <- list("mpbClimate", "mpbPine")
-modules <- list("mpbRandomLandscapes")
+modules <- list("mpbRandomLandscapes",
+                #"mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
+                #"mpbMassAttacks",
+                #"mpbRedTopDispersal",
+                "mpbGrowth_B79forced")
 objects <- list(studyArea = studyArea)
 
 MPB <- simInit(times = times, params = params, modules = modules, objects = objects)
 
-MPB2 <- spades(Copy(MPB))
+MPB2 <- spades(Copy(MPB), debug = TRUE)
+```
+
+## Simulation diagrams
+
+```{r sim-diagrams}
+moduleDiagram(MPB2)
+objectDiagram(MPB2)
+eventDiagram(MPB2)
 ```
