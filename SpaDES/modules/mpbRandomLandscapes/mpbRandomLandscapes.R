@@ -5,30 +5,29 @@ defineModule(sim, list(
   name = "mpbRandomLandscapes",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "Barry.Cooke@NRCan.gc.ca", role = c("aut", "cre")),
-            person(c("Alex", "M"), "Chubaty", email = "Alexander.Chubaty@NRCan.gc.ca", role = c("aut", "cre"))),
+  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@canada.ca", role = c("aut", "cre")),
+            person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
   childModules = character(),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("raster", "RColorBrewer"),
+  reqdPkgs = list("RandomFields", "raster", "RColorBrewer"),
   parameters = rbind(
-    defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
-    defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
+    defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
+    defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
-    defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
-    defineParameter("nx", "numeric", 100L, NA, NA, "size of map (number of pixels) in the x dimension"),
-    defineParameter("ny", "numeric", 100L, NA, NA, "size of map (number of pixels) in the y dimension")
+    defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events")
   ),
   inputObjects = rbind(
-    expectsInput(NA_character_, NA_character_, NA_character_, NA_character_)
+    expectsInput(objectName = "studyArea", objectClass = "SpatialPolygons",
+                 desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
   ),
   outputObjects = rbind(
-    createsOutput("DEM", "RasterLayer"),
-    createsOutput("habitatQuality", "RasterLayer"),
-    createsOutput("pineMap", "RasterLayer", "map of percent pine")
+    createsOutput(objectName = "climateSuitabilityMap", objectClass = "RasterLayer",
+                  desc = "A stack of MPB climatic suitablity maps corresponding to 1981-2010 normals and 2011-2040, 2041-2070, 2071-2100 projections."),
+    createsOutput(objectName = "pineMap", objectClass = "RasterLayer", desc = "Map of pine available for MPB.")
   )
 ))
 
@@ -45,13 +44,14 @@ doEvent.mpbRandomLandscapes <- function(sim, eventTime, eventType, debug = FALSE
       sim <- sim$mpbRandomLandscapesInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim) + P(sim)$.plotInitialTime, "mpbRandomLandscapes", "plot")
-      sim <- scheduleEvent(sim, start(sim) + P(sim)$.saveInitialTime, "mpbRandomLandscapes", "save")
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbRandomLandscapes", "plot")
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbRandomLandscapes", "save")
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-      Plot(sim[[globals(sim)$stackName]])
+      Plot(sim$climateSuitabilityMap)
+      Plot(sim$pineMap)
   
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbRandomLandscapes", "plot")
@@ -78,36 +78,52 @@ doEvent.mpbRandomLandscapes <- function(sim, eventTime, eventType, debug = FALSE
   return(invisible(sim))
 }
 
-## event functions
-#   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initiliazation;
-#   - keep event functions short and clean, modularize by calling subroutines from section below.
+.inputObjects = function(sim) {
+  # Any code written here will be run during the simInit for the purpose of creating
+  # any objects required by this module and identified in the inputObjects element of defineModule.
+  # This is useful if there is something required before simulation to produce the module
+  # object dependencies, including such things as downloading default datasets, e.g.,
+  # downloadData("LCC2005", modulePath(sim)).
+  # Nothing should be created here that does not create an named object in inputObjects.
+  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
+  # Note: the module developer can use 'sim$.userSuppliedObjNames' in their function below to
+  # selectively skip unnecessary steps because the user has provided those inputObjects in the
+  # simInit call. e.g.,
+  # if (!('defaultColor' %in% sim$.userSuppliedObjNames)) {
+  #  sim$defaultColor <- 'red'
+  # }
+  
+  # ! ----- EDIT BELOW ----- ! #
+  if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
+    load(file.path(modulePath(sim), "mpbRandomLandscapes", "data", "west.boreal.RData"), envir = envir(sim))
+  }
+  
+  # ! ----- STOP EDITING ----- ! #
+  return(invisible(sim))
+}
 
 ### template initilization
 mpbRandomLandscapesInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
-  nx <- P(sim)$nx
-  ny <- P(sim)$ny
-  template <- raster(nrows = ny, ncols = nx, xmn = -nx/2, xmx = nx/2, ymn = -ny/2, ymx = ny/2)
-  speedup <- max(1, nx / 5e2)
+  template <- if (is(sim$studyArea, "RasterLayer")) {
+    sim$studyArea
+  } else {
+    raster(sim$studyArea, crs = CRS(proj4string(sim$studyArea)))
+  }
+  speedup <- max(1, ncol(sim$studyArea) / 5e2)
   inMemory <- TRUE
 
-  DEM <- gaussMap(template, scale = 300, var = 0.03, speedup = speedup, inMemory = inMemory)
-  DEM[] <- round(getValues(DEM), 1) * 1000
-  setColors(DEM) <- grDevices::terrain.colors(100)
-  sim$DEM <- DEM
-  
-  pineMap <- gaussMap(template, scale = 50, var = 1, speedup = speedup, inMemory = inMemory)
+  pineMap <- gaussMap(template, scale = 10, var = 1, speedup = speedup, inMemory = inMemory)
   pineMap[] <- round(getValues(pineMap), 1)
-  pineMap <- pineMap / maxValue(pineMap) * 100 ## scale value to give percentage pine
-  setColors(pnieMap) <- brewer.pal(9, "Greens")
+  pineMap <- pineMap / maxValue(pineMap) * 500 ## scale values to range 0-500
+  setColors(pineMap) <- brewer.pal(9, "Greens")
   sim$pineMap <- pineMap
 
   # Make layers that are derived from other layers
-  habitatQuality <- (DEM + 10) * pineMap / 100
-  habitatQuality <- habitatQuality / maxValue(habitatQuality)
-  setColors(habitatQuality) <- brewer.pal(8, "Spectral")
-  sim$habitatQuality <- habitatQuality
+  climateSuitabilityMap <- gaussMap(template, scale = 10, var = 1, speedup = speedup, inMemory = inMemory)
+  climateSuitabilityMap[] <- getValues(climateSuitabilityMap) / maxValue(climateSuitabilityMap) ## values range from 0-1
+  setColors(climateSuitabilityMap) <- rev(brewer.pal(8, "Spectral"))
+  sim$climateSuitabilityMap <- climateSuitabilityMap
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
