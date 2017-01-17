@@ -52,7 +52,8 @@ doEvent.mpbClimate = function(sim, eventTime, eventType, debug = FALSE) {
   } else if (eventType == "plot") {
     # ! ----- EDIT BELOW ----- ! #
     # do stuff for this event
-    Plot(sim$climateSuitabilityMap)
+    names(sim$climateSuitabilityMap) <- "layer"
+    Plot(sim$climateSuitabilityMap, title = "Climate Suitability Map", new = TRUE)
     
     # schedule future event(s)
 
