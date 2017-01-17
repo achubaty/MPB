@@ -117,10 +117,13 @@ mpbPineSave <- function(sim) {
 
 mpbPineImportMap <- function(sim) {
   file <- file.path(modulePath(sim), "mpbPine", "data", "Yemshanov_pine_map.flt")
-  
-  sim$pineMap <- raster(file) %>% 
-    projectRaster(crs = CRS(proj4string(sim$studyArea))) %>% 
-    crop(sim$studyArea)
+
+  fn1 <- function(file, studyArea) {
+    a <- raster(file)  
+    a <- projectRaster(a, crs = CRS(proj4string(studyArea)))
+    crop(a, studyArea)
+  }
+  sim$pineMap <- Cache(fn1, file, sim$studyArea)
   
   return(invisible(sim))
 }
