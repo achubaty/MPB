@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(SpaDES, .Library.dev)
+library(raster, .Library.dev)
 stopifnot(packageVersion("SpaDES", lib.loc = .Library.dev) >= "1.3.1.9019")
 
 setPaths(modulePath = "~/GitHub/MPB/SpaDES/modules")
@@ -31,6 +32,7 @@ studyArea <- raster::raster(nrows = ny, ncols = nx,
 times <- list(start = 2011, end = 2020)
 params <- list(
   ##
+  mpbClimate = list(suitabilityIndex = "G") # Can be "G", "S", "L", "R"
 )
 modules <- list("mpbRandomLandscapes",
                 #"mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
