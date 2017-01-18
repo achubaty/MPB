@@ -164,9 +164,10 @@ mpbClimateImportMaps <- function(sim) {
   fn1 <- function(files, studyArea) {
     stack(lapply(files, function(f) {
       raster(f) %>%
-        projectRaster(crs = CRS(proj4string(studyArea))) %>%
-        crop(studyArea)
-    }))}
+        crop(studyArea) %>%
+        projectRaster(crs = CRS(proj4string(studyArea)))
+    }))
+  }
   sim$mpbClimateMaps <- Cache(fn1, files, sim$studyArea)
   
   return(sim)
