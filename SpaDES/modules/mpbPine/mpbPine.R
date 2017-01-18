@@ -116,12 +116,18 @@ mpbPineSave <- function(sim) {
 }
 
 mpbPineImportMap <- function(sim) {
-  file <- file.path(modulePath(sim), "mpbPine", "data", "Yemshanov_pine_map.flt")
+  file <- file.path(modulePath(sim), "mpbPine", "data", "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif")
 
+  sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1=="Alberta" | 
+                                   sim$studyArea$NAME_1=="Saskatchewan",]
   fn1 <- function(file, studyArea) {
     a <- raster(file)  
-    a <- projectRaster(a, crs = CRS(proj4string(studyArea)))
-    crop(a, studyArea)
+    b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
+    a <- crop(a, b) # crop first to make it a smaller projectRaster problem next
+    a <- projectRaster(a, crs = CRS(proj4string(studyArea)), method="ngb")
+    a <- crop(a, studyArea)
+    a[] <- a[]
+    a
   }
   sim$pineMap <- Cache(fn1, file, sim$studyArea)
   
