@@ -109,6 +109,9 @@ mpbPineSave <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
     load(file.path(modulePath(sim), "mpbPine", "data", "west.boreal.RData"), envir = envir(sim))
+    sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1=="Alberta" | 
+                                     sim$studyArea$NAME_1=="Saskatchewan",]
+    
   }
   
   # ! ----- STOP EDITING ----- ! #
@@ -118,8 +121,6 @@ mpbPineSave <- function(sim) {
 mpbPineImportMap <- function(sim) {
   file <- file.path(modulePath(sim), "mpbPine", "data", "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif")
 
-  sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1=="Alberta" | 
-                                   sim$studyArea$NAME_1=="Saskatchewan",]
   fn1 <- function(file, studyArea) {
     a <- raster(file)  
     b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))

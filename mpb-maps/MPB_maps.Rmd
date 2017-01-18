@@ -117,10 +117,7 @@ stopifnot(all(dir.exists(c(fig.path, maps.dir, rdata.path, work.dir))))
 ._MAPS_REPROJ_. <- FALSE  ## reproject raw maps to `boreal`
 ._MAPS_MKRSTR_. <- FALSE  ## convert the maps to rasters
 
-# map extent obtained using `locator(2)` on 'west.boreal' map
-._EXT_MAPS_. <- extent(x = -1027658, xmax = 320751.9, ymin = 5108872, ymax = 6163350)
-
-._RES_MAPS_. <- 1000       # map resolution, in metres
+._RES_MAPS_. <- 2000      ## map resolution, in metres
 ```
 
 \newpage
