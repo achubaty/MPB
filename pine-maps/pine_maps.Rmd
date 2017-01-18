@@ -102,6 +102,33 @@ myTheme <- rasterTheme(region = brewer.pal('Greens', n = 9)[3:9])
 levelplot(pineMap_raster, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
 ```
 
+## Beaudoin et al. kNN pine map
+
+From @Beaudoin:2014cf.
+
+```{r kNN-download}
+## TO DO
+```
+
+Plotting using `raster` package looks OK but not great:
+
+```{r knn-plot}
+files <- file.path(maps.dir, "kNN", "original",
+                   c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
+                     "NFI_MODIS250m_kNN_Species_Pinu_Con_Lat_v0.tif",
+                     "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
+
+kNN_pine <- stack(x = files)
+plot(kNN_pine)
+```
+
+Using `rasterVis` package, it's much nicer:
+
+```{r kNN-plot-rasterVis}
+myTheme <- rasterTheme(region = brewer.pal('Greens', n = 9)[3:9])
+levelplot(kNN_pine, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
+```
+
 # References
 
 <!-- automatically generated using bibliography.bib -->
