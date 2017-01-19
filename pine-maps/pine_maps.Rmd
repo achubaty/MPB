@@ -115,10 +115,9 @@ Plotting using `raster` package looks OK but not great:
 ```{r knn-plot}
 files <- file.path(maps.dir, "kNN", "original",
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
-                     "NFI_MODIS250m_kNN_Species_Pinu_Con_Lat_v0.tif",
                      "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
 
-kNN_pine <- stack(x = files)
+kNN_pine <- stack(x = files) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
 plot(kNN_pine)
 ```
 
