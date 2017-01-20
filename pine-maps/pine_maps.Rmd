@@ -1,7 +1,7 @@
 ---
 title: "Pine maps"
 author: "Alex Chubaty"
-date: "October 31, 2016"
+date: "January 20, 2017"
 output: pdf_document
 bibliography: bibliography.bib
 ---
@@ -46,6 +46,7 @@ if (._USER_. == "achubaty") {
 }
 
 download.data <- FALSE
+kNN.dir <- file.path(maps.dir, "kNN")
 pineMap.dir <- file.path(maps.dir, "Yemshanov_pine_map")
 ```
 
@@ -68,7 +69,7 @@ if (isTRUE(download.data)) {
   
   ## download files
   eol <- ifelse(os == "windows", "\r\n", "\n")
-  url <- "ftp://ftp.nofc.cfs.nrcan.gc.ca/downloads/Cooke/Yemshanov_pine_map/" ## temporory
+  url <- "ftp://ftp.nofc.cfs.nrcan.gc.ca/downloads/Cooke/Yemshanov_pine_map/" ## temporary
   paper_url <- "https://www.dropbox.com/s/uh7g570gns1dpn3/yemshanov.etal_2012.pdf?dl=1"
   paper <- basename(paper_url)
   fileNames <- unlist(strsplit(getURL(url, dirlistonly = TRUE), split = eol))
@@ -106,8 +107,27 @@ levelplot(pineMap_raster, margin = list(median), maxpixels = 1e6, par.settings =
 
 From @Beaudoin:2014cf.
 
-```{r kNN-download}
-## TO DO
+```{r kNN-download, eval = FALSE}
+if (isTRUE(download.data)) {
+  if (!dir.exists(kNN.dir)) {
+    dir.create(kNN.dir)
+  }
+  
+  source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-data.R")
+  
+  url <- "ftp://tree.nfis.org/"
+  pw <- "knn4ftp:knn4ftp"
+  docFiles <- c("NFI_and_kNN_Mapping_20160628.docx",
+             "FR_NFI_and_kNN_Mapping_20160628.docx",
+             "cjfr-2013-0401suppl.pdf")
+  
+  lapply(docFiles, function(f) {
+    if (!file.exists(file.path(kNN.dir, f))) {
+      download.file(paste0(url, f), destfile = file.path(kNN.dir, f))
+    }
+  })
+  dl.data(paste0(url, "kNN-Species.tar"), dest = kNN.dir)
+}
 ```
 
 Plotting using `raster` package looks OK but not great:
