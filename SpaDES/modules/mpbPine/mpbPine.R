@@ -109,8 +109,8 @@ mpbPineSave <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
     load(file.path(modulePath(sim), "mpbPine", "data", "west.boreal.RData"), envir = envir(sim))
-    sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1=="Alberta" | 
-                                     sim$studyArea$NAME_1=="Saskatchewan",]
+    sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1 == "Alberta" |
+                                     sim$studyArea$NAME_1 == "Saskatchewan",]
     
   }
   
@@ -119,18 +119,20 @@ mpbPineSave <- function(sim) {
 }
 
 mpbPineImportMap <- function(sim) {
-  file <- file.path(modulePath(sim), "mpbPine", "data", "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif")
+  f <- file.path(modulePath(sim), "mpbPine", "data",
+                     c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
+                       "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
 
-  fn1 <- function(file, studyArea) {
-    a <- raster(file)  
+  fn1 <- function(f, studyArea) {
+    a <- raster::stack(x = f) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
     b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
-    a <- crop(a, b) # crop first to make it a smaller projectRaster problem next
-    a <- projectRaster(a, crs = CRS(proj4string(studyArea)), method="ngb")
-    a <- crop(a, studyArea)
+    a <- crop(a, b) %>%
+      projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
+      crop(studyArea)
     a[] <- a[]
-    a
+    return(a)
   }
-  sim$pineMap <- Cache(fn1, file, sim$studyArea)
+  sim$pineMap <- Cache(fn1, f, sim$studyArea)
   
   return(invisible(sim))
 }

@@ -1,7 +1,7 @@
 ---
 title: "MPB dynamics and spread"
 author: "Alex M. Chubaty"
-date: "December 12, 2016"
+date: "January 20, 2017"
 output: html_document
 ---
 
@@ -39,14 +39,14 @@ params <- list(
   ##
   mpbClimate = list(suitabilityIndex = "G") # Can be "G", "S", "L", "R"
 )
-modules <- list("mpbRandomLandscapes",
-                #"mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
+modules <- list(#"mpbRandomLandscapes",
+                "mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
                 #"mpbMassAttacks",
                 #"mpbRedTopDispersal",
                 "mpbGrowth_B79forced")
 objects <- list(studyArea = studyArea)
 
-MPB <- simInit(times = times, params = params, modules = modules, objects = objects)
+MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
 
 MPB2 <- spades(Copy(MPB), debug = TRUE)
 ```
