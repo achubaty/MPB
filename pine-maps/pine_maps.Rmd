@@ -23,8 +23,8 @@ if (isTRUE(._CFS_.)) {
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, eval = TRUE)
 
 ## load and attach required packages
+library(httr)
 library(magrittr)
-library(RCurl)
 library(raster)
 library(rasterVis)
 
@@ -116,17 +116,25 @@ if (isTRUE(download.data)) {
   source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-data.R")
   
   url <- "ftp://tree.nfis.org/"
-  pw <- "knn4ftp:knn4ftp"
+  pw <- authenticate("knn4ftp", "knn4ftp")
   docFiles <- c("NFI_and_kNN_Mapping_20160628.docx",
-             "FR_NFI_and_kNN_Mapping_20160628.docx",
-             "cjfr-2013-0401suppl.pdf")
+                "FR_NFI_and_kNN_Mapping_20160628.docx",
+                "cjfr-2013-0401suppl.pdf")
+  dataFile <- "kNN-Species.tar"
   
   lapply(docFiles, function(f) {
     if (!file.exists(file.path(kNN.dir, f))) {
-      download.file(paste0(url, f), destfile = file.path(kNN.dir, f))
+      GET(paste0(url, f), pw, write_disk(file.path(kNN.dir, f)))
     }
   })
-  dl.data(paste0(url, "kNN-Species.tar"), dest = kNN.dir)
+  GET(paste0(url, dataFile), pw, write_disk(file.path(kNN.dir, dataFile)))
+  untar(file.path(kNN.dir, dataFile),
+        files = c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip",
+                  "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip"),
+        exdir = kNN.dir)
+  unzip(file.path(kNN.dir, "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip"), exdir = kNN.dir)
+  unzip(file.path(kNN.dir, "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip"), exdir = kNN.dir)
+  unlink(file.path(kNN.dir, dataFile))
 }
 ```
 
