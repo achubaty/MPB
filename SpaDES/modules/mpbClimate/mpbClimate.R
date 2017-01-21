@@ -54,6 +54,7 @@ doEvent.mpbClimate = function(sim, eventTime, eventType, debug = FALSE) {
     # do stuff for this event
     names(sim$climateSuitabilityMap) <- "layer"
     Plot(sim$climateSuitabilityMap, title = "Climate Suitability Map", new = TRUE)
+    Plot(sim$studyArea, addTo = "sim$climateSuitabilityMap")
     
     # schedule future event(s)
 
