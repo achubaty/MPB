@@ -141,7 +141,7 @@ if (isTRUE(download.data)) {
 Plotting using `raster` package looks OK but not great:
 
 ```{r knn-plot}
-files <- file.path(maps.dir, "kNN", "original",
+files <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
                      "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
 
