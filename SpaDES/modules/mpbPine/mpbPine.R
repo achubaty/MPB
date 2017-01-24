@@ -27,7 +27,7 @@ defineModule(sim, list(
                  desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = "pineMap", objectClass = "RasterStack", desc = "RasterLayers of jack and lodgepole pine available for MPB.")
+    createsOutput(objectName = "pineMap", objectClass = "RasterLayer", desc = "Jack and lodgepole pine available for MPB.")
   )
 ))
 
@@ -46,11 +46,9 @@ doEvent.mpbPine = function(sim, eventTime, eventType, debug = FALSE) {
   } else if (eventType == "plot") {
     # ! ----- EDIT BELOW ----- ! #
     # do stuff for this event
-    Plot(sim$pineMap$Lodgepole_Pine, zero.color = "#dddddd", title = "Lodgepole Pine")
-    Plot(MPB$studyArea, addTo = "sim$pineMap$Lodgepole_Pine")
-    Plot(sim$pineMap$Jack_Pine, zero.color = "#dddddd", title = "Jack Pine")
-    Plot(MPB$studyArea, addTo = "sim$pineMap$Jack_Pine")
-
+    Plot(sim$pineMap, title = "Lodgepole and Jack Pine")
+    Plot(MPB$studyArea, addTo = "sim$pineMap")
+    
     # schedule future event(s)
     sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbPine", "plot")
     # ! ----- STOP EDITING ----- ! #
@@ -132,7 +130,9 @@ mpbPineImportMap <- function(sim) {
       projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
       crop(studyArea)
     a[] <- a[]
-    return(stack(a))
+    out <- mosaic(a[[1]], a[[2]], fun = sum) %>% 
+      setNames("Lodgepole_and_Jack_Pine")
+    return(out)
   }
   sim$pineMap <- Cache(fn1, f, sim$studyArea)
   
