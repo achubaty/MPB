@@ -76,9 +76,6 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
     load(file.path(modulePath(sim), "mpbPine", "data", "west.boreal.RData"), envir = envir(sim))
-    sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1 == "Alberta" |
-                                     sim$studyArea$NAME_1 == "Saskatchewan",]
-    
   }
   
   # ! ----- STOP EDITING ----- ! #
