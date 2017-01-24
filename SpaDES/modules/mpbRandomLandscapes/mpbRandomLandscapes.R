@@ -5,7 +5,7 @@ defineModule(sim, list(
   name = "mpbRandomLandscapes",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@canada.ca", role = c("aut", "cre")),
+  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
             person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
   childModules = character(),
   version = numeric_version("0.0.1"),
@@ -19,7 +19,7 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
-    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = rbind(
     expectsInput(objectName = "studyArea", objectClass = "SpatialPolygons",
@@ -79,7 +79,7 @@ doEvent.mpbRandomLandscapes <- function(sim, eventTime, eventType, debug = FALSE
   return(invisible(sim))
 }
 
-.inputObjects = function(sim) {
+.inputObjects <- function(sim) {
   # Any code written here will be run during the simInit for the purpose of creating
   # any objects required by this module and identified in the inputObjects element of defineModule.
   # This is useful if there is something required before simulation to produce the module

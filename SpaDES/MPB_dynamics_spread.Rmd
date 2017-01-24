@@ -1,33 +1,126 @@
 ---
 title: "MPB dynamics and spread"
 author: "Alex M. Chubaty"
-date: "January 20, 2017"
-output: html_document
+date: "January 24, 2017"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+bibliography:
+  - bibliography.bib
+  - ../mpb-maps/climate-projections.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE, echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
 
-```{r}
-if (Sys.info()[["user"]] == "achubaty") {
-  library(SpaDES, .Library.dev)
-  stopifnot(packageVersion("SpaDES", .Library.dev) >= "1.3.1.9019")
-} else {
-  library(SpaDES)
-  stopifnot(packageVersion("SpaDES") >= "1.3.1.9019")
+# Introduction
+
+The goal of this model is to simulate the spread of mountain pine beetle outbreaks as a function of the growth and dispersal of beetle-killed trees, called "red tops".
+
+## Module descriptions
+
+### `mpbGrowth_*`
+
+Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question.
+@Berryman:1979bs was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in MO and WY the 1960s.
+Consequently, the module offers the option of using any of four possible interpretations (B79fit, B79forced, XXX, YYY).
+Two addiitonal options are forthcoming at the time of writing.
+
+The first of these is a high-order polynomial fit to Berryman's hand-drawn curve (`mpbGrowth_B79fit`).
+The second is the linearized multi-niche model of @Berryman:1999bk, which, oddly & inexplicably, held endemic-niche dynamics as a fast process (`R[t] ~ X[t-1]`), and epidemic-niche dynamics as a lagged process (`R[t] ~ X[t-2]`) (`mpbGrowth_B79forced`). [IS THIS RIGHT??]
+
+### `mpbPine`
+
+Calculating the initial density of red tops and the effect of growth in their number requires read and write access to a forest landscape of susceptible pine.
+This module imports the [@Beaudoin:2014cf] kNN estimates for lodgepole pine and jack pine availability in Canada.
+
+### `mpbClimate`
+
+This module imports several MPB climate suitability scenarios (using four different indices: `S`, `L`, `R`, `G`) for use as model drivers.
+The Logan suitability index (`L`) is based on summer temperatures [@Logan:2003fr].
+The Regniere suitability index (`R`) is based on MPB cold tolerance (*i.e.*, winter survival) [@Regniere:2007ip].
+The Safranyik suitability index (`S`) is based on aspects of both summer temperatures and winter survival [@Safranyik:1975bk].
+Finally, the composite SLR index (`G`) takes the harmonic mean of the `S`, `L`, and `R` models.
+These are described in further detail in @Nealis:2008gc (and the updated @Nealis:2014re ?), and of course in their respective publications cited above.
+BioSim was used to generate the maps [see @Bentz:2010bs; @Logan:2003fr; @Safranyik:2010ce].
+
+```{r scenario-table, echo=FALSE}
+scenarios <- data.frame(
+  index = c('S', 'L', 'R', 'G'),
+  description = c('Safranyik', 'Logan', 'Regniere', 'Composite'),
+  stringsAsFactors = FALSE
+)
+knitr::kable(scenarios)
+```
+
+For each of the four indices, there are 1981-2010 normals plus the projections from two RCP scenarios (either 4.5 or 8.5), covering a span of 120 years, split into 30-year frames.
+
+All maps are projected using LCC and cover all of Canada.
+
+The default is to use the composite inedx (`G`).
+
+### `mpbMassAttacks`
+
+This module imports the raw MPB red top attack data from AB and BC over several years.
+@Cooke:2017ms describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`.
+
+**NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).
+
+### `mpbRedTopDispersal`
+
+Dispersal is currently a stub.
+
+# Installation and setup
+
+Install the most recent version of the `SpaDES` package from the development branch (packages version `1.3.1.9020` or higher is required.)
+
+```{r install-packages}
+#options(repos = c(CRAN = "https://cran.rstudio.com/"))
+
+if (!require(devtools)) {
+  install.packages("devtools")
 }
+if (!require(igraph)) {
+  install.packages("igraph")
+}
+if (!require(SpaDES) | packageVersion("SpaDES", "~/R-dev") < "1.3.1.9020") {
+  devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
+}
+```
+
+Load required packages and set some default options for data loading etc.
+
+```{r additional-setup}
+library(igraph)
 library(raster)
+library(SpaDES); stopifnot(packageVersion("SpaDES") >= "1.3.1.9020")
 
-setPaths(modulePath = "~/GitHub/MPB/SpaDES/modules")
-dev.useRSGD(FALSE)
+setPaths(
+  cachePath = "~/SpaDES/cache",
+  modulePath = "~/GitHub/MPB/SpaDES/modules"
+)
+if (interactive()) dev.useRSGD(FALSE)
+```
 
+# Initialize and run the simulation
+
+## Define study area
+
+The study area is the provinces of Alberta (AB), British Columbia (BC), and Saskatchewan (SK); however, during development, a much smaller area may be used.
+
+**NOTE:** major GIS operations such as reprojecting and cropping are cached, to speed up subsequent running of the model.
+
+```{r define-study-area}
 ## load CRS for the boreal raster
 load(file.path(getOption("spades.modulePath"), "mpbRandomLandscapes", "data", "west.boreal.RData")) ## loads studyArea object (spdf)
 crs.boreal <- CRS(proj4string(studyArea))
 rm(studyArea)
 
 ## define (small) study area for development
+## skip this step if you want to use the default area af BC, AB, SK
 nx <- ny <- 2000
 studyArea <- raster::raster(nrows = ny, ncols = nx,
                             xmn = -245643, xmx = -213643,
@@ -44,17 +137,25 @@ modules <- list(#"mpbRandomLandscapes",
                 #"mpbMassAttacks",
                 #"mpbRedTopDispersal",
                 "mpbGrowth_B79forced")
-objects <- list(studyArea = studyArea)
+```
 
-MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
+## Run the model
 
+```{r simulation}
+MPB <- simInit(times = times, params = params, modules = modules)
+
+## the first time you run this, esp. w/ large study area, it will be slow because
+## of the GIS operations taking plare. However, because these slow steps are cached,
+## subsequent runs will be much faster (plotting will became slowest step).
 MPB2 <- spades(Copy(MPB), debug = TRUE)
 ```
 
 ## Simulation diagrams
 
-```{r sim-diagrams}
+```{r sim-diagrams, eval=FALSE}
 moduleDiagram(MPB2)
 objectDiagram(MPB2)
 eventDiagram(MPB2)
 ```
+
+# References

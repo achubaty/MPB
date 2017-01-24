@@ -5,9 +5,9 @@ defineModule(sim, list(
   name = "mpbWind",
   description = "insert module description here",
   keywords = c("insert key words here"),
-  authors = person(c("Alex", "M"), "Chubaty", email = "alex.chubaty@gmail.com", role = c("aut", "cre")),
+  authors = person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
   childModules = character(0),
-  version = numeric_version("1.3.1.9020"),
+  version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
@@ -20,7 +20,7 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
@@ -35,133 +35,38 @@ defineModule(sim, list(
 ## event types
 #   - type `init` is required for initialiazation
 
-doEvent.mpbWind = function(sim, eventTime, eventType, debug = FALSE) {
-  if (eventType == "init") {
-    ### check for more detailed object dependencies:
-    ### (use `checkObject` or similar)
-
-    # do stuff for this event
-    sim <- sim$mpbWindInit(sim)
-
-    # schedule future event(s)
-    sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbWind", "plot")
-    sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbWind", "save")
-  } else if (eventType == "plot") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    #Plot(objectFromModule) # uncomment this, replace with object to plot
-    # schedule future event(s)
-
-    # e.g.,
-    #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbWind", "plot")
-
-    # ! ----- STOP EDITING ----- ! #
-  } else if (eventType == "save") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    # e.g., call your custom functions/methods here
-    # you can define your own methods below this `doEvent` function
-
-    # schedule future event(s)
-
-    # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "mpbWind", "save")
-
-    # ! ----- STOP EDITING ----- ! #
-  } else if (eventType == "event1") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    # e.g., call your custom functions/methods here
-    # you can define your own methods below this `doEvent` function
-
-    # schedule future event(s)
-
-    # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + increment, "mpbWind", "templateEvent")
-
-    # ! ----- STOP EDITING ----- ! #
-  } else if (eventType == "event2") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    # e.g., call your custom functions/methods here
-    # you can define your own methods below this `doEvent` function
-
-    # schedule future event(s)
-
-    # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + increment, "mpbWind", "templateEvent")
-
-    # ! ----- STOP EDITING ----- ! #
-  } else {
+doEvent.mpbWind <- function(sim, eventTime, eventType, debug = FALSE) {
+  switch(eventType,
+    "init" = {
+      ### check for more detailed object dependencies:
+      ### (use `checkObject` or similar)
+  
+      # do stuff for this event
+      sim <- sim$mpbWindInit(sim)
+  
+      # schedule future event(s)
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbWind", "plot")
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbWind", "save")
+    },
+    "plot" = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+  
+      #Plot(objectFromModule) # uncomment this, replace with object to plot
+      # schedule future event(s)
+  
+      # e.g.,
+      #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbWind", "plot")
+  
+      # ! ----- STOP EDITING ----- ! #
+    },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
-  }
+  )
   return(invisible(sim))
 }
 
-## event functions
-#   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initiliazation;
-#   - keep event functions short and clean, modularize by calling subroutines from section below.
-
-### template initialization
-mpbWindInit <- function(sim) {
-  # # ! ----- EDIT BELOW ----- ! #
-
-  # ! ----- STOP EDITING ----- ! #
-
-  return(invisible(sim))
-}
-
-### template for save events
-mpbWindSave <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # do stuff for this event
-  sim <- saveFiles(sim)
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for plot events
-mpbWindPlot <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # do stuff for this event
-  #Plot("object")
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for your event1
-mpbWindEvent1 <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
-  sim$event1Test1 <- " this is test for event 1. " # for dummy unit test
-  sim$event1Test2 <- 999 # for dummy unit test
-
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for your event2
-mpbWindEvent2 <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # THE NEXT TWO LINES ARE FOR DUMMY UNIT TESTS; CHANGE OR DELETE THEM.
-  sim$event2Test1 <- " this is test for event 2. " # for dummy unit test
-  sim$event2Test2 <- 777  # for dummy unit test
-
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-.inputObjects = function(sim) {
+.inputObjects <- function(sim) {
   # Any code written here will be run during the simInit for the purpose of creating
   # any objects required by this module and identified in the inputObjects element of defineModule.
   # This is useful if there is something required before simulation to produce the module
@@ -176,8 +81,37 @@ mpbWindEvent2 <- function(sim) {
   #  sim$defaultColor <- 'red'
   # }
   # ! ----- EDIT BELOW ----- ! #
-
+  if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
+    load(file.path(modulePath(sim), "mpbWind", "data", "west.boreal.RData"), envir = envir(sim))
+    sim$studyArea <- sim$studyArea[sim$studyArea$NAME_1 == "Alberta" |
+                                     sim$studyArea$NAME_1 == "Saskatchewan",]
+    
+  }
+  
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
-### add additional events as needed by copy/pasting from above
+
+## event functions
+#   - follow the naming convention `modulenameEventtype()`;
+#   - `modulenameInit()` function is required for initiliazation;
+#   - keep event functions short and clean, modularize by calling subroutines from section below.
+
+### template initialization
+mpbWindInit <- function(sim) {
+  # # ! ----- EDIT BELOW ----- ! #
+  
+  # ! ----- STOP EDITING ----- ! #
+  
+  return(invisible(sim))
+}
+
+### template for plot events
+mpbWindPlot <- function(sim) {
+  # ! ----- EDIT BELOW ----- ! #
+  # do stuff for this event
+  #Plot("object")
+  
+  # ! ----- STOP EDITING ----- ! #
+  return(invisible(sim))
+}

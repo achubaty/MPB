@@ -5,8 +5,8 @@ defineModule(sim, list(
   name = "mpbGrowth_B79fit",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "Barry.Cooke@canada.ca", role = c("aut", "cre")),
-              person(c("Alex", "M"), "Chubaty", email = "Alexander.Chubaty@canada.ca", role = c("aut", "cre"))),
+  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
+              person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
   childModules = character(),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -19,7 +19,7 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
-    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant"),
+    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
     defineParameter("growthInterval", "numeric", 1, NA, NA, "This describes the interval time between growth events")
   ),
   inputObjects = rbind(
@@ -37,7 +37,7 @@ defineModule(sim, list(
 ## event types
 #   - type `init` is required for initiliazation
 
-doEvent.mpbGrowth_B79fit = function(sim, eventTime, eventType, debug = FALSE) {
+doEvent.mpbGrowth_B79fit <- function(sim, eventTime, eventType, debug = FALSE) {
   switch(eventType,
     "init" = {
       ### check for more detailed object dependencies:
@@ -65,20 +65,6 @@ doEvent.mpbGrowth_B79fit = function(sim, eventTime, eventType, debug = FALSE) {
       # sim <- scheduleEvent(sim, time(sim) + increment, "mpbGrowth_B79fit", "plot")
   
       # ! ----- STOP EDITING ----- ! #
-  },
-  "save" = {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    # e.g., call your custom functions/methods here
-    # you can define your own methods below this `doEvent` function
-
-    # schedule future event(s)
-
-    # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + increment, "mpbGrowth_B79fit", "save")
-
-    # ! ----- STOP EDITING ----- ! #
   },
   warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
                 "' in module '", events(sim)[1, "moduleName", with = FALSE], "'", sep = ""))

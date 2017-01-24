@@ -7,7 +7,7 @@ defineModule(sim, list(
   keywords = c("insert key words here"),
   authors = person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
   childModules = character(0),
-  version = numeric_version("1.3.1.9020"),
+  version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
@@ -20,7 +20,7 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
+    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
@@ -35,7 +35,7 @@ defineModule(sim, list(
 ## event types
 #   - type `init` is required for initialiazation
 
-doEvent.canDEM = function(sim, eventTime, eventType, debug = FALSE) {
+doEvent.canDEM <- function(sim, eventTime, eventType, debug = FALSE) {
   if (eventType == "init") {
     ### check for more detailed object dependencies:
     ### (use `checkObject` or similar)
@@ -161,7 +161,7 @@ canDEMEvent2 <- function(sim) {
   return(invisible(sim))
 }
 
-.inputObjects = function(sim) {
+.inputObjects <- function(sim) {
   # Any code written here will be run during the simInit for the purpose of creating
   # any objects required by this module and identified in the inputObjects element of defineModule.
   # This is useful if there is something required before simulation to produce the module
