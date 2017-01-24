@@ -202,6 +202,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
 
 ### AB `SpatialPoints` data
 
+**NOTE:** this chunk below uses the AB data up to 2011, but we have access to more recent (up to 2016) aerial survey data.
+However, because we don't have more recent data (yet) for BC, we stick with using the older data for AB for now.
+
 ```{r import-maps-points}
 if (isTRUE(._MAPS_USERAW_.)) {
   if (!exists("crs.boreal")) {
