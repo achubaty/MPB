@@ -138,20 +138,29 @@ if (isTRUE(download.data)) {
 }
 ```
 
-Plotting using `raster` package looks OK but not great:
-
-```{r knn-plot}
+```{r knn-raster}
 files <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
                      "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
 
 kNN_pine <- stack(x = files) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
-plot(kNN_pine)
+
+### Merge the jack pine and lodgepole pine layers
+# The Yemshanov map has both pine species combined in the same layer,
+# so we should do the same here.
+kNN_pine_map <- mosaic(kNN_pine[[1]], kNN_pine[[2]], fun = sum) %>% 
+  setNames("Lodgepole_and_Jack_Pine")
+
+writeRaster(kNN_pine_map, filename = file.path(kNN.dir, "kNN_pine_map.tif"))
+writeRaster(kNN_pine_map, filename = file.path(kNN.dir, "kNN_pine_map.grd"))
+save(kNN_pine_map, file = file.path(kNN.dir, "kNN_pine_map.Rdata"))
 ```
 
-Using `rasterVis` package, it's much nicer:
+```{r knn-plot}
+## plot it
+plot(kNN_pine)
 
-```{r kNN-plot-rasterVis}
+## even better with rasterVis
 myTheme <- rasterTheme(region = brewer.pal('Greens', n = 9)[3:9])
 levelplot(kNN_pine, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
 ```
