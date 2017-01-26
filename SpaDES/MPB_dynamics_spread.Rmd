@@ -62,7 +62,7 @@ All maps are projected using LCC and cover all of Canada.
 
 The default is to use the composite inedx (`G`).
 
-### `mpbMassAttacks`
+### `mpbMassAttacksData`
 
 This module imports the raw MPB red top attack data from AB and BC over several years.
 @Cooke:2017ms describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`.
@@ -134,7 +134,7 @@ params <- list(
 )
 modules <- list(#"mpbRandomLandscapes",
                 "mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
-                #"mpbMassAttacks",
+                #"mpbMassAttacksData",
                 #"mpbRedTopDispersal",
                 "mpbRedTopGrowth")
 ```

@@ -2,11 +2,12 @@
 # Everything in this file gets sourced during simInit, and all functions and objects
 #  are put into the simList. To use objects and functions, use sim$xxx.
 defineModule(sim, list(
-  name = "mpbMassAttacks",
+  name = "mpbMassAttacksData",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
-              person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
+  authors = c(person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
+              person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut")),
+              person(c("Eliot", "J B"), "McIntire", email = "eliot.mcintire@canada.ca", role = c("aut"))),
   childModules = character(),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -34,20 +35,20 @@ defineModule(sim, list(
 ## event types
 #   - type `init` is required for initiliazation
 
-doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
+doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE) {
   switch(eventType,
     "init" = {
       ### check for more detailed object dependencies:
       ### (use `checkObject` or similar)
   
       # do stuff for this event
-      sim <- sim$mpbMassAttacksInit(sim)
+      sim <- sim$mpbMassAttacksDataInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacks$.plotInitialTime,
-                           "mpbMassAttacks", "plot")
-      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacks$.saveInitialTime,
-                           "mpbMassAttacks", "save")
+      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacksData$.plotInitialTime,
+                           "mpbMassAttacksData", "plot")
+      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacksData$.saveInitialTime,
+                           "mpbMassAttacksData", "save")
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
@@ -55,8 +56,8 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
       Plot(sim$MassAttacksT)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbMassAttacks$.plotInterval,
-                           "mpbMassAttacks", "plot")
+      sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbMassAttacksData$.plotInterval,
+                           "mpbMassAttacksData", "plot")
   
       # ! ----- STOP EDITING ----- ! #
     },
@@ -82,7 +83,7 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
   # }
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbMassAttacks", "data", "west.boreal.RData"), envir = envir(sim))
+    load(file.path(modulePath(sim), "mpbMassAttacksData", "data", "west.boreal.RData"), envir = envir(sim))
   }
   
   # ! ----- STOP EDITING ----- ! #
@@ -95,12 +96,12 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 ### template initilization
-mpbMassAttacksInit <- function(sim) {
+mpbMassAttacksDataInit <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   ##
   ## TO DO: incorporate code from MPB_maps.R to create the raster layers
   ##
-  massAttacks <- stack(file.path(modulePath(sim), "mpbMassAttacks", "data", "mpb_bcab_boreal.tif")) %>% 
+  massAttacks <- stack(file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal.tif")) %>% 
     crop(sim$studyArea)
   setColors(massAttacks) <- brewer.pal(9, "YlOrRd") ## does this work on a stack?
   sim$MassAttacksT <- massAttacks[[time(sim)]]
