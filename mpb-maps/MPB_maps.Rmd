@@ -83,7 +83,7 @@ getOGR <- function(layer, dir) {
 ## set work dirs based on computer used
 if (._USER_. == "achubaty") {
   if (._OS_. == "Darwin") {
-    maps.dir <- "~/Documents/data/maps"
+    maps.dir <- "~/Documents/shared"
     work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
   } else if (._OS_. == "Linux") {
     if (isTRUE(._CFS_.)) {
@@ -139,6 +139,7 @@ See @Cooke:2017ms foc more details.
 ```{r can_adm}
 if (isTRUE(._MAPS_USERAW_.)) {
   adm.path <- file.path(maps.dir, "CAN_adm")
+  if (!dir.exists(adm.path)) dir.create(adm.path)
   for (s in 0:3) {
     assign(paste0("CAN_adm", s),
            raster::getData('GADM', path = adm.path, country = "Canada", level = s),
