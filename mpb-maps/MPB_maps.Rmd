@@ -278,7 +278,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
     sfLibrary(rgdal)
     sfLibrary(rgeos)
     sfLibrary(sp)
-    sfExport("crs.boreal", "getOGR", "maps.dir", "rdata.path", "west.boreal.raster")
+    sfExport("._RES_MAPS_.", "crs.boreal", "getOGR", "maps.dir", "rdata.path", "west.boreal.raster")
     
     ## in parallel: load, reproject, and rasterize each of the bc polygons
     #  do as much as possible in a single step (don't save intermediate objects) to minimize RAM use.
