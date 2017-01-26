@@ -22,15 +22,15 @@ The goal of this model is to simulate the spread of mountain pine beetle outbrea
 
 ## Module descriptions
 
-### `mpbGrowth_*`
+### `mpbGrowth`
 
 Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question.
 @Berryman:1979bs was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in MO and WY the 1960s.
-Consequently, the module offers the option of using any of four possible interpretations (B79fit, B79forced, XXX, YYY).
+Consequently, the module offers the option of using any of four possible interpretations (Berryman1979_fit, Berryman1979_forced, XXX, YYY).
 Two addiitonal options are forthcoming at the time of writing.
 
-The first of these is a high-order polynomial fit to Berryman's hand-drawn curve (`mpbGrowth_B79fit`).
-The second is the linearized multi-niche model of @Berryman:1999bk, which, oddly & inexplicably, held endemic-niche dynamics as a fast process (`R[t] ~ X[t-1]`), and epidemic-niche dynamics as a lagged process (`R[t] ~ X[t-2]`) (`mpbGrowth_B79forced`). [IS THIS RIGHT??]
+The first of these is a high-order polynomial fit to Berryman's hand-drawn curve (`Berryman1979_fit`).
+The second is the linearized multi-niche model of @Berryman:1999bk, which, oddly & inexplicably, held endemic-niche dynamics as a fast process (`R[t] ~ X[t-1]`), and epidemic-niche dynamics as a lagged process (`R[t] ~ X[t-2]`) (`Berryman1979_forced`). [IS THIS RIGHT??]
 
 ### `mpbPine`
 
@@ -129,14 +129,14 @@ studyArea <- raster::raster(nrows = ny, ncols = nx,
 
 times <- list(start = 2011, end = 2020)
 params <- list(
-  ##
-  mpbClimate = list(suitabilityIndex = "G") # Can be "G", "S", "L", "R"
+  mpbClimate = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
+  mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
 )
 modules <- list(#"mpbRandomLandscapes",
                 "mpbPine", "mpbClimate",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimate
                 #"mpbMassAttacks",
                 #"mpbRedTopDispersal",
-                "mpbGrowth_B79forced")
+                "mpbRedTopGrowth")
 ```
 
 ## Run the model

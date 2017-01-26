@@ -1,7 +1,0 @@
----
-title: "MPBRedTopGrowth_B79fit"
-author: "Barry J. Cooke and Alex M. Chubaty"
-date: "12 August 2015"
-output: pdf_document
----
-
