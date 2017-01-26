@@ -298,8 +298,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
       yr <- strsplit(shp, "_")[[1]][3]
       out <- rasterize(poly.boreal, west.boreal.raster, getCover = TRUE,
                        filename = file.path(rdata.path, paste0("MPB_BC_poly_", yr, ".grd")),
-                       overwrite = TRUE) / 100 * 1125 * (._RES_MAPS_. / 100) ^ 2
-      
+                       overwrite = TRUE) / 100 * 1125 * (._RES_MAPS_. / 100) ^ 2 %>%
+        writeRaster(filename = file.path(rdata.path, paste0("MPB_BC_poly_", yr, ".grd")),
+                    overwrite = TRUE)
       writeRaster(out, filename = file.path(rdata.path, paste0("MPB_BC_poly_", yr, ".tif")),
                   overwrite = TRUE)
       return(out)
