@@ -333,23 +333,23 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   wh.pnts <- na.omit(match(names(bc.poly.boreal.raster.stack), names(ab.pnts.boreal.raster.stack)))
   wh.poly <- na.omit(match(names(ab.pnts.boreal.raster.stack), names(bc.poly.boreal.raster.stack)))
   
-  all <- list()
+  bcab <- list()
   j <- 0
   for (i in 1:nlayers(bc.poly.boreal.raster.stack)) {
     if (any(names(bc.poly.boreal.raster.stack)[i] == names(ab.pnts.boreal.raster.stack))) {
       j <- j + 1
       if (any(is.finite(cellStats(bc.poly.boreal.raster.stack[[i]], "range")))) {
-        all[[i]] <- merge(ab.pnts.boreal.raster.stack[[wh.pnts[j]]],
+        bcab[[i]] <- merge(ab.pnts.boreal.raster.stack[[wh.pnts[j]]],
                           bc.poly.boreal.raster.stack[[wh.poly[j]]])
       } else {
-        all[[i]] <- ab.pnts.boreal.raster.stack[[wh.pnts[j]]]
+        bcab[[i]] <- ab.pnts.boreal.raster.stack[[wh.pnts[j]]]
       }
     } else {
-      all[[i]] <- bc.poly.boreal.raster.stack[[i]]
+      bcab[[i]] <- bc.poly.boreal.raster.stack[[i]]
     }
   }
   
-  all <- lapply(all, function(x) {
+  bcab <- lapply(bcab, function(x) {
     x[is.na(x)] <- 0; return(x)
   }) %>% lapply(., function(x) {
     x[x > 0] <- log(x[x > 0]) + 10
@@ -357,22 +357,23 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   }) %>%
     setNames(substr(names(bc.poly.boreal.raster.stack), 2, 5))
   
-  bcab.boreal.raster.stack <- stack(all) %>%
+  bcab.boreal.raster.stack <- stack(bcab, filename = file.path(rdata.path, "bcab.boreal.raster.stack.grd"),
+                                    overwrite = TRUE) %>%
     setNames(substr(names(bc.poly.boreal.raster.stack), 2, 5))
   bcab.boreal.raster.brick <- brick(bcab.boreal.raster.stack,
                                     filename = file.path(rdata.path, "bcab.boreal.raster.brick.grd"),
                                     overwrite = TRUE) %>%
     setNames(substr(names(bc.poly.boreal.raster.stack), 2, 5))
-    
-  bcab.boreal.raster.stack <- writeRaster(bcab.boreal.raster.stack,
-                                          filename = file.path(rdata.path, "bcab.boreal.raster.stack.grd"),
-                                          overwrite = TRUE)
-    
+  
+  writeRaster(bcab.boreal.raster.stack,
+              filename = file.path(rdata.path, "mpb_bcab_boreal.tif"),
+              overwrite = TRUE) ## TO DO: add options to compress raster depending on size
+  
   saveObjects(c("bcab.boreal.raster.brick", "bcab.boreal.raster.stack"), rdata.path)
   
   ## cleanup workspace
-  rm(all, bcab.boreal.raster.brick, bcab.boreal.raster.stack,
-     ab.pnts.boreal.raster.stack, bc.poly.boreal.raster.stack,
+  rm(ab.pnts.boreal.raster.stack, bc.poly.boreal.raster.stack,
+     bcab, bcab.boreal.raster.brick, bcab.boreal.raster.stack,
      wh.pnts, wh.poly)
   .cleanup()
 }
