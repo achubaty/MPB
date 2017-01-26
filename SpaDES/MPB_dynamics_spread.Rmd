@@ -25,7 +25,7 @@ The goal of this model is to simulate the spread of mountain pine beetle outbrea
 ### `mpbGrowth`
 
 Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question.
-@Berryman:1979bs was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in MO and WY the 1960s.
+@Berryman:1979bs was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in Montana (MT) and Wyoming (WY) the 1960s.
 Consequently, the module offers the option of using any of four possible interpretations (`Berryman1979_fit`, `Berryman1979_forced` (current default), XXX, YYY).
 Two addiitonal options are forthcoming at the time of writing.
 
