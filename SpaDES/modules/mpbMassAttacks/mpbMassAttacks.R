@@ -52,7 +52,7 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-      Plot(sim$totalNumberMassAttacks)
+      Plot(sim$MassAttacksT)
   
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbMassAttacks$.plotInterval,
@@ -96,13 +96,16 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
 
 ### template initilization
 mpbMassAttacksInit <- function(sim) {
-  # # ! ----- EDIT BELOW ----- ! #
-  massAttacks <- XXX  ## TO DO: load mpb attack raster produced from MPB_maps.R
-  names(massAttacks) <- "massAttacks"
-  setColors(massAttacks) <- brewer.pal(9, "YlOrRd")
-  sim$totalNumberMassAttacks <- massAttacks
+  # ! ----- EDIT BELOW ----- ! #
+  ##
+  ## TO DO: incorporate code from MPB_maps.R to create the raster layers
+  ##
+  massAttacks <- stack(file.path(modulePath(sim), "mpbMassAttacks", "data", "mpb_bcab_boreal.tif")) %>% 
+    crop(sim$studyArea)
+  setColors(massAttacks) <- brewer.pal(9, "YlOrRd") ## does this work on a stack?
+  sim$MassAttacksT <- massAttacks[[time(sim)]]
+  sim$MassAttacksTminus1 <- massAttacks[[time(sim) - 1]]
 
   # ! ----- STOP EDITING ----- ! #
-
   return(invisible(sim))
 }
