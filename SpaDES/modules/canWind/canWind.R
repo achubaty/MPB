@@ -1,24 +1,25 @@
 
 # Everything in this file gets sourced during simInit, and all functions and objects
-#  are put into the simList. To use objects and functions, use sim$xxx.
+# are put into the simList. To use objects and functions, use sim$xxx.
 defineModule(sim, list(
-  name = "mpbMassAttacks",
-  description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
-  keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
-              person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
-  childModules = character(),
+  name = "canWind",
+  description = "Simulate mean annual wind speeds/directions by generating random directions (biased eastward).",
+  keywords = c("insert key words here"),
+  authors = person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
+  childModules = character(0),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
-  citation = list(),
-  reqdPkgs = list("raster", "RColorBrewer"),
+  citation = list("citation.bib"),
+  documentation = list("README.txt", "canWind.Rmd"),
+  reqdPkgs = list("CircStats", "raster"),
   parameters = rbind(
+    #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
-    defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
+    defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
-    defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
+    defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
@@ -26,42 +27,35 @@ defineModule(sim, list(
                  desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    createsOutput("massAttacksT", "RasterLayer", desc = "The current year's mass attacks."),
-    createsOutput("massAttacksTminus1", "RasterLayer", desc = "The previous year's mass attacks.")
+    createsOutput(objectName = "windMap", objectClass = "RasterStack",
+                  desc = "Raster maps corresponding to wind spped and direction.")
   )
 ))
 
 ## event types
-#   - type `init` is required for initiliazation
+#   - type `init` is required for initialiazation
 
-doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
+doEvent.canWind <- function(sim, eventTime, eventType, debug = FALSE) {
   switch(eventType,
     "init" = {
-      ### check for more detailed object dependencies:
-      ### (use `checkObject` or similar)
-  
       # do stuff for this event
-      sim <- sim$mpbMassAttacksInit(sim)
+      sim <- sim$canWindInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacks$.plotInitialTime,
-                           "mpbMassAttacks", "plot")
-      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacks$.saveInitialTime,
-                           "mpbMassAttacks", "save")
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "canWind", "plot")
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-      Plot(sim$totalNumberMassAttacks)
-  
+      Plot(sim$windMap)
+      
       # schedule future event(s)
-      sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbMassAttacks$.plotInterval,
-                           "mpbMassAttacks", "plot")
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "canWind", "plot")
   
       # ! ----- STOP EDITING ----- ! #
     },
-    warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
-                  "' in module '", events(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
+    warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
+                  "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
   return(invisible(sim))
 }
@@ -82,7 +76,7 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
   # }
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbMassAttacks", "data", "west.boreal.RData"), envir = envir(sim))
+    load(file.path(modulePath(sim), "canWind", "data", "west.boreal.RData"), envir = envir(sim))
   }
   
   # ! ----- STOP EDITING ----- ! #
@@ -94,15 +88,10 @@ doEvent.mpbMassAttacks <- function(sim, eventTime, eventType, debug = FALSE) {
 #   - `modulenameInit()` function is required for initiliazation;
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
-### template initilization
-mpbMassAttacksInit <- function(sim) {
+### template initialization
+canWindInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
-  massAttacks <- XXX  ## TO DO: load mpb attack raster produced from MPB_maps.R
-  names(massAttacks) <- "massAttacks"
-  setColors(massAttacks) <- brewer.pal(9, "YlOrRd")
-  sim$totalNumberMassAttacks <- massAttacks
-
+  
   # ! ----- STOP EDITING ----- ! #
-
   return(invisible(sim))
 }

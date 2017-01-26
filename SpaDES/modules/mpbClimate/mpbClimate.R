@@ -37,50 +37,39 @@ defineModule(sim, list(
 #   - type `init` is required for initialiazation
 
 doEvent.mpbClimate <- function(sim, eventTime, eventType, debug = FALSE) {
-  if (eventType == "init") {
-    ### check sim init params etc.
-    stopifnot(start(sim) > 1981, end(sim) < 2100)
-
-    # do stuff for this event
-    sim <- sim$mpbClimateInit(sim)
-    sim <- sim$mpbClimateImportMaps(sim)
-
-    # schedule future event(s)
-    sim <- scheduleEvent(sim, start(sim), "mpbClimate", "switchLayer", .first())
-    sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbClimate", "plot", .last())
-    sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbClimate", "save", .last() + 1)
-  } else if (eventType == "plot") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-    names(sim$climateSuitabilityMap) <- "layer"
-    Plot(sim$climateSuitabilityMap, title = "Climate Suitability Map", new = TRUE)
-    Plot(sim$studyArea, addTo = "sim$climateSuitabilityMap")
-    
-    # schedule future event(s)
-
-    sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbClimate", "plot")
-    # ! ----- STOP EDITING ----- ! #
-  } else if (eventType == "save") {
-    # ! ----- EDIT BELOW ----- ! #
-    # do stuff for this event
-
-    # e.g., call your custom functions/methods here
-    # you can define your own methods below this `doEvent` function
-
-    # schedule future event(s)
-
-    # e.g.,
-    # sim <- scheduleEvent(sim, time(sim) + increment, "mpbClimate", "save")
-
-    # ! ----- STOP EDITING ----- ! #
-  } else if (eventType == "switchLayer") {
-    sim <- mpbClimateSwitchLayer(sim)
-    
-    sim <- scheduleEvent(sim, time(sim) + 40, "mpbClimate", "switchLayer")
-  } else {
+  switch(eventType,
+    "init" = {
+      ### check sim init params etc.
+      stopifnot(start(sim) > 1981, end(sim) < 2100)
+  
+      # do stuff for this event
+      sim <- sim$mpbClimateImportMaps(sim)
+  
+      # schedule future event(s)
+      sim <- scheduleEvent(sim, start(sim), "mpbClimate", "switchLayer", .first())
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbClimate", "plot", .last())
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbClimate", "save", .last() + 1)
+    },
+    "plot" = {
+      # ! ----- EDIT BELOW ----- ! #
+      # do stuff for this event
+      names(sim$climateSuitabilityMap) <- "layer"
+      Plot(sim$climateSuitabilityMap, title = "Climate Suitability Map", new = TRUE)
+      Plot(sim$studyArea, addTo = "sim$climateSuitabilityMap")
+      
+      # schedule future event(s)
+  
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbClimate", "plot")
+      # ! ----- STOP EDITING ----- ! #
+    },
+    "switchLayer" = {
+      sim <- mpbClimateSwitchLayer(sim)
+      
+      sim <- scheduleEvent(sim, time(sim) + 40, "mpbClimate", "switchLayer")
+    },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
-  }
+  )
   return(invisible(sim))
 }
 
@@ -88,27 +77,6 @@ doEvent.mpbClimate <- function(sim, eventTime, eventType, debug = FALSE) {
 #   - follow the naming convention `modulenameEventtype()`;
 #   - `modulenameInit()` function is required for initiliazation;
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
-
-### template initialization
-mpbClimateInit <- function(sim) {
-  return(invisible(sim))
-}
-
-### template for save events
-mpbClimateSave <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # do stuff for this event
-  sim <- saveFiles(sim)
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### template for plot events
-mpbClimatePlot <- function(sim) {
-  Plot(sim$mpbClimateMap)
-  return(invisible(sim))
-}
 
 ### template for your event2
 mpbClimateSwitchLayer <- function(sim) {
