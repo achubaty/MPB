@@ -256,6 +256,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   ## cleanup workspace
   rm(ab.pnts.dir.shp, ab.pnts.files, ab.pnts.boreal.raster.stack, west.boreal.raster)
   .cleanup()
+  unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
 ```
 
@@ -316,6 +317,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   # clean up workspace 
   rm(bc.poly.dir.shp, bc.poly.files) 
   .cleanup()
+  unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
 ```
 
@@ -378,6 +380,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
      bcab, bcab.boreal.raster.brick, bcab.boreal.raster.stack,
      wh.pnts, wh.poly)
   .cleanup()
+  unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
 ```
 
