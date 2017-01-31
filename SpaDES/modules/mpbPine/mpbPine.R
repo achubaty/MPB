@@ -93,6 +93,8 @@ mpbPineImportMap <- function(sim) {
                        "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
 
   fn1 <- function(f, studyArea) {
+    tf <- tempfile(fileext = ".tif")
+    file.create(tf)
     ## TO DO: make this parallel -- one thread per map layer
     a <- raster::stack(x = f) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
     b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
@@ -100,10 +102,12 @@ mpbPineImportMap <- function(sim) {
       projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
       crop(studyArea)
     a[] <- a[]
+    a <- writeRaster(raster::stack(a), filename = tf, overwrite = TRUE)
     
     ## TO DO: can this partbe made parallel?
     out <- mosaic(a[[1]], a[[2]], fun = sum) %>% 
-      setNames("Lodgepole_and_Jack_Pine")
+      setNames("Lodgepole_and_Jack_Pine") %>% 
+      writeRaster(filename = tf, overwrite = TRUE)
     return(out)
   }
   sim$pineMap <- Cache(fn1, f, sim$studyArea)

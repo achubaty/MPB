@@ -131,11 +131,13 @@ mpbClimateImportMaps <- function(sim) {
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
   
   fn1 <- function(files, studyArea) {
+    tf <- tempfile(fileext = ".tif")
     stack(lapply(files, function(f) {
       raster(f) %>%
         projectRaster(crs = CRS(proj4string(studyArea))) %>%
         crop(studyArea)
-    }))
+    })) %>%
+      writeRaster(filename = tf, overwrite = TRUE)
   }
   sim$mpbClimateMaps <- Cache(fn1, files, sim$studyArea)
   
