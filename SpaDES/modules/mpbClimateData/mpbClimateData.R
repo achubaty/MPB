@@ -2,7 +2,7 @@
 # Everything in this file gets sourced during simInit, and all functions and objects
 # are put into the simList. To use objects and functions, use sim$xxx.
 defineModule(sim, list(
-  name = "mpbClimate",
+  name = "mpbClimateData",
   description = "insert module description here",
   keywords = c("insert key words here"),
   authors = c(person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
@@ -12,7 +12,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list("citation.bib"),
-  documentation = list("README.txt", "mpbClimate.Rmd"),
+  documentation = list("README.txt", "mpbClimateData.Rmd"),
   reqdPkgs = list("magrittr", "raster", "sp"),
   parameters = rbind(
     defineParameter("climateScenario", "character", "RCP45", NA_character_, NA_character_, "The climate scenario to use. One of RCP45 or RCP85."),
@@ -36,19 +36,19 @@ defineModule(sim, list(
 ## event types
 #   - type `init` is required for initialiazation
 
-doEvent.mpbClimate <- function(sim, eventTime, eventType, debug = FALSE) {
+doEvent.mpbClimateData <- function(sim, eventTime, eventType, debug = FALSE) {
   switch(eventType,
     "init" = {
       ### check sim init params etc.
       stopifnot(start(sim) > 1981, end(sim) < 2100)
   
       # do stuff for this event
-      sim <- sim$mpbClimateImportMaps(sim)
+      sim <- sim$mpbClimateDataImportMaps(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim), "mpbClimate", "switchLayer", .first())
-      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbClimate", "plot", .last())
-      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbClimate", "save", .last() + 1)
+      sim <- scheduleEvent(sim, start(sim), "mpbClimateData", "switchLayer", .first())
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbClimateData", "plot", .last())
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbClimateData", "save", .last() + 1)
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
@@ -59,13 +59,13 @@ doEvent.mpbClimate <- function(sim, eventTime, eventType, debug = FALSE) {
       
       # schedule future event(s)
   
-      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbClimate", "plot")
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbClimateData", "plot")
       # ! ----- STOP EDITING ----- ! #
     },
     "switchLayer" = {
-      sim <- mpbClimateSwitchLayer(sim)
+      sim <- mpbClimateDataSwitchLayer(sim)
       
-      sim <- scheduleEvent(sim, time(sim) + 40, "mpbClimate", "switchLayer")
+      sim <- scheduleEvent(sim, time(sim) + 40, "mpbClimateData", "switchLayer")
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
@@ -79,16 +79,16 @@ doEvent.mpbClimate <- function(sim, eventTime, eventType, debug = FALSE) {
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 ### template for your event2
-mpbClimateSwitchLayer <- function(sim) {
+mpbClimateDataSwitchLayer <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   sim$climateSuitabilityMap <- if (time(sim) <= 2010) {
-    sim$mpbClimateMaps[[1]]
+    sim$mpbClimateDataMaps[[1]]
   } else if (time(sim) <= 2040) {
-    sim$mpbClimateMaps[[2]]
+    sim$mpbClimateDataMaps[[2]]
   } else if (time(sim) <= 2070) {
-    sim$mpbClimateMaps[[3]]
+    sim$mpbClimateDataMaps[[3]]
   } else if (time(sim) <= 2100) {
-    sim$mpbClimateMaps[[4]]
+    sim$mpbClimateDataMaps[[4]]
   } else {
     stop("No climate suitabliity projections available beyond year 2100.")
   }
@@ -113,21 +113,21 @@ mpbClimateSwitchLayer <- function(sim) {
   # }
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbClimate", "data", "west.boreal.RData"), envir = envir(sim))
+    load(file.path(modulePath(sim), "mpbClimateData", "data", "west.boreal.RData"), envir = envir(sim))
   }
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
 
 ### helper functions
-mpbClimateImportMaps <- function(sim) {
+mpbClimateDataImportMaps <- function(sim) {
   suffix <- switch(P(sim)$suitabilityIndex,
                    "S" = "_SafP[.]tif",
                    "L" = "_LoganP[.]tif",
                    "R" = "_RegP[.]tif",
                    "G" = "_GeoP[.]tif",
                    stop("suitability index must be one of S, L, R, or G."))
-  files <- dir(path = file.path(modulePath(sim), "mpbClimate", "data"), pattern = suffix, full.names = TRUE)
+  files <- dir(path = file.path(modulePath(sim), "mpbClimateData", "data"), pattern = suffix, full.names = TRUE)
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
   
   fn1 <- function(files, studyArea) {
@@ -139,7 +139,7 @@ mpbClimateImportMaps <- function(sim) {
     })) %>%
       writeRaster(filename = tf, overwrite = TRUE)
   }
-  sim$mpbClimateMaps <- Cache(fn1, files, sim$studyArea)
+  sim$mpbClimateDataMaps <- Cache(fn1, files, sim$studyArea)
   
   return(sim)
 }
