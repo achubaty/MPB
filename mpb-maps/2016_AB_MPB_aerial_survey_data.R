@@ -151,11 +151,6 @@ west.boreal.raster <- suppressWarnings(
 )
 save("west.boreal.raster", file = file.path(rdata.path, "west.boreal.raster.Rdata"))
 
-# rasterize MPB point data per method oulined in Cooke & Carroll (unpublished)
-rasterize.mpb <- function(x, y = , ...) {
-  
-}
-
 sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
   sfLibrary(raster)
   sfExport("ab_pnts_boreal", "crs.boreal", "rdata.path", "west.boreal.raster")
