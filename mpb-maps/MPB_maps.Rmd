@@ -246,7 +246,6 @@ if (isTRUE(._MAPS_USERAW_.)) {
     }) %>%
       setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4)) %>%
       stack(filename = file.path(rdata.path, "ab_pnts_boreal.grd"), overwrite = TRUE)
-    
 
     # save these new map objects for later use
     saveObjects("ab.pnts.boreal.raster.stack", rdata.path)
