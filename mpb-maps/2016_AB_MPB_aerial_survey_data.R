@@ -1,4 +1,5 @@
 library(magrittr)
+library(raster)
 library(rgdal)
 library(snowfall)
 library(sp)
@@ -68,10 +69,11 @@ source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-d
 ##  [ password protected archive, downloaded October 19, 2016                       ]
 ##  [ see email from Aaron McGill (Aaron.McGill@gov.ab.ca) forwarded by Barry Cooke ]
 ##
-file <- file.path(maps.dir, "MPB/MPB_AERIAL_SURVEY.gdb")
+f <- file.path(maps.dir, "MPB/MPB_AERIAL_SURVEY.gdb")
+stopifnot(file.exists(f))
 
 # List all feature classes in a file geodatabase
-fc_list <- ogrListLayers(file)
+fc_list <- ogrListLayers(f)
 print(fc_list)
 
 # each layer represents data for a single year (2 of the last 3 characters in the name)
@@ -113,13 +115,24 @@ if (!exists("crs.boreal")) {
 }
 
 sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
+  sfLibrary(magrittr)
+  sfLibrary(sp)
+  sfLibrary(rgeos)
   sfLibrary(rgdal)
+  sfExport("crs.boreal")
   
-  ab_pnts_boreal <- sfClusterApplyLB(ab_pnts, spTransform, crs.boreal) %>%
+  ab_pnts_boreal <- sfClusterApplyLB(ab_pnts, function(pnts) {
+    pnts.boreal <- pnts %>%
+      setNames(toupper(names(pnts))) %>% 
+      spTransform(crs.boreal)
+    stopifnot(gIsValid(pnts.boreal))
+    
+    return(pnts.boreal)
+  }) %>%
     setNames(names(ab_pnts))
-
+  
   # save these new map objects for later use
-  save("ab_pnts_boreal", file = file.path(rdata.path, "ab_pnts_boreal.Rdata"))
+  save("ab_pnts_boreal", file = file.path(rdata.path, "ab_pnts_boreal_2016.Rdata"))
 sfStop()
 .cleanup()
 
@@ -138,23 +151,33 @@ west.boreal.raster <- suppressWarnings(
 )
 save("west.boreal.raster", file = file.path(rdata.path, "west.boreal.raster.Rdata"))
 
-# rasterize MPB point data per method oulined in Cooke & Carrol (unpublished)
-rasterize.mpb <- function(x, y = west.boreal.raster, ...) {
-  rasterize(x = x, y = y,
-            field = as.numeric(x@data$NUM_TREES),
-            fun = "sum", overwrite = TRUE, ...)
+# rasterize MPB point data per method oulined in Cooke & Carroll (unpublished)
+rasterize.mpb <- function(x, y = , ...) {
+  
 }
 
 sfInit(cpus = ._NUM_CPUS_., parallel = TRUE)
   sfLibrary(raster)
-  sfExport("west.boreal.raster")
+  sfExport("ab_pnts_boreal", "crs.boreal", "rdata.path", "west.boreal.raster")
   
-  ab_pnts_boreal_stack <- stack(sfClusterApplyLB(ab_pnts_boreal, rasterize.mpb)) %>%
-    setNames(names(ab_pnts_boreal))
-  writeRaster(ab_pnts_boreal_stack, file.path(rdata.path, "ab_pnts_boreal.grd"), overwrite = TRUE)
-  save("ab_pnts_boreal_stack", file = file.path(rdata.path, "ab_pnts_boreal_stack.Rdata"))
+  ab_pnts_boreal_stack <- sfClusterApplyLB(names(ab_pnts_boreal), function(shp) {
+    pnts <- ab_pnts_boreal[[shp]]
+    yr <- substr(shp, 1, 4)
+    out <- rasterize(pnts, west.boreal.raster,
+                     field = as.numeric(pnts@data$NUM_TREES), fun = "sum",
+                     filename = file.path(rdata.path, paste0("MPB_AB_pnts_", yr, "_new.grd")),
+                     overwrite = TRUE)
+    writeRaster(out, filename = file.path(rdata.path, paste0("MPB_AB_pnts_", yr, "_new.tif")),
+                overwrite = TRUE)
+    return(out)
+  }) %>%
+    setNames(names(ab_pnts_boreal)) %>%
+    stack(filename = file.path(rdata.path, "ab_pnts_boreal_2016.grd"), overwrite = TRUE)
+  
+  save("ab_pnts_boreal_stack", file = file.path(rdata.path, "ab_pnts_boreal_stack_2016.Rdata"))
 sfStop()
 .cleanup()
+unlink(rasterOptions()$tmpfile, recursive = TRUE)
 
 dev.new(noRStudioGD = TRUE)
 plot(ab_pnts_boreal_stack)
