@@ -51,13 +51,20 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
       # schedule future event(s)
       #sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbRedTopGrowth", "plot")
     },
+    "grow" = {
+      # do stuff for this event
+      sim <- sim$mpbRedTopGrowthGrow(sim)
+      
+      # schedule future event(s)
+      sim <- scheduleEvent(sim, time(sim) + 1, "mpbRedTopGrowth", "grow")
+    },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-     
       sim <- sim$mpbRedTopGrowthPlot(sim)
-     
-      # sim <- scheduleEvent(sim, time(sim) + increment, "mpbRedTopGrowth_B79forced", "plot")
+      
+      # schedule future event(s)
+      sim <- scheduleEvent(sim, time(sim) + 1, "mpbRedTopGrowth", "plot")
   
       # ! ----- STOP EDITING ----- ! #
     },
@@ -74,15 +81,19 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
 
 mpbRedTopGrowthInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
+  stopifnot(res(sim$massAttacksT) == res(sim$massAttacksTminus1),
+            extent(sim$massAttacksT) == extent(sim$massAttacksTminus1),
+            xres(sim$massAttacksT) == yres(sim$massAttacksT))
+  
   sim$growthData <- switch(P(sim)$dataset,
     "Berryman1979_fit" = {
       ## Berryman1979_forced
       data.frame(
-        yearRedTopsObserved <- c(1:15),
-        laggedlog10redTopsObserved <- c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2,
-                                        0.9, 0.65, 1.05, 0.95, 1.1, 1.5, 1.85),
-        log10changeInRedTopsObserved = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75,
-                                         1.2, -0.7, -0.4, 0.2, 0.45, 0.3, -0.78),
+        year = c(1:15),
+        log10Rt = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
+                    1.05, 0.95, 1.1, 1.5, 1.85),
+        log10Xtm1 = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
+                      -0.4, 0.2, 0.45, 0.3, -0.78),
         study = c(rep("Tunnock 1970", 9), rep("Parker 1973", 6)),
         stringsAsFactors = TRUE
       )
@@ -90,15 +101,31 @@ mpbRedTopGrowthInit <- function(sim) {
     "Berryman1979_forced" = {
       ## same as Berryman1979_fit
       data.frame(
-        yearRedTopsObserved = c(1:15),
-        laggedlog10redTopsObserved = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2,
-                                       0.9, 0.65, 1.05, 0.95, 1.1, 1.5, 1.85),
-        log10changeInRedTopsObserved = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75,
-                                         1.2, -0.7, -0.4, 0.2, 0.45, 0.3, -0.78),
+        year = c(1:15),
+        log10Rt = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
+                    1.05, 0.95, 1.1, 1.5, 1.85),
+        log10Xtm1 = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
+                      -0.4, 0.2, 0.45, 0.3, -0.78),
         study = c(rep("Tunnock 1970", 9), rep("Parker 1973", 6)),
         stringsAsFactors = TRUE
       )
     }
+  )
+  
+  ## define growth function (from regression) for each dataset
+  growthFunction <- switch(P(sim)$dataset,
+     "Berryman1979_fit" = {
+       function(x) {
+         m <- lm(log10Rt ~ poly(log10Xtm1, 3, raw = TRUE), data = sim$growthData)
+         unname(predict(m, newdata = data.frame(log10Xtm1 = x)))
+       }
+     },
+     "Berryman1979_force" = {
+       function(x) {
+         poly3.params <- c(1.1, -0.2, -0.9, -0.24)
+         (poly3.params[4] * x^3 + poly3.params[3] * x^2 + poly3.params[2] * x + poly3.params[1])
+       }
+     }
   )
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
@@ -108,18 +135,11 @@ mpbRedTopGrowthPlotInit <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
 
-  poly3.B79.forced <- function(x) {
-   poly3.params <- c(1.1, -0.2, -0.9, -0.24)
-   (poly3.params[4] * x^3 + poly3.params[3] * x^2 + poly3.params[2] * x + poly3.params[1])
-  }
-  
   ### see ggplot docs at http://docs.ggplot2.org/current/
   gg <- ggplot(sim$growthData) +
-    geom_point(aes(x = laggedlog10redTopsObserved,
-                   y = log10changeInRedTopsObserved,
-                   shape = study)) +
+    geom_point(aes(x = log10Xtm1, y = log10Rt, shape = study)) +
     scale_shape(solid = FALSE) +
-    xlim(-3.2, 2) + ylim(-1.5, 1.5) +
+    xlim(-1.0, 1.5) + ylim(-3.2, 2.0) +
     labs(title = switch(P(sim)$dataset,
                         "Berryman1979_fit" = "Berryman (1979) [fit]",
                         "Berryman1979_forced" = "Berryman (1979) [forced]"
@@ -129,13 +149,11 @@ mpbRedTopGrowthPlotInit <- function(sim) {
     geom_hline(aes(yintercept = 0)) +
     switch(P(sim)$dataset,
       "Berryman1979_fit" = {
-        stat_smooth(aes(x = laggedlog10redTopsObserved,
-                        y = log10changeInRedTopsObserved),
-                    method = "lm",
+        stat_smooth(aes(x = log10Xtm1, y = log10Rt), method = "lm",
                     formula = y ~ poly(x, 3, raw = TRUE))
       },
       "Berryman1979_forced" = {
-        stat_function(fun = poly3.B79.forced)
+        stat_function(fun = sim$growthFunction)
       }
     )
   
@@ -149,9 +167,19 @@ mpbRedTopGrowthPlotInit <- function(sim) {
 mpbRedTopGrowthPlot <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
-  
   Plot(sim$massAttacksT)
   
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
+}
+
+mpbRedTopGrowthGrow <- function(sim) {
+  ## determine the actual growth based on the actual number of attacked trees/ha
+  xt <- function(xtminus1) {
+    map.res <- xres(xtminus1)
+    per.ha <- 10^sim$growthFunction(log10(xtminus1)) * xtminus1
+    return(map.res * per.ha)
+  }
+  
+  sim$massAttacksT <- Xt(sim$massAttacksTminus1)  ## TO DO: ensure tmp rasters don't proliferate!
 }
