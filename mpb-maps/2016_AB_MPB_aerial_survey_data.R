@@ -11,7 +11,7 @@ library(stringr)
 ._USER_. <- Sys.info()[["user"]]
 
 ## MPB data processing options
-._RES_MAPS_. <- 2000  ## raster resolution, based on Cooke & Carroll (unpublished)
+._RES_MAPS_. <- 250  ## raster resolution (metres)
 
 ## set R and knitr options
 if (isTRUE(._CFS_.)) {
@@ -24,7 +24,7 @@ if (isTRUE(._CFS_.)) {
 ## set work dirs based on computer used
 if (._USER_. == "achubaty") {
   if (._OS_. == "Darwin") {
-    maps.dir <- "~/Documents/data/maps"
+    maps.dir <- "~/Documents/shared"
     work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
   } else if (._OS_. == "Linux") {
     if (isTRUE(._CFS_.)) {
