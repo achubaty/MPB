@@ -115,8 +115,7 @@ if (isTRUE(download.data)) {
   
   source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-data.R")
   
-  url <- "ftp://tree.nfis.org/"
-  pw <- authenticate("knn4ftp", "knn4ftp")
+  url <- "http://tree.nfis.org/"
   docFiles <- c("NFI_and_kNN_Mapping_20160628.docx",
                 "FR_NFI_and_kNN_Mapping_20160628.docx",
                 "cjfr-2013-0401suppl.pdf")
@@ -124,7 +123,7 @@ if (isTRUE(download.data)) {
   
   lapply(docFiles, function(f) {
     if (!file.exists(file.path(kNN.dir, f))) {
-      GET(paste0(url, f), pw, write_disk(file.path(kNN.dir, f)))
+      GET(paste0(url, f), write_disk(file.path(kNN.dir, f)))
     }
   })
   GET(paste0(url, dataFile), pw, write_disk(file.path(kNN.dir, dataFile)))
