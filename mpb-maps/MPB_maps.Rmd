@@ -285,9 +285,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
     #  total RAM used can be controlled by adjusting the num.cpus used for processing.
     bc.poly.boreal.raster.stack <- sfClusterApplyLB(bc.poly.dir.shp, function(shp) {
       poly.boreal <- getOGR(shp, dir = file.path(maps.dir, "MPB", "province_BC")) %>% 
-      ## reproject to boreal projection
-      spTransform(., crs.boreal) %>%
-      gBuffer(., byid = TRUE, width = 0)
+        ## reproject to boreal projection
+        spTransform(., crs.boreal) %>%
+        gBuffer(., byid = TRUE, width = 0)
       
       stopifnot(gIsValid(poly.boreal))
       
