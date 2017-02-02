@@ -108,12 +108,12 @@ mpbPineImportMap <- function(sim) {
     
     ## TO DO: can this part be made parallel?
     out <- mosaic(a[[1]], a[[2]], fun = sum) %>% 
-      setNames("Lodgepole_and_Jack_Pine") %>% 
-      writeRaster(filename = tf, overwrite = TRUE)
-    return(out)
+      writeRaster(filename = tf, overwrite = TRUE) %>% 
+      setNames("Lodgepole_and_Jack_Pine")
+      return(out)
   }
   sim$pineMap <- Cache(fn1, f, sim$studyArea)
-
+  
   ## put all cells with pine into the data.table
   ids <- which(sim$pineMap[] > 0)
   sim$pineDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 

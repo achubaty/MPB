@@ -77,6 +77,28 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
   return(invisible(sim))
 }
 
+.inputObjects <- function(sim) {
+  # Any code written here will be run during the simInit for the purpose of creating
+  # any objects required by this module and identified in the inputObjects element of defineModule.
+  # This is useful if there is something required before simulation to produce the module
+  # object dependencies, including such things as downloading default datasets, e.g.,
+  # downloadData("LCC2005", modulePath(sim)).
+  # Nothing should be created here that does not create an named object in inputObjects.
+  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
+  # Note: the module developer can use 'sim$.userSuppliedObjNames' in their function below to
+  # selectively skip unnecessary steps because the user has provided those inputObjects in the
+  # simInit call. e.g.,
+  # if (!('defaultColor' %in% sim$.userSuppliedObjNames)) {
+  #  sim$defaultColor <- 'red'
+  # }
+  # ! ----- EDIT BELOW ----- ! #
+  if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
+    load(file.path(modulePath(sim), "mpbRedTopGrowth", "data", "west.boreal.RData"), envir = envir(sim))
+  }
+  # ! ----- STOP EDITING ----- ! #
+  return(invisible(sim))
+}
+
 ## event functions
 #   - follow the naming convention `modulenameEventtype()`;
 #   - `modulenameInit()` function is required for initiliazation;
@@ -159,7 +181,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
                     formula = y ~ poly(x, 3, raw = TRUE))
       },
       "Berryman1979_forced" = {
-        stat_function(fun = sim$growthFunction)
+        stat_function(fun = sim$growthFunction, colour = "blue")
       }
     )
   
