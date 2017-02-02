@@ -27,7 +27,7 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     createsOutput("pineMap", "RasterLayer", "Current lodgepole and jack pine available for MPB."),
-    createsOutput("pineMapDT", "data.table", "Current lodgepole and jack pine available for MPB.")
+    createsOutput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB.")
   )
 ))
 
@@ -115,7 +115,7 @@ mpbPineImportMap <- function(sim) {
 
   ## put all cells with pine into the data.table
   ids <- which(sim$pineMap > 0)
-  sim$pineMapDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 
+  sim$pineDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 
   
   return(invisible(sim))
 }

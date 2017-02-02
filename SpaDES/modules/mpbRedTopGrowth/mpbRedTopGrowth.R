@@ -25,7 +25,7 @@ defineModule(sim, list(
   ),
   inputObjects = rbind(
     expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
-    expectsInput("pineMapDT", "data.table", "Current lodgepole and jack pine available for MPB."),
+    expectsInput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB."),
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
     expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
@@ -88,7 +88,7 @@ mpbRedTopGrowthInit <- function(sim) {
   ## create a data.table consisting of the reduced map of current MPB distribution,
   ## presence/absence of pine, and climatic suitability
   sim$mpbGrowthDT <- Reduce(function(...) data.table::merge(..., all.x = TRUE),
-                            list(sim$massAttacksDT, sim$pineMapDT, sim$climateSuitabilityDT))
+                            list(sim$massAttacksDT, sim$pineDT, sim$climateSuitabilityDT))
   
   sim$growthData <- switch(P(sim)$dataset,
     "Berryman1979_fit" = {
