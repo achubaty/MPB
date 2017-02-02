@@ -125,7 +125,8 @@ mpbClimateDataImportMaps <- function(sim) {
                    "R" = "_RegP[.]tif",
                    "G" = "_GeoP[.]tif",
                    stop("suitability index must be one of S, L, R, or G."))
-  files <- dir(path = file.path(modulePath(sim), "mpbClimateData", "data"), pattern = suffix, full.names = TRUE)
+  files <- dir(path = file.path(modulePath(sim), "mpbClimateData", "data"),
+               pattern = suffix, full.names = TRUE)
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
   
   fn1 <- function(files, studyArea) {

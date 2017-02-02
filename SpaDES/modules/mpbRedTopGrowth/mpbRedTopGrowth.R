@@ -70,7 +70,7 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
     "save" = {
       rtmp <- update(rtmp, cell = sim$massAttacks[, ID], v = sim$massAttacks[, RedTrees])
       writeRaster(r, filename = file.path(outputPath(sim), paste0("massAttacks", time(sim), ".tif")))
-    }
+    },
     warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
                   "' in module '", events(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
@@ -87,17 +87,18 @@ mpbRedTopGrowthInit <- function(sim) {
   
   ## create a data.table consisting of the reduced map of current MPB distribution,
   ## presence/absence of pine, and climatic suitability
-  sim$mpbGrowthDT <- Reduce(function(...) data.table::merge(..., all.x = TRUE),
+  sim$mpbGrowthDT <- Reduce(function(...) merge(..., all.x = TRUE),
                             list(sim$massAttacksDT, sim$pineDT, sim$climateSuitabilityDT))
+  ## TO DO: climate map not same resolution etc as other maps, so this naive merge will be wrong!!!
   
   sim$growthData <- switch(P(sim)$dataset,
     "Berryman1979_fit" = {
       ## Berryman1979_forced
       data.frame(
         year = c(1:15),
-        log10Rt = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
+        log10Xtm1 = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
                     1.05, 0.95, 1.1, 1.5, 1.85),
-        log10Xtm1 = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
+        log10Rt = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
                       -0.4, 0.2, 0.45, 0.3, -0.78),
         study = c(rep("Tunnock 1970", 9), rep("Parker 1973", 6)),
         stringsAsFactors = TRUE
@@ -107,9 +108,9 @@ mpbRedTopGrowthInit <- function(sim) {
       ## same as Berryman1979_fit
       data.frame(
         year = c(1:15),
-        log10Rt = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
+        log10Xtm1 = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
                     1.05, 0.95, 1.1, 1.5, 1.85),
-        log10Xtm1 = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
+        log10Rt = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
                       -0.4, 0.2, 0.45, 0.3, -0.78),
         study = c(rep("Tunnock 1970", 9), rep("Parker 1973", 6)),
         stringsAsFactors = TRUE
@@ -118,14 +119,14 @@ mpbRedTopGrowthInit <- function(sim) {
   )
   
   ## define growth function (from regression) for each dataset
-  growthFunction <- switch(P(sim)$dataset,
+  sim$growthFunction <- switch(P(sim)$dataset,
      "Berryman1979_fit" = {
        function(x) {
          m <- lm(log10Rt ~ poly(log10Xtm1, 3, raw = TRUE), data = sim$growthData)
          unname(predict(m, newdata = data.frame(log10Xtm1 = x)))
        }
      },
-     "Berryman1979_force" = {
+     "Berryman1979_forced" = {
        function(x) {
          poly3.params <- c(1.1, -0.2, -0.9, -0.24)
          (poly3.params[4] * x^3 + poly3.params[3] * x^2 + poly3.params[2] * x + poly3.params[1])
@@ -144,7 +145,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
   gg <- ggplot(sim$growthData) +
     geom_point(aes(x = log10Xtm1, y = log10Rt, shape = study)) +
     scale_shape(solid = FALSE) +
-    xlim(-1.0, 1.5) + ylim(-3.2, 2.0) +
+    xlim(-3.2, 2) + ylim(-1.5, 1.5) +
     labs(title = switch(P(sim)$dataset,
                         "Berryman1979_fit" = "Berryman (1979) [fit]",
                         "Berryman1979_forced" = "Berryman (1979) [forced]"
@@ -182,32 +183,9 @@ mpbRedTopGrowthGrow <- function(sim) {
   ## determine the actual growth based on the actual number of attacked trees/ha
   xt <- function(xtminus1) {
     map.res <- xres(xtminus1)
-    per.ha <- 10^sim$growthFunction(log10(xtminus1)) * xtminus1
+    per.ha <- 10^sim$growthFunction(log10(xtminus1)) * xtminus1 ## TO DO: something is off about this
     return(map.res * per.ha)
   }
   
   sim$massAttacksDT <- sim$massAttacksDT[RedTops := xt(RedTops) * pClimate * pPine]
 }
-
-### SCRATCH
-growthFunction <- function(x) {
-  m <- lm(log10Rt ~ poly(log10Xtm1, 3, raw = TRUE), data = sim$growthData)
-  unname(predict(m, newdata = data.frame(log10Xtm1 = x)))
-}
-
-Xt <- function(Xtminus1) {
-  10^growthFunction(log10(Xtminus1)) * Xtminus1
-}
-
-plot(Berryman_1979fit$log10Xtm1, Berryman_1979fit$log10Rt)
-abline(h = 0, lty = 3)
-curve(growthFunction(x), add = TRUE, col = "blue", lwd = 2)
-curve(log10(Xt(10^x)), add = TRUE, col = "purple", lwd = 2)
-
-x <- 10^Berryman_1979fit$log10Xtm1
-points(log10(x), log10(Xt(x)), pch = 16)
-
-
-
-
-

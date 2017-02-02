@@ -90,12 +90,13 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
 
 mpbPineImportMap <- function(sim) {
   f <- file.path(modulePath(sim), "mpbPine", "data",
-                     c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
-                       "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
+                 c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
+                   "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
 
   fn1 <- function(f, studyArea) {
     tf <- tempfile(fileext = ".tif")
     file.create(tf)
+
     ## TO DO: make this parallel -- one thread per map layer
     a <- raster::stack(x = f) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
     b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
@@ -114,7 +115,7 @@ mpbPineImportMap <- function(sim) {
   sim$pineMap <- Cache(fn1, f, sim$studyArea)
 
   ## put all cells with pine into the data.table
-  ids <- which(sim$pineMap > 0)
+  ids <- which(sim$pineMap[] > 0)
   sim$pineDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 
   
   return(invisible(sim))
