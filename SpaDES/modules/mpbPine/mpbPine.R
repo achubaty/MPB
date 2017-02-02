@@ -13,7 +13,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "mpbPine.Rmd"),
-  reqdPkgs = list("magrittr", "raster", "sp"),
+  reqdPkgs = list("data.table", "magrittr", "raster", "sp"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
@@ -22,11 +22,12 @@ defineModule(sim, list(
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
-    expectsInput(objectName = "studyArea", objectClass = "SpatialPolygons",
-                 desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
+    expectsInput("studyArea", "SpatialPolygons", "The study area to which all maps will be cropped and reprojected.", sourceURL = NA),
+    expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = "pineMap", objectClass = "RasterLayer", desc = "Jack and lodgepole pine available for MPB.")
+    createsOutput("pineMap", "RasterLayer", "Current lodgepole and jack pine available for MPB."),
+    createsOutput("pineMapDT", "data.table", "Current lodgepole and jack pine available for MPB.")
   )
 ))
 
@@ -104,13 +105,17 @@ mpbPineImportMap <- function(sim) {
     a[] <- a[]
     a <- writeRaster(raster::stack(a), filename = tf, overwrite = TRUE)
     
-    ## TO DO: can this partbe made parallel?
+    ## TO DO: can this part be made parallel?
     out <- mosaic(a[[1]], a[[2]], fun = sum) %>% 
       setNames("Lodgepole_and_Jack_Pine") %>% 
       writeRaster(filename = tf, overwrite = TRUE)
     return(out)
   }
   sim$pineMap <- Cache(fn1, f, sim$studyArea)
+
+  ## put all cells with pine into the data.table
+  ids <- which(sim$pineMap > 0)
+  sim$pineMapDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 
   
   return(invisible(sim))
 }

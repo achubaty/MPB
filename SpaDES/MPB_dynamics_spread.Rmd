@@ -80,6 +80,9 @@ Install the most recent version of the `SpaDES` package from the development bra
 ```{r install-packages}
 #options(repos = c(CRAN = "https://cran.rstudio.com/"))
 
+if (!require(data.table)) {
+  install.packages("data.table")
+}
 if (!require(devtools)) {
   install.packages("devtools")
 }
@@ -121,11 +124,8 @@ rm(studyArea)
 
 ## define (small) study area for development
 ## skip this step if you want to use the default area af BC, AB, SK
-nx <- ny <- 2000
-studyArea <- raster::raster(nrows = ny, ncols = nx,
-                            xmn = -245643, xmx = -213643,
-                            ymn = 5615173, ymx = 5637173,
-                            crs = crs.boreal)
+sa <- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
+             resolution = c(250, 250), crs = crs.boreal)
 
 times <- list(start = 2011, end = 2020)
 params <- list(

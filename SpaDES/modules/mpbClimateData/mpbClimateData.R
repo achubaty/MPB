@@ -24,12 +24,10 @@ defineModule(sim, list(
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
-    expectsInput(objectName = "studyArea", objectClass = "SpatialPolygons",
-                 desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
+    expectsInput("studyArea", "SpatialPolygons", "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    createsOutput(objectName = "climateSuitabilityMap", objectClass = "RasterLayer",
-                  desc = "A stack of MPB climatic suitablity maps corresponding to 1981-2010 normals and 2011-2040, 2041-2070, 2071-2100 projections.")
+    createsOutput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year.")
   )
 ))
 

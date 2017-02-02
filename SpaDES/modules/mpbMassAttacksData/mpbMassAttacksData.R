@@ -14,7 +14,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("raster", "RColorBrewer"),
+  reqdPkgs = list("data.table", "raster", "RColorBrewer"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
@@ -23,12 +23,11 @@ defineModule(sim, list(
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
-    expectsInput(objectName = "studyArea", objectClass = "SpatialPolygons",
-                 desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
+    expectsInput("studyArea", "SpatialPolygons", "The study area to which all maps will be cropped and reprojected.", sourceURL = NA),
+    expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
   outputObjects = bind_rows(
-    createsOutput("massAttacksT", "RasterLayer", desc = "The current year's mass attacks."),
-    createsOutput("massAttacksTminus1", "RasterLayer", desc = "The previous year's mass attacks.")
+    createsOutput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   )
 ))
 
@@ -45,19 +44,19 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
       sim <- sim$mpbMassAttacksDataInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacksData$.plotInitialTime,
-                           "mpbMassAttacksData", "plot")
-      sim <- scheduleEvent(sim, start(sim) + params(sim)$mpbMassAttacksData$.saveInitialTime,
-                           "mpbMassAttacksData", "save")
+      sim <- scheduleEvent(sim, params(sim)$mpbMassAttacksData$.plotInitialTime,
+                           "mpbMassAttacksData", "plot", .last() - 1)
+      sim <- scheduleEvent(sim, params(sim)$mpbMassAttacksData$.saveInitialTime,
+                           "mpbMassAttacksData", "save", .last())
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-      Plot(sim$MassAttacksT)
+      Plot(sim$massAttacksMap)
   
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbMassAttacksData$.plotInterval,
-                           "mpbMassAttacksData", "plot")
+                           "mpbMassAttacksData", "plot", .last() - 1)
   
       # ! ----- STOP EDITING ----- ! #
     },
@@ -101,11 +100,28 @@ mpbMassAttacksDataInit <- function(sim) {
   ##
   ## TO DO: incorporate code from MPB_maps.R to create the raster layers
   ##
-  massAttacks <- stack(file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal.tif")) %>% 
-    crop(sim$studyArea)
-  setColors(massAttacks) <- brewer.pal(9, "YlOrRd") ## does this work on a stack?
-  sim$MassAttacksT <- massAttacks[[time(sim)]]
-  sim$MassAttacksTminus1 <- massAttacks[[time(sim) - 1]]
+  
+  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal.tif")
+  
+  fn1 <- function(f, studyArea) {
+    tf <- tempfile(fileext = ".tif")
+    file.create(tf)
+    a <- raster(x = f)
+    b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
+    a <- crop(a, b) %>%
+      projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
+      crop(studyArea)
+    a[] <- a[]
+    
+    setColors(a) <- brewer.pal(9, "YlOrRd")
+    a <- writeRaster(a, filename = tf, overwrite = TRUE)
+    return(a)
+  }
+  
+  sim$massAttacksMap <- Cache(fn1, f, sim$studyArea)
+
+  ids <- which(!is.na(sim$massAttacksMap[]))
+  sim$massAttacksDT <- data.table(ID = ids, RedTrees = sim$massAttacksMap[ids])
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))

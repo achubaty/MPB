@@ -13,7 +13,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("ggplot2", "raster"),
+  reqdPkgs = list("data.table", "ggplot2", "raster"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
@@ -24,14 +24,13 @@ defineModule(sim, list(
     defineParameter("growthInterval", "numeric", 1, NA, NA, "This describes the interval time between growth events")
   ),
   inputObjects = rbind(
-    expectsInput("pineMap", "RasterLayer", desc = "Map of pine available for MPB."),
-    expectsInput("massAttacksT", "RasterLayer", desc = ""),
-    expectsInput("massAttacksTminus1", "RasterLayer", desc = "")
+    expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
+    expectsInput("pineMapDT", "data.table", "Current lodgepole and jack pine available for MPB."),
+    expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
+    expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
   outputObjects = rbind(
-    createsOutput("growthData", "data.frame", desc = ""),
-    createsOutput("massAttacksT", "RasterLayer", desc = ""),
-    createsOutput("massAttacksTminus1", "RasterLayer", desc = "")
+    createsOutput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   )
 ))
 
@@ -68,6 +67,10 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
   
       # ! ----- STOP EDITING ----- ! #
     },
+    "save" = {
+      rtmp <- update(rtmp, cell = sim$massAttacks[, ID], v = sim$massAttacks[, RedTrees])
+      writeRaster(r, filename = file.path(outputPath(sim), paste0("massAttacks", time(sim), ".tif")))
+    }
     warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
                   "' in module '", events(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
@@ -81,9 +84,11 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
 
 mpbRedTopGrowthInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
-  stopifnot(res(sim$massAttacksT) == res(sim$massAttacksTminus1),
-            extent(sim$massAttacksT) == extent(sim$massAttacksTminus1),
-            xres(sim$massAttacksT) == yres(sim$massAttacksT))
+  
+  ## create a data.table consisting of the reduced map of current MPB distribution,
+  ## presence/absence of pine, and climatic suitability
+  sim$mpbGrowthDT <- Reduce(function(...) data.table::merge(..., all.x = TRUE),
+                            list(sim$massAttacksDT, sim$pineMapDT, sim$climateSuitabilityDT))
   
   sim$growthData <- switch(P(sim)$dataset,
     "Berryman1979_fit" = {
@@ -181,5 +186,28 @@ mpbRedTopGrowthGrow <- function(sim) {
     return(map.res * per.ha)
   }
   
-  sim$massAttacksT <- Xt(sim$massAttacksTminus1)  ## TO DO: ensure tmp rasters don't proliferate!
+  sim$massAttacksDT <- sim$massAttacksDT[RedTops := xt(RedTops) * pClimate * pPine]
 }
+
+### SCRATCH
+growthFunction <- function(x) {
+  m <- lm(log10Rt ~ poly(log10Xtm1, 3, raw = TRUE), data = sim$growthData)
+  unname(predict(m, newdata = data.frame(log10Xtm1 = x)))
+}
+
+Xt <- function(Xtminus1) {
+  10^growthFunction(log10(Xtminus1)) * Xtminus1
+}
+
+plot(Berryman_1979fit$log10Xtm1, Berryman_1979fit$log10Rt)
+abline(h = 0, lty = 3)
+curve(growthFunction(x), add = TRUE, col = "blue", lwd = 2)
+curve(log10(Xt(10^x)), add = TRUE, col = "purple", lwd = 2)
+
+x <- 10^Berryman_1979fit$log10Xtm1
+points(log10(x), log10(Xt(x)), pch = 16)
+
+
+
+
+
