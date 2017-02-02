@@ -142,7 +142,7 @@ modules <- list(#"mpbRandomLandscapes",
 
 ## Run the model
 
-```{r simulation}
+```{r simulation, fig.keep="last"}
 MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
 
 ## the first time you run this, esp. w/ large study area, it will be slow because
@@ -153,9 +153,25 @@ MPB2 <- spades(Copy(MPB), debug = TRUE)
 
 ## Simulation diagrams
 
-```{r sim-diagrams, eval=FALSE}
-moduleDiagram(MPB2)
+### Module diagram
+
+```{r module-diagram}
+clearPlot()
+moduleDiagram(MPB2, vertex.size = 50,
+              vertex.color = c("lightblue", "lightblue", "lightblue", "orange"))
+```
+
+### Object diagram
+
+```{r object-diagram}
+clearPlot()
 objectDiagram(MPB2)
+```
+
+### Event diagram
+
+```{r event-diagram}
+clearPlot()
 eventDiagram(MPB2)
 ```
 
