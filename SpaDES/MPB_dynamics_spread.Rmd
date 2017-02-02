@@ -89,6 +89,9 @@ if (!require(devtools)) {
 if (!require(igraph)) {
   install.packages("igraph")
 }
+if (!require(raster)) {
+  install.packages("raster")
+}
 if (!require(SpaDES) | packageVersion("SpaDES", "~/R-dev") < "1.3.1.9020") {
   devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
 }
@@ -97,10 +100,6 @@ if (!require(SpaDES) | packageVersion("SpaDES", "~/R-dev") < "1.3.1.9020") {
 Load required packages and set some default options for data loading etc.
 
 ```{r additional-setup}
-library(igraph)
-library(raster)
-library(SpaDES); stopifnot(packageVersion("SpaDES") >= "1.3.1.9020")
-
 setPaths(
   cachePath = "~/SpaDES/cache",
   modulePath = "~/GitHub/MPB/SpaDES/modules"
@@ -130,6 +129,7 @@ sa <- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
 times <- list(start = 2011, end = 2020)
 params <- list(
   mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
+  mpbPine = list(lowMemory = FALSE), ## set to TRUE on laptop
   mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
 )
 objects <- list(studyArea = sa)
@@ -146,7 +146,7 @@ modules <- list(#"mpbRandomLandscapes",
 MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
 
 ## the first time you run this, esp. w/ large study area, it will be slow because
-## of the GIS operations taking plare. However, because these slow steps are cached,
+## of the GIS operations taking place. However, because these slow steps are cached,
 ## subsequent runs will be much faster (plotting will became slowest step).
 MPB2 <- spades(Copy(MPB), debug = TRUE)
 ```
