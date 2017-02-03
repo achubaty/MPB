@@ -139,7 +139,7 @@ sfStop()
 # plot them
 dev.new(noRStudioGD = TRUE)
 plot(boreal.west)
-lapply(ab_pnts_boreal, plot, add = TRUE, col = 'darkred')
+lapply(ab_pnts_boreal, plot, add = TRUE, col = 'darkred', pch = ".")
 
 ## RASTERIZE
 load(file.path(rdata.path, "west.boreal.Rdata"))
@@ -176,3 +176,5 @@ unlink(rasterOptions()$tmpfile, recursive = TRUE)
 
 dev.new(noRStudioGD = TRUE)
 plot(ab_pnts_boreal_stack)
+
+
