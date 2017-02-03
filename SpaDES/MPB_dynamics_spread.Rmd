@@ -72,9 +72,23 @@ This module imports the raw MPB red top attack data from AB and BC over several 
 
 **NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).
 
-### `mpbRedTopDispersal`
+### `mpbSpread`
 
-Dispersal is currently a stub.
+Model red top spread based on availability of pine, climatic suitability, wind, and distance to beetle sources.
+
+Not yet implemented. Currently a stub.
+
+### `canWindBiosim`
+
+Import/use wind projections from BioSim to be ued with `mpbSpread`.
+
+Not yet implemented.
+
+### `mpbManagement`
+
+Implement several management scenarios and evaluate their efficacy.
+
+Not yet implemented.
 
 # Installation and setup
 

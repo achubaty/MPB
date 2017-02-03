@@ -10,8 +10,9 @@
 
 
 <meta name="author" content="Alex M. Chubaty" />
+<meta name="author" content="Barry J. Cooke" />
+<meta name="author" content="Eliot J. B. McIntire" />
 
-<meta name="date" content="2017-01-24" />
 
 <title>MPB dynamics and spread</title>
 
@@ -225,7 +226,9 @@ div.tocify {
 
 <h1 class="title toc-ignore">MPB dynamics and spread</h1>
 <h4 class="author"><em>Alex M. Chubaty</em></h4>
-<h4 class="date"><em>January 24, 2017</em></h4>
+<h4 class="author"><em>Barry J. Cooke</em></h4>
+<h4 class="author"><em>Eliot J. B. McIntire</em></h4>
+<h4 class="date"><em>February 2, 2017</em></h4>
 
 </div>
 
@@ -282,15 +285,26 @@ div.tocify {
 <p>This module imports the raw MPB red top attack data from AB and BC over several years. <span class="citation">Cooke and Carroll (n.d.)</span> describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single <code>RasterLayer</code>.</p>
 <p><strong>NOTE:</strong> currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).</p>
 </div>
-<div id="mpbredtopdispersal" class="section level3">
-<h3><code>mpbRedTopDispersal</code></h3>
-<p>Dispersal is currently a stub.</p>
+<div id="mpbspread" class="section level3">
+<h3><code>mpbSpread</code></h3>
+<p>Model red top spread based on availability of pine, climatic suitability, wind, and distance to beetle sources.</p>
+<p>Not yet implemented. Currently a stub.</p>
+</div>
+<div id="canwindbiosim" class="section level3">
+<h3><code>canWindBiosim</code></h3>
+<p>Import/use wind projections from BioSim to be ued with <code>mpbSpread</code>.</p>
+<p>Not yet implemented.</p>
+</div>
+<div id="mpbmanagement" class="section level3">
+<h3><code>mpbManagement</code></h3>
+<p>Implement several management scenarios and evaluate their efficacy.</p>
+<p>Not yet implemented.</p>
 </div>
 </div>
 </div>
 <div id="installation-and-setup" class="section level1">
 <h1>Installation and setup</h1>
-<p>Install the most recent version of the <code>SpaDES</code> package from the development branch (packages version <code>1.3.1.9020</code> or higher is required.)</p>
+<p>Install the most recent version of the <code>SpaDES</code> package from the development branch (packages version <code>1.3.1.9032</code> or higher is required.)</p>
 <pre class="r"><code>#options(repos = c(CRAN = &quot;https://cran.rstudio.com/&quot;))
 
 if (!require(data.table)) {
@@ -302,15 +316,14 @@ if (!require(devtools)) {
 if (!require(igraph)) {
   install.packages(&quot;igraph&quot;)
 }
-if (!require(SpaDES) | packageVersion(&quot;SpaDES&quot;, &quot;~/R-dev&quot;) &lt; &quot;1.3.1.9020&quot;) {
+if (!require(raster)) {
+  install.packages(&quot;raster&quot;)
+}
+if (!require(SpaDES) | packageVersion(&quot;SpaDES&quot;, &quot;~/R-dev&quot;) &lt; &quot;1.3.1.9032&quot;) {
   devtools::install_github(&quot;PredictiveEcology/SpaDES@development&quot;, dependencies = TRUE)
 }</code></pre>
 <p>Load required packages and set some default options for data loading etc.</p>
-<pre class="r"><code>library(igraph)
-library(raster)
-library(SpaDES); stopifnot(packageVersion(&quot;SpaDES&quot;) &gt;= &quot;1.3.1.9020&quot;)
-
-setPaths(
+<pre class="r"><code>setPaths(
   cachePath = &quot;~/SpaDES/cache&quot;,
   modulePath = &quot;~/GitHub/MPB/SpaDES/modules&quot;
 )</code></pre>
@@ -346,6 +359,7 @@ sa &lt;- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
 times &lt;- list(start = 2011, end = 2020)
 params &lt;- list(
   mpbClimateData = list(suitabilityIndex = &quot;G&quot;),    ## Can be &quot;G&quot;, &quot;S&quot;, &quot;L&quot;, &quot;R&quot;
+  mpbPine = list(lowMemory = FALSE), ## set to TRUE on laptop
   mpbRedTopGrowth = list(dataset = &quot;Berryman1979_forced&quot;)
 )
 objects &lt;- list(studyArea = sa)
@@ -360,7 +374,7 @@ modules &lt;- list(#&quot;mpbRandomLandscapes&quot;,
 <pre class="r"><code>MPB &lt;- simInit(times = times, params = params, modules = modules)#, objects = objects)
 
 ## the first time you run this, esp. w/ large study area, it will be slow because
-## of the GIS operations taking plare. However, because these slow steps are cached,
+## of the GIS operations taking place. However, because these slow steps are cached,
 ## subsequent runs will be much faster (plotting will became slowest step).
 MPB2 &lt;- spades(Copy(MPB), debug = TRUE)</code></pre>
 <pre><code>## This is the current event, printed as it is happening:
