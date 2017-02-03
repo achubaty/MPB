@@ -5,9 +5,11 @@ defineModule(sim, list(
   name = "mpbMassAttacksData",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
-              person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut")),
-              person(c("Eliot", "J B"), "McIntire", email = "eliot.mcintire@canada.ca", role = c("aut"))),
+  authors = c(
+    person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
+    person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut")),
+    person(c("Eliot", "J B"), "McIntire", email = "eliot.mcintire@canada.ca", role = c("aut"))
+  ),
   childModules = character(),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),

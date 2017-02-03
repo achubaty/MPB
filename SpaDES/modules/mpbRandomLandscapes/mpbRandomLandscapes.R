@@ -5,8 +5,9 @@ defineModule(sim, list(
   name = "mpbRandomLandscapes",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
-            person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
+  authors = c(
+    person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))
+  ),
   childModules = character(),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -21,14 +22,14 @@ defineModule(sim, list(
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
-  inputObjects = rbind(
-    expectsInput(objectName = "studyArea", objectClass = "SpatialPolygons",
-                 desc = "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
+  inputObjects = bind_rows(
+    expectsInput("studyArea", "SpatialPolygons",
+                 "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
   ),
-  outputObjects = rbind(
-    createsOutput(objectName = "climateSuitabilityMap", objectClass = "RasterLayer",
-                  desc = "A stack of MPB climatic suitablity maps corresponding to 1981-2010 normals and 2011-2040, 2041-2070, 2071-2100 projections."),
-    createsOutput(objectName = "pineMap", objectClass = "RasterLayer", desc = "Map of pine available for MPB.")
+  outputObjects = bind_rows(
+    createsOutput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
+    createsOutput("pineMap", "RasterLayer", "Current lodgepole and jack pine available for MPB."),
+    createsOutput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB.")
   )
 ))
 

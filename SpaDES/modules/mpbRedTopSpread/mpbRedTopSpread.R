@@ -24,13 +24,13 @@ defineModule(sim, list(
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
     defineParameter("dispersalInterval", "numeric", 1, NA, NA, "This describes the interval time between dispersal events")
   ),
-  inputObjects = rbind(
+  inputObjects = bind_rows(
     expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
     expectsInput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB."),
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
     expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
-  outputObjects = rbind(
+  outputObjects = bind_rows(
     createsOutput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   )
 ))

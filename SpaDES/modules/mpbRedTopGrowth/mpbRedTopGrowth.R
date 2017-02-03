@@ -5,8 +5,10 @@ defineModule(sim, list(
   name = "mpbRedTopGrowth",
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
-  authors = c(person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
-              person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))),
+  authors = c(
+    person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
+    person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))
+  ),
   childModules = character(),
   version = numeric_version("0.0.1"),
   spatialExtent = raster::extent(rep(NA_real_, 4)),
@@ -23,13 +25,13 @@ defineModule(sim, list(
     defineParameter("dataset", "character", "Berryman1979_forced", NA, NA, "Which dataset to use for stand dynamic model fitting. One of 'Berrman1979_fit', 'Berrman1979_forced' (default). Others to be implemented later."),
     defineParameter("growthInterval", "numeric", 1, NA, NA, "This describes the interval time between growth events")
   ),
-  inputObjects = rbind(
+  inputObjects = bind_rows(
     expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
     expectsInput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB."),
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
     expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
-  outputObjects = rbind(
+  outputObjects = bind_rows(
     createsOutput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   )
 ))
