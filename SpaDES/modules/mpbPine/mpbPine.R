@@ -93,12 +93,22 @@ mpbPineImportMap <- function(sim) {
   if (P(sim)$lowMemory) {
     ## load the pre-computed raster instead of doing RAM-intensive GIS
     f <- file.path(modulePath(sim), "mpbPine", "data", "kNN_pine_map.tif")
-    tf <- tempfile(fileext = ".tif")
-    file.create(tf)
     
-    sim$pineMap <- raster(f) %>% 
-      writeRaster(filename = tf, overwrite = TRUE) %>% 
-      setNames("Lodgepole_and_Jack_Pine")
+    fn2 <- function(f, studyArea) {
+      tf <- tempfile(fileext = ".tif")
+      file.create(tf)
+    
+      a <- raster::raster(f)
+      b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
+      a <- crop(a, b) %>%
+        projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
+        crop(studyArea)
+      a[] <- a[]
+      a <- writeRaster(a, filename = tf, overwrite = TRUE) %>% 
+        setNames("Lodgepole_and_Jack_Pine")
+      return(a)
+    }
+    sim$pineMap <- Cache(fn2, f, sim$studyArea)
   } else {
     f <- file.path(modulePath(sim), "mpbPine", "data",
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
