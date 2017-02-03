@@ -25,7 +25,7 @@ The goal of this model is to simulate the spread of mountain pine beetle outbrea
 
 ## Module descriptions
 
-### `mpbGrowth`
+### `mpbRedTopGrowth`
 
 Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question.
 @Berryman:1979bs was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in Montana (MT) and Wyoming (WY) the 1960s.
@@ -72,7 +72,7 @@ This module imports the raw MPB red top attack data from AB and BC over several 
 
 **NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).
 
-### `mpbSpread`
+### `mpbRedTopSpread`
 
 Model red top spread based on availability of pine, climatic suitability, wind, and distance to beetle sources.
 
@@ -153,7 +153,7 @@ objects <- list(studyArea = sa)
 modules <- list(#"mpbRandomLandscapes",
                 "mpbPine", "mpbClimateData",  ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData
                 #"mpbMassAttacksData",
-                #"mpbRedTopDispersal",
+                #"mpbRedTopSpread",
                 "mpbRedTopGrowth")
 ```
 
