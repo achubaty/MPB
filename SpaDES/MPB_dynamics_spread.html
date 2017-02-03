@@ -238,14 +238,10 @@ div.tocify {
 <p>The goal of this model is to simulate the spread of mountain pine beetle outbreaks as a function of the growth and dispersal of beetle-killed trees, called “red tops”.</p>
 <div id="module-descriptions" class="section level2">
 <h2>Module descriptions</h2>
-<div id="mpbredtopgrowth" class="section level3">
-<h3><code>mpbRedTopGrowth</code></h3>
-<p>Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question. <span class="citation">Berryman (1979)</span> was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in Montana (MT) and Wyoming (WY) the 1960s. Consequently, the module offers the option of using any of four possible interpretations (<code>Berryman1979_fit</code>, <code>Berryman1979_forced</code> (current default), XXX, YYY). Two addiitonal options are forthcoming at the time of writing.</p>
-<p>The first of these is a high-order polynomial fit to Berryman’s hand-drawn curve (<code>Berryman1979_fit</code>). The second is the linearized multi-niche model of <span class="citation">Berryman (1999)</span>, which, oddly &amp; inexplicably, held endemic-niche dynamics as a fast process (<code>R[t] ~ X[t-1]</code>), and epidemic-niche dynamics as a lagged process (<code>R[t] ~ X[t-2]</code>) (<code>Berryman1979_forced</code>). [IS THIS RIGHT??]</p>
-</div>
-<div id="mpbpine" class="section level3">
-<h3><code>mpbPine</code></h3>
-<p>Calculating the initial density of red tops and the effect of growth in their number requires read and write access to a forest landscape of susceptible pine. This module imports the <span class="citation">(Beaudoin et al. 2014)</span> kNN estimates for lodgepole pine and jack pine availability in Canada.</p>
+<div id="mpbmassattacksdata" class="section level3">
+<h3><code>mpbMassAttacksData</code></h3>
+<p>This module imports the raw MPB red top attack data from AB and BC over several years. <span class="citation">Cooke and Carroll (n.d.)</span> describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single <code>RasterLayer</code>.</p>
+<p><strong>NOTE:</strong> currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).</p>
 </div>
 <div id="mpbclimatedata" class="section level3">
 <h3><code>mpbClimateData</code></h3>
@@ -280,10 +276,14 @@ div.tocify {
 <p>All maps are projected using LCC and cover all of Canada.</p>
 <p>The default is to use the composite inedx (<code>G</code>).</p>
 </div>
-<div id="mpbmassattacksdata" class="section level3">
-<h3><code>mpbMassAttacksData</code></h3>
-<p>This module imports the raw MPB red top attack data from AB and BC over several years. <span class="citation">Cooke and Carroll (n.d.)</span> describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single <code>RasterLayer</code>.</p>
-<p><strong>NOTE:</strong> currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).</p>
+<div id="mpbpine" class="section level3">
+<h3><code>mpbPine</code></h3>
+<p>Calculating the initial density of red tops and the effect of growth in their number requires read and write access to a forest landscape of susceptible pine. This module imports the <span class="citation">(Beaudoin et al. 2014)</span> kNN estimates for lodgepole pine and jack pine availability in Canada.</p>
+</div>
+<div id="mpbredtopgrowth" class="section level3">
+<h3><code>mpbRedTopGrowth</code></h3>
+<p>Recruitment is an annual process, with the inter-annual recruitment function taking a variety of possible forms, depending who one takes as an authority on the question. <span class="citation">Berryman (1979)</span> was an early pioneer who inspired much work in the area, and there are several possible interpretation of the data he used from Glacier and Yellowstone National Parks in Montana (MT) and Wyoming (WY) the 1960s. Consequently, the module offers the option of using any of four possible interpretations (<code>Berryman1979_fit</code>, <code>Berryman1979_forced</code> (current default), XXX, YYY). Two addiitonal options are forthcoming at the time of writing.</p>
+<p>The first of these is a high-order polynomial fit to Berryman’s hand-drawn curve (<code>Berryman1979_fit</code>). The second is the linearized multi-niche model of <span class="citation">Berryman (1999)</span>, which, oddly &amp; inexplicably, held endemic-niche dynamics as a fast process (<code>R[t] ~ X[t-1]</code>), and epidemic-niche dynamics as a lagged process (<code>R[t] ~ X[t-2]</code>) (<code>Berryman1979_forced</code>). [IS THIS RIGHT??]</p>
 </div>
 <div id="mpbredtopspread" class="section level3">
 <h3><code>mpbRedTopSpread</code></h3>
