@@ -346,8 +346,8 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     if (any(names(bc.poly.boreal.raster.stack)[i] == names(ab.pnts.boreal.raster.stack))) {
       j <- j + 1
       if (any(is.finite(cellStats(bc.poly.boreal.raster.stack[[i]], "range")))) {
-        bcab[[i]] <- merge(ab.pnts.boreal.raster.stack[[wh.pnts[j]]],
-                          bc.poly.boreal.raster.stack[[wh.poly[j]]])
+        bcab[[i]] <- mosaic(ab.pnts.boreal.raster.stack[[wh.pnts[j]]],
+                            bc.poly.boreal.raster.stack[[wh.poly[j]]])
       } else {
         bcab[[i]] <- ab.pnts.boreal.raster.stack[[wh.pnts[j]]]
       }
@@ -358,7 +358,8 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   
   bcab <- lapply(bcab, function(x) {
     x[is.na(x)] <- 0; return(x)
-  }) %>% lapply(., function(x) {
+  }) %>%
+    lapply(., function(x) {
     x[x > 0] <- log(x[x > 0]) + 10
     return(x)
   }) %>%

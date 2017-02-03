@@ -19,7 +19,8 @@ defineModule(sim, list(
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between save events"),
-    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
+    defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
+    defineParameter("lowMemory", "numeric", FALSE, NA, NA, "Should high memory-usage steps be skipped? Useful for running on laptops.")
   ),
   inputObjects = bind_rows(
     expectsInput("studyArea", "SpatialPolygons", "The study area to which all maps will be cropped and reprojected.", sourceURL = NA),
@@ -89,31 +90,52 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 mpbPineImportMap <- function(sim) {
-  f <- file.path(modulePath(sim), "mpbPine", "data",
-                 c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
-                   "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
-
-  fn1 <- function(f, studyArea) {
-    tf <- tempfile(fileext = ".tif")
-    file.create(tf)
-
-    ## TO DO: make this parallel -- one thread per map layer
-    a <- raster::stack(x = f) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
-    b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
-    a <- crop(a, b) %>%
-      projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
-      crop(studyArea)
-    a[] <- a[]
-    a <- writeRaster(raster::stack(a), filename = tf, overwrite = TRUE)
+  if (P(sim)$lowMemory) {
+    ## load the pre-computed raster instead of doing RAM-intensive GIS
+    f <- file.path(modulePath(sim), "mpbPine", "data", "kNN_pine_map.tif")
     
-    ## TO DO: can this part be made parallel?
-    out <- mosaic(a[[1]], a[[2]], fun = sum) %>% 
-      setNames("Lodgepole_and_Jack_Pine") %>% 
-      writeRaster(filename = tf, overwrite = TRUE)
-    return(out)
+    fn2 <- function(f, studyArea) {
+      tf <- tempfile(fileext = ".tif")
+      file.create(tf)
+    
+      a <- raster::raster(f)
+      b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
+      a <- crop(a, b) %>%
+        projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
+        crop(studyArea)
+      a[] <- a[]
+      a <- writeRaster(a, filename = tf, overwrite = TRUE) %>% 
+        setNames("Lodgepole_and_Jack_Pine")
+      return(a)
+    }
+    sim$pineMap <- Cache(fn2, f, sim$studyArea)
+  } else {
+    f <- file.path(modulePath(sim), "mpbPine", "data",
+                   c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
+                     "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
+  
+    fn1 <- function(f, studyArea) {
+      tf <- tempfile(fileext = ".tif")
+      file.create(tf)
+  
+      ## TO DO: make this parallel -- one thread per map layer
+      a <- raster::stack(x = f) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
+      b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
+      a <- crop(a, b) %>%
+        projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
+        crop(studyArea)
+      a[] <- a[]
+      a <- writeRaster(raster::stack(a), filename = tf, overwrite = TRUE)
+      
+      ## TO DO: can this part be made parallel?
+      out <- mosaic(a[[1]], a[[2]], fun = sum) %>% 
+        writeRaster(filename = tf, overwrite = TRUE) %>% 
+        setNames("Lodgepole_and_Jack_Pine")
+        return(out)
+    }
+    sim$pineMap <- Cache(fn1, f, sim$studyArea)
   }
-  sim$pineMap <- Cache(fn1, f, sim$studyArea)
-
+  
   ## put all cells with pine into the data.table
   ids <- which(sim$pineMap[] > 0)
   sim$pineDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 

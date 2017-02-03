@@ -1,7 +1,10 @@
 ---
 title: "MPB dynamics and spread"
-author: "Alex M. Chubaty"
-date: "January 24, 2017"
+author:
+  - "Alex M. Chubaty"
+  - "Barry J. Cooke"
+  - "Eliot J. B. McIntire"
+date: "February 2, 2017"
 output:
   html_document:
     toc: true
@@ -69,13 +72,27 @@ This module imports the raw MPB red top attack data from AB and BC over several 
 
 **NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).
 
-### `mpbRedTopDispersal`
+### `mpbSpread`
 
-Dispersal is currently a stub.
+Model red top spread based on availability of pine, climatic suitability, wind, and distance to beetle sources.
+
+Not yet implemented. Currently a stub.
+
+### `canWindBiosim`
+
+Import/use wind projections from BioSim to be ued with `mpbSpread`.
+
+Not yet implemented.
+
+### `mpbManagement`
+
+Implement several management scenarios and evaluate their efficacy.
+
+Not yet implemented.
 
 # Installation and setup
 
-Install the most recent version of the `SpaDES` package from the development branch (packages version `1.3.1.9020` or higher is required.)
+Install the most recent version of the `SpaDES` package from the development branch (packages version `1.3.1.9032` or higher is required.)
 
 ```{r install-packages}
 #options(repos = c(CRAN = "https://cran.rstudio.com/"))
@@ -89,7 +106,10 @@ if (!require(devtools)) {
 if (!require(igraph)) {
   install.packages("igraph")
 }
-if (!require(SpaDES) | packageVersion("SpaDES", "~/R-dev") < "1.3.1.9020") {
+if (!require(raster)) {
+  install.packages("raster")
+}
+if (!require(SpaDES) | packageVersion("SpaDES", "~/R-dev") < "1.3.1.9032") {
   devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
 }
 ```
@@ -97,10 +117,6 @@ if (!require(SpaDES) | packageVersion("SpaDES", "~/R-dev") < "1.3.1.9020") {
 Load required packages and set some default options for data loading etc.
 
 ```{r additional-setup}
-library(igraph)
-library(raster)
-library(SpaDES); stopifnot(packageVersion("SpaDES") >= "1.3.1.9020")
-
 setPaths(
   cachePath = "~/SpaDES/cache",
   modulePath = "~/GitHub/MPB/SpaDES/modules"
@@ -130,6 +146,7 @@ sa <- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
 times <- list(start = 2011, end = 2020)
 params <- list(
   mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
+  mpbPine = list(lowMemory = FALSE), ## set to TRUE on laptop
   mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
 )
 objects <- list(studyArea = sa)
@@ -142,20 +159,36 @@ modules <- list(#"mpbRandomLandscapes",
 
 ## Run the model
 
-```{r simulation}
+```{r simulation, fig.keep="last"}
 MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
 
 ## the first time you run this, esp. w/ large study area, it will be slow because
-## of the GIS operations taking plare. However, because these slow steps are cached,
+## of the GIS operations taking place. However, because these slow steps are cached,
 ## subsequent runs will be much faster (plotting will became slowest step).
 MPB2 <- spades(Copy(MPB), debug = TRUE)
 ```
 
 ## Simulation diagrams
 
-```{r sim-diagrams, eval=FALSE}
-moduleDiagram(MPB2)
+### Module diagram
+
+```{r module-diagram}
+clearPlot()
+moduleDiagram(MPB2, vertex.size = 50,
+              vertex.color = c("lightblue", "lightblue", "lightblue", "orange"))
+```
+
+### Object diagram
+
+```{r object-diagram}
+clearPlot()
 objectDiagram(MPB2)
+```
+
+### Event diagram
+
+```{r event-diagram}
+clearPlot()
 eventDiagram(MPB2)
 ```
 
