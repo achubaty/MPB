@@ -103,7 +103,7 @@ mpbMassAttacksDataInit <- function(sim) {
   ## TO DO: incorporate code from MPB_maps.R to create the raster layers
   ##
   
-  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal.tif")
+  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1998-2011.tif")
   
   fn1 <- function(f, studyArea) {
     tf <- tempfile(fileext = ".tif")

@@ -334,55 +334,57 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     rm(boreal)
   }
 
-  ### combine bcab points and poly rasters
-  loadObjects(c("ab.pnts.boreal.raster.stack", "bc.poly.boreal.raster.stack"), rdata.path)
+  ### combine bcab points and poly rasters from .tif files
+  files <- dir(rdata.path, pattern = ".tif", full.names = TRUE) %>% 
+    grep("new", ., invert = TRUE, value = TRUE)
   
-  wh.pnts <- na.omit(match(names(bc.poly.boreal.raster.stack), names(ab.pnts.boreal.raster.stack)))
-  wh.poly <- na.omit(match(names(ab.pnts.boreal.raster.stack), names(bc.poly.boreal.raster.stack)))
+  yrs <- substr(basename(files), 13, 16)
   
-  bcab <- list()
-  j <- 0
-  for (i in 1:nlayers(bc.poly.boreal.raster.stack)) {
-    if (any(names(bc.poly.boreal.raster.stack)[i] == names(ab.pnts.boreal.raster.stack))) {
-      j <- j + 1
-      if (any(is.finite(cellStats(bc.poly.boreal.raster.stack[[i]], "range")))) {
-        bcab[[i]] <- mosaic(ab.pnts.boreal.raster.stack[[wh.pnts[j]]],
-                            bc.poly.boreal.raster.stack[[wh.poly[j]]])
-      } else {
-        bcab[[i]] <- ab.pnts.boreal.raster.stack[[wh.pnts[j]]]
+  sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
+    sfLibrary(magrittr)
+    sfLibrary(raster)
+    sfExport("files", "rdata.path", "yrs")
+    
+    bcab.boreal.raster.stack <- sfClusterApplyLB(sort(unique(yrs)), function(y) {
+      ids <- which(yrs == y)
+      stopifnot(length(ids) %in% c(1, 2))
+      
+      f <- file.path(rdata.path, paste0("MPB_BCAB_", y, ".tif"))
+  
+      m <- if (length(ids) == 2) {
+        r1 <- raster(files[ids[1]])
+        r2 <- raster(files[ids[2]])
+        mosaic(r1, r2, fun = sum, filename = f, overwrite = TRUE)
+      } else if (length(ids == 1)) {
+        writeRaster(raster(files[ids[1]]), filename = f, overwrite = TRUE)
       }
-    } else {
-      bcab[[i]] <- bc.poly.boreal.raster.stack[[i]]
-    }
-  }
+      
+      return(m)
+    }) %>%
+      setNames(sort(unique(yrs))) %>%
+      stack() %>% 
+      writeRaster(filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2011.grd"),
+                  overwrite = TRUE)
+  sfStop()    
   
-  bcab <- lapply(bcab, function(x) {
-    x[is.na(x)] <- 0; return(x)
-  }) %>%
-    lapply(., function(x) {
-    x[x > 0] <- log(x[x > 0]) + 10
-    return(x)
-  }) %>%
-    setNames(substr(names(bc.poly.boreal.raster.stack), 2, 5))
-  
-  bcab.boreal.raster.stack <- stack(bcab, filename = file.path(rdata.path, "bcab.boreal.raster.stack.grd"),
-                                    overwrite = TRUE) %>%
-    setNames(substr(names(bc.poly.boreal.raster.stack), 2, 5))
+  writeRaster(bcab.boreal.raster.stack,
+              filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2011.tif"),
+              overwrite = TRUE) ## TO DO: add options to compress raster depending on size
+
+  ## also create a brick version
   bcab.boreal.raster.brick <- brick(bcab.boreal.raster.stack,
                                     filename = file.path(rdata.path, "bcab.boreal.raster.brick.grd"),
                                     overwrite = TRUE) %>%
-    setNames(substr(names(bc.poly.boreal.raster.stack), 2, 5))
-  
-  writeRaster(bcab.boreal.raster.stack,
-              filename = file.path(rdata.path, "mpb_bcab_boreal.tif"),
+    setNames(sort(unique(yrs)))
+
+  writeRaster(bcab.boreal.raster.brick,
+              filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2001_brick.tif"),
               overwrite = TRUE) ## TO DO: add options to compress raster depending on size
-  
+
   saveObjects(c("bcab.boreal.raster.brick", "bcab.boreal.raster.stack"), rdata.path)
-  
+
   ## cleanup workspace
-  rm(ab.pnts.boreal.raster.stack, bc.poly.boreal.raster.stack,
-     bcab, bcab.boreal.raster.brick, bcab.boreal.raster.stack,
-     wh.pnts, wh.poly)
+  rm(bcab.boreal.raster.brick, bcab.boreal.raster.stack)
   .cleanup()
   unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
