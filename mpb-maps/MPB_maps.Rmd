@@ -363,12 +363,12 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     }) %>%
       setNames(sort(unique(yrs))) %>%
       stack() %>% 
-      writeRaster(filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2011.grd"),
+      writeRaster(filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2011.grd"),
                   overwrite = TRUE)
   sfStop()    
   
   writeRaster(bcab.boreal.raster.stack,
-              filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2011.tif"),
+              filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2011.tif"),
               overwrite = TRUE) ## TO DO: add options to compress raster depending on size
 
   ## also create a brick version
@@ -378,7 +378,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     setNames(sort(unique(yrs)))
 
   writeRaster(bcab.boreal.raster.brick,
-              filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2001_brick.tif"),
+              filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2001_brick.tif"),
               overwrite = TRUE) ## TO DO: add options to compress raster depending on size
 
   saveObjects(c("bcab.boreal.raster.brick", "bcab.boreal.raster.stack"), rdata.path)
