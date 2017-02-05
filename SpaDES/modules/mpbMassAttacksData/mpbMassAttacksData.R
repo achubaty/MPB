@@ -103,17 +103,16 @@ mpbMassAttacksDataInit <- function(sim) {
   ## TO DO: incorporate code from MPB_maps.R to create the raster layers
   ##
   
-  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1998-2011.tif")
-  
+  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1997-2011.tif")
+
   fn1 <- function(f, studyArea) {
-    tf <- tempfile(fileext = ".tif")
-    file.create(tf)
-    a <- raster(x = f)
+    tf <- tempfile(fileext = ".tif") %>% file.create(tf)
+    a <- stack(x = f)  %>% setNames(paste0("X", 1997:2011))
     b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
     a <- crop(a, b) %>%
       projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
-      crop(studyArea)
-    a[] <- a[]
+      crop(studyArea) %>%
+      setNames(paste0("X", 1997:2011))
     
     setColors(a) <- brewer.pal(9, "YlOrRd")
     a <- writeRaster(a, filename = tf, overwrite = TRUE)
