@@ -17,7 +17,7 @@ library(stringr)
 ## set R and knitr options
 if (isTRUE(._CFS_.)) {
   options(repos = c(CRAN = "https://cran.rstudio.com/",
-                    NRCRAN = "http://132.156.149.95"))
+                    NRCRAN = "http://132.156.148.93"))
 } else {
   options(repos = c(CRAN = "https://cran.rstudio.com/"))
 }

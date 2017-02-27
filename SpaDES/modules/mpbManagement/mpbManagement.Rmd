@@ -3,6 +3,7 @@ title: "mpbManagement"
 author: "achubaty"
 date: "03 February 2017"
 output: pdf_document
+bibliography: bibliography.bib
 ---
 
 # Overview
@@ -12,11 +13,7 @@ Provide an overview of what the module does / how to use the module.
 Module documentation should be written so that others can use your module.
 This is a template for module documentation, and should be changed to reflect your module.
 
-## R Markdown
-
-R Markdown syntax allows R code, outputs, and figures to be rendered in the documentation.
-
-For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
+**check out:** @Strohm:2016em
 
 # Usage
 
@@ -77,3 +74,6 @@ Description of the module outputs.
 
 Describe any anticipated linkages to other modules.
 
+# References
+
+<!-- automatically generated from bibliograhy.bib -->
