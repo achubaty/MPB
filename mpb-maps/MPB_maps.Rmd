@@ -63,21 +63,7 @@ suppressPackageStartupMessages({
 })
 
 ## additional helper functions
-source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/download-data.R")
-source_url("https://raw.githubusercontent.com/achubaty/r-tools/master/rdata-objects.R")
-
-#' manual garbage collection to free recently unallocated memory 
-.cleanup <- function() {
-  for (i in 1:10) gc()
-}
-
-#' readOGR without having ]to manually change working directory
-getOGR <- function(layer, dir) {
-  orig.dir <- getwd()
-  setwd(dir); on.exit(setwd(orig.dir))
-  out <- readOGR(dsn = ".", layer = layer)
-  return(out)
-}
+if (!require(amc)) devtools::install_github("achubaty/amc")
 
 ## set work dirs based on computer used
 if (._USER_. == "achubaty") {

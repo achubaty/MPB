@@ -55,7 +55,7 @@ For each of the four indices, there are 1981-2010 normals plus the projections f
 
 All maps are projected using LCC and cover all of Canada.
 
-The default is to use the composite inedx (`G`).
+The default is to use the composite index (`G`).
 
 ### `mpbPine`
 
