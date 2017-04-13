@@ -1,0 +1,335 @@
+---
+title: "Modelling MPB spread using Bayesian ecological diffusion forecasts"
+author:
+- name: "Alex M. Chubaty"
+  affiliaton: |
+    Canadian Forest Service
+    Pacific Forestry Centre  
+    506 Burnside Road W  
+    Victoria, BC V8Z 1M5
+    +1.250.298.2347
+    alexander.chubaty@canada.ca
+- name: "Eliot J. B. McIntire"
+  affiliaton: |
+    Canadian Forest Service
+    Pacific Forestry Centre  
+    506 Burnside Road W  
+    Victoria, BC V8Z 1M5
+    +1.250.298.2374
+    eliot.mcintire@canada.ca
+date: "March 31, 2017"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+bibliography: bibliography.bib
+---
+
+```{r setup, include=FALSE, message=FALSE}
+## determine OS and whether we are on a CFS machine
+._CFS_. <- grepl("W-VIC", Sys.info()[["nodename"]])
+._OS_. <- Sys.info()[["sysname"]]
+._USER_. <- Sys.info()[["user"]]
+
+## set R and knitr options
+if (isTRUE(._CFS_.)) {
+  options(repos = c(CRAN = "https://cran.rstudio.com/",
+                    NRCRAN = "http://132.156.148.93"))
+} else {
+  options(repos = c(CRAN = "https://cran.rstudio.com/"))
+}
+
+knitr::opts_chunk$set(cache = TRUE, cache.path = "cache/", echo = FALSE,
+                      message = FALSE, warning = FALSE, fig.path = "figures/")
+
+## attach packages
+suppressPackageStartupMessages({
+  library(beanplot)
+  library(coda)
+  library(dplyr)
+  library(fBasics)
+  library(fields)
+  library(gridExtra)
+  library(magrittr)
+  library(MASS)
+  library(mgcv)
+  library(mvtnorm)
+  library(raster)
+  library(rasterVis)
+  library(RColorBrewer)
+  library(rgdal)
+  library(rgeos)
+  library(rts)
+  library(sdm)
+  library(tidyr)
+  library(truncnorm)
+})
+
+## additional helper functions
+if (!require(amc)) devtools::install_github("achubaty/amc")
+
+## set work dirs based on computer used
+if (._USER_. == "achubaty") {
+  if (._OS_. == "Darwin") {
+    maps.dir <- "~/Documents/shared"
+    work.dir <- "~/Documents/GitHub/MPB/mpb-spread"
+  } else if (._OS_. == "Linux") {
+    if (isTRUE(._CFS_.)) {
+      maps.dir <- "/mnt/A105388/shared/data"
+    } else {
+      maps.dir <- "~/Documents/Data/shared"
+    }
+    work.dir <- "~/Documents/GitHub/MPB/mpb-spread"
+  } else if (._OS_. == "Windows") {
+    maps.dir <- "//W-VIC-A105388/shared/data"
+    work.dir <- "~/GitHub/MPB/mpb-spread"
+  } else {
+    stop("Which operating system are you using?")
+  }
+}
+setwd(work.dir)
+rdata.path <- file.path(maps.dir, "MPB", "Rmaps")
+fig.path <- file.path(work.dir, "figures")
+if (!dir.exists(fig.path)) dir.create(fig.path)
+
+stopifnot(all(dir.exists(c(fig.path, maps.dir, rdata.path, work.dir))))
+
+## additional options
+._NUM_CPUS_. <- parallel::detectCores() / 2 ## max cpus to use
+._RES_MAPS_. <- 250                         ## map resolution, in metres
+```
+
+\newpage
+
+## Data loading and preparation
+
+The general approach seems to be to convert `Raster*` objects to `data.frame`s, by first assembling a `RasterStack` for the predictor variables and edoing an `extract`ion for the points to be modelled.
+Note that this is tricky with the MPB data, because the spatial data all used different projections and have different resolutions, so when projecting rasters, they don't line up exactly, and `stack`ing fails.
+Thus, in this case, I'm extracting the values from each `RasterLayer` separately for each point and constructing the `data.frame` in a more manual fashion.
+
+Also note that the preliminary attempts are simply predicting using presence/absence of MPB red attack (instead of abundance).
+
+```{r simple-sdm}
+if (!exists(bcab.boreal.raster.stack)) {
+  loadObjects("bcab.boreal.raster.stack", rdata.path)
+}
+
+# temporary ----- :
+load(file.path(rdata.path, "west.boreal.RData"))
+crs.boreal <- CRS(proj4string(west.boreal))
+rm(west.boreal)
+
+## use a small study area for development
+studyArea <- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
+                    resolution = c(._RES_MAPS_., ._RES_MAPS_.), crs = crs.boreal,
+                    vals = NA_real_)
+
+## timeframe
+
+# NOTE: We use only the years for which we have data
+# - years > 2010 don't have real climate data (only projections)
+# - years > 2011 don't have all MPB data (still need recent BC data?)
+# - we assume the pine data remain unchanged over this timeframe
+years <- 1997L:2010L
+
+## MPB data
+tf <- list.files(rdata.path, "MPB_BCAB_.*[.]tif", full.names = TRUE)
+mpb_stack <- lapply(tf, raster) %>%
+  stack() %>%
+  crop(studyArea)
+
+ids <- which(!(names(mpb_stack) %in% paste0("MPB_BCAB_", years)))
+mpb_stack <- dropLayer(mpb_stack, ids)
+mpb_ts <- rts(mpb_stack, time = as.Date(paste("01", "09", years, sep = "-"), format = "%d-%m-%Y"))
+
+## climate suitability maps (use combined metric)
+tf <- list.files(file.path(maps.dir, "MPB", "climate"), "_MPB_GeoP[.]tif", full.names = TRUE)[1:4]
+fn1 <- function(files, studyArea) {
+  tf <- tempfile(fileext = ".tif")
+  stack(lapply(files, function(f) {
+    raster(f) %>%
+      projectRaster(crs = CRS(proj4string(studyArea))) %>%
+      crop(studyArea)
+  })) %>%
+    writeRaster(filename = tf, overwrite = TRUE)
+}
+climate_stack <- fn1(tf, studyArea) %>%
+  setNames(c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100"))
+
+## pine abundance layer
+f <- file.path(maps.dir, "kNN", "kNN_pine_map.tif")
+fn2 <- function(f, studyArea) {
+  tf <- tempfile(fileext = ".tif")
+  file.create(tf)
+
+  a <- raster::raster(f)
+  b <- projectRaster(studyArea, crs = CRS(proj4string(a)))
+  a <- crop(a, b) %>%
+    projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
+    crop(studyArea)
+  a[] <- a[]
+  a <- writeRaster(a, filename = tf, overwrite = TRUE) %>% 
+    setNames("Lodgepole_and_Jack_Pine")
+  return(a)
+}
+
+pine_map <- fn2(f, studyArea)
+# : ----- temporary
+
+## extract values and create data.frame
+
+# using all cells, extract centroid coordinates
+mpb_pnts <- mpb_stack[["MPB_BCAB_2010"]] %>%
+  xyFromCell(., 1:ncell(.), spatial = TRUE)
+
+a1 <- raster::extract(mpb_stack, mpb_pnts) %>% as.data.frame(stringsAsFactors = FALSE) %>%
+  gather(YEAR, ATTACK) %>%
+  mutate(ATTACK = ifelse(ATTACK > 0, 1, 0)) %>%
+  mutate(YEAR = substr(YEAR, 10, 14) %>% as.numeric())
+
+a2 <- b2 <- climate_stack[["X1981.2010"]] %>% raster::extract(mpb_pnts)
+a3 <- b3 <- pine_map %>% raster::extract(mpb_pnts)
+
+b1 <- raster::extract(mpb_stack, mpb_pnts) %>% as.data.frame(stringsAsFactors = FALSE) %>%
+  gather(YEAR, ATTACK) %>%
+  mutate(YEAR = substr(YEAR, 10, 14) %>% as.numeric())
+```
+
+\newpage
+
+# Classical species distribution modelling
+
+Following Part II of the `sdm` vignette, and using simple GLMs. 
+```{r sdm-vignette, eval=FALSE}
+vignette(sdm)
+```
+
+**NOTE:** these SDMs are "aspatial" in that they do not incorporate spatial autocorrelation or take into account neighbouring infestation sites in a meaningful way (though I added a predictor which is the distance to nearest infested pixel).
+
+```{r add-distance-col}
+# add a column that indicates proximity to another mpb-infested cell
+a4 <- b4 <- lapply(1:length(years), function(x) {
+  ids <- which(mpb_stack[[x]][] == 0)
+  r1 <- mpb_stack[[x]]
+  r1[ids] <- NA
+  if (any(mpb_stack[[x]][] > 0)) {
+    raster::distance(r1) %>% raster::extract(mpb_pnts) %>% data.frame(DIST = .)
+  } else {
+    # should returned "distance" values be set to inf instead of NA?
+    raster::extract(r1, mpb_pnts) %>% data.frame(DIST = .)
+  } 
+}) %>% bind_rows()
+```
+
+## Binomial logistic regression
+
+```{r logistic-regression}
+all1 <- cbind(a1, a4, data.frame(CLIMATE = rep(a2, length(years)), PINE = rep(a3, length(years))))
+
+## create the model (aspatial)
+m1 <- glm(ATTACK ~ CLIMATE + PINE + DIST + YEAR,
+          #family = binomial(link = "logit"),
+          data = all1)
+summary(m1)
+
+m2 <- glm(ATTACK ~ CLIMATE * PINE * DIST * YEAR,
+          #family = binomial(link = "logit"),
+          data = all1)
+summary(m2)
+
+## predict (aspatial)
+
+```
+
+## Negative binomial regression
+
+```{r logistic-regression}
+all2 <- cbind(b1, b4, data.frame(CLIMATE = rep(b2, length(years)), PINE = rep(b3, length(years))))
+
+## create the model (aspatial)
+n1 <- glm.nb(ATTACK ~ CLIMATE + PINE + DIST + YEAR, data = all2)
+summary(n1)
+
+n2 <- glm.nb(ATTACK ~ CLIMATE * PINE * DIST * YEAR, data = all2)
+summary(n2)
+
+## predict (aspatial)
+
+```
+
+\newpage
+
+# Bayesian ecological diffusion model
+
+Based on @Hefley:2017el paper, especially Appendix 2.
+See also `~/Dropbox/tmp/hefley.etal_2017/appendixS1.R`.
+
+## Ecological diffusion model for MPB
+
+```{r bayesian-ecological-diffusion}
+df <- cbind(as.data.frame(mpb_pnts), a1)
+
+# Determine which data points to use for model fitting (within-sample),
+# prediction (out-of-sample) and forecasting (out-of-sample)
+set.seed(9590)
+in.sample <- sample(which(df$YEAR < 2011),
+                    size = (2/3) * length(which(df$YEAR < 2011)))
+out.of.sample.forcast <- which(df$year > 2010) # TODO: rename forecast
+
+# Data used for model fitting (within-sample)
+set.seed(9590)
+df1 <- df[in.sample, ]
+
+# Data used for forecast validation 2011-2016 (out-of-sample)
+df2 <- df[out.of.sample.forcast, ]
+
+# Data used for model validation for 1997-2010 (out-of-sample)
+df3 <- df[-c(in.sample, out.of.sample.forcast), ]
+
+# scale and centre the spatial covariates
+climate <- scale(climate_stack[["X1981.2010"]])
+pine <- scale(pine_map)
+
+# fit the model to the data
+set.seed(1291)
+ptm <- proc.time()
+
+chain1 <- fit.model.mcmc( ## TO DO: parameterive these for my MPB stuff!
+  n.iter = 250 * 1000,    ## use 250,000 for analysis; use 1000 for e.g., testing
+  print.iter = TRUE,
+  thin.u = 100,
+  save.u = TRUE,
+  alpha.start = c(17.3, -0.1, -0.2, -0.2),
+  beta.start = c(0.8, 0.4),
+  gamma.start = c(0.2, 0.1, 0.05, -0.1),
+  theta.start = 3,
+  phi.start = 10000,
+  alpha.prior.var = 10,
+  beta.prior.var = 10,
+  gamma.prior.var = 1,
+  theta.prior = 10^6,
+  phi.prior = 10^10,
+  alpha.tune = c(7/1000, 35/1000, 2/1000, 4/1000) / 11,
+  beta.tune = 1/2000,
+  gamma.tune = c(6/10000, 500/10000, 20/10000, 20/10000) / 25,
+  theta.tune = 1/6,
+  phi.tune = 220,
+  y = df1$y,
+  X = model.matrix(~ sex + age, data = df1)[, -1],
+  K = df1$cell + ((df1$year - 2002) * max(spatial.covariates$cell[])),
+  t.stop = 13*4,
+  t.keep = seq(1, 13*4, by = 4),
+  dt = 1/4,
+  spatial.covariates = spatial.covariates,
+  diffusion.coef = c(0, 1, 1, 1, 1),
+  growth.coef = c(0, 1, 1, 1, 1),
+  d = SpatialPoints(t(matrix(colMeans(df1[which(df1$year == 2002 & df1$y == 1), 10:11])))),
+  us.fact = 5
+)
+
+proc.time() - ptm
+
+# Note: d = SpatialPoints(t(matrix(colMeans(df1[which(df1$year==2002 & df1$y==1),10:11]))))
+# specifies the location that the scaled Guassian kernel used to specify the initial state
+# is centered. To specify d we used the centroid of the locations of positive deer from 2002.
+```
