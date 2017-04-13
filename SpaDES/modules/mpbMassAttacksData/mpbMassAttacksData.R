@@ -16,7 +16,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("data.table", "raster", "RColorBrewer"),
+  reqdPkgs = list("amc", "data.table", "raster", "RColorBrewer"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
@@ -69,19 +69,6 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
 }
 
 .inputObjects <- function(sim) {
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create an named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can use 'sim$.userSuppliedObjNames' in their function below to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call. e.g.,
-  # if (!('defaultColor' %in% sim$.userSuppliedObjNames)) {
-  #  sim$defaultColor <- 'red'
-  # }
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
     load(file.path(modulePath(sim), "mpbMassAttacksData", "data", "west.boreal.RData"), envir = envir(sim))
@@ -105,21 +92,8 @@ mpbMassAttacksDataInit <- function(sim) {
   
   f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1997-2011.tif")
 
-  fn1 <- function(f, studyArea) {
-    tf <- tempfile(fileext = ".tif") %>% file.create(tf)
-    a <- stack(x = f)  %>% setNames(paste0("X", 1997:2011))
-    b <- spTransform(studyArea, CRSobj = CRS(proj4string(a)))
-    a <- crop(a, b) %>%
-      projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
-      crop(studyArea) %>%
-      setNames(paste0("X", 1997:2011))
-    
-    setColors(a) <- brewer.pal(9, "YlOrRd")
-    a <- writeRaster(a, filename = tf, overwrite = TRUE)
-    return(a)
-  }
-  
-  sim$massAttacksMap <- Cache(fn1, f, sim$studyArea)
+  sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011), amc::tf())
+  setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
 
   ids <- which(!is.na(sim$massAttacksMap[]))
   sim$massAttacksDT <- data.table(ID = ids, RedTrees = sim$massAttacksMap[ids])

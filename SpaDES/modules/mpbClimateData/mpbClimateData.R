@@ -96,19 +96,6 @@ mpbClimateDataSwitchLayer <- function(sim) {
 }
 
 .inputObjects <- function(sim) {
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create an named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can use 'sim$.userSuppliedObjNames' in their function below to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call. e.g.,
-  # if (!('defaultColor' %in% sim$.userSuppliedObjNames)) {
-  #  sim$defaultColor <- 'red'
-  # }
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
     load(file.path(modulePath(sim), "mpbClimateData", "data", "west.boreal.RData"), envir = envir(sim))
@@ -130,13 +117,11 @@ mpbClimateDataImportMaps <- function(sim) {
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
   
   fn1 <- function(files, studyArea) {
-    tf <- tempfile(fileext = ".tif")
-    stack(lapply(files, function(f) {
-      raster(f) %>%
-        projectRaster(crs = CRS(proj4string(studyArea))) %>%
-        crop(studyArea)
-    })) %>%
-      writeRaster(filename = tf, overwrite = TRUE)
+    layerNames <- c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100")
+    out <- stack(files) %>%
+      amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif"))
+    
+    return(out)
   }
   sim$mpbClimateDataMaps <- Cache(fn1, files, sim$studyArea)
   
