@@ -109,10 +109,10 @@ if (!require(igraph)) {
 if (!require(raster)) {
   install.packages("raster")
 }
-if (!require(amc) | packageVersion("amc") < "0.0.1.9000") {
+if (!require(amc) || packageVersion("amc") < "0.1.0.9000") {
   devtools::install_github("achubaty/amc@development", dependencies = TRUE)
 }
-if (!require(SpaDES) | packageVersion("SpaDES") < "1.3.1.9033") {
+if (!require(SpaDES) || packageVersion("SpaDES") < "1.3.1.9033") {
   devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
 }
 ```
@@ -150,7 +150,7 @@ sa <- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
 times <- list(start = 2011, end = 2020)
 params <- list(
   mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
-  mpbPine = list(lowMemory = FALSE), ## set to TRUE on laptop
+  mpbPine = list(lowMemory = TRUE), ## set to TRUE on laptop
   mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
 )
 objects <- list(studyArea = sa)

@@ -119,7 +119,8 @@ mpbClimateDataImportMaps <- function(sim) {
   fn1 <- function(files, studyArea) {
     layerNames <- c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100")
     out <- stack(files) %>%
-      amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif"))
+      amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif")) %>%
+      stack()
     
     return(out)
   }
