@@ -61,6 +61,7 @@ suppressPackageStartupMessages({
   library(rgeos)
   library(rts)
   library(sdm)
+  library(SpaDES)
   library(tidyr)
   library(truncnorm)
 })
@@ -133,47 +134,21 @@ studyArea <- raster(xmn = -300000, xmx = -260000, ymn = 5600000, ymx = 5640000,
 years <- 1997L:2010L
 
 ## MPB data
-tf <- list.files(rdata.path, "MPB_BCAB_.*[.]tif", full.names = TRUE)
-mpb_stack <- lapply(tf, raster) %>%
-  stack() %>%
-  crop(studyArea)
+tifs <- list.files(rdata.path, "MPB_BCAB_.*[.]tif", full.names = TRUE)
+mpb_stack <- lapply(tifs, raster) %>% stack() %>% crop(studyArea) %>% stack()
 
 ids <- which(!(names(mpb_stack) %in% paste0("MPB_BCAB_", years)))
 mpb_stack <- dropLayer(mpb_stack, ids)
 mpb_ts <- rts(mpb_stack, time = as.Date(paste("01", "09", years, sep = "-"), format = "%d-%m-%Y"))
 
 ## climate suitability maps (use combined metric)
-tf <- list.files(file.path(maps.dir, "MPB", "climate"), "_MPB_GeoP[.]tif", full.names = TRUE)[1:4]
-fn1 <- function(files, studyArea) {
-  tf <- tempfile(fileext = ".tif")
-  stack(lapply(files, function(f) {
-    raster(f) %>%
-      projectRaster(crs = CRS(proj4string(studyArea))) %>%
-      crop(studyArea)
-  })) %>%
-    writeRaster(filename = tf, overwrite = TRUE)
-}
-climate_stack <- fn1(tf, studyArea) %>%
-  setNames(c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100"))
+tifs <- list.files(file.path(maps.dir, "MPB", "climate"), "_MPB_GeoP[.]tif", full.names = TRUE)[1:4]
+layer_names <- c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100")
+climate_stack <- stack(tifs) %>% amc::cropReproj(studyArea, layer_names)
 
 ## pine abundance layer
 f <- file.path(maps.dir, "kNN", "kNN_pine_map.tif")
-fn2 <- function(f, studyArea) {
-  tf <- tempfile(fileext = ".tif")
-  file.create(tf)
-
-  a <- raster::raster(f)
-  b <- projectRaster(studyArea, crs = CRS(proj4string(a)))
-  a <- crop(a, b) %>%
-    projectRaster(., crs = CRS(proj4string(studyArea)), method = "ngb") %>%
-    crop(studyArea)
-  a[] <- a[]
-  a <- writeRaster(a, filename = tf, overwrite = TRUE) %>% 
-    setNames("Lodgepole_and_Jack_Pine")
-  return(a)
-}
-
-pine_map <- fn2(f, studyArea)
+pine_map <- amc::cropReproj(f, studyArea, "Lodgepole_and_Jack_Pine") %>% unstack()[[1]]
 # : ----- temporary
 
 ## extract values and create data.frame
@@ -317,8 +292,8 @@ chain1 <- fit.model.mcmc( ## TO DO: parameterive these for my MPB stuff!
   y = df1$y,
   X = model.matrix(~ sex + age, data = df1)[, -1],
   K = df1$cell + ((df1$year - 2002) * max(spatial.covariates$cell[])),
-  t.stop = 13*4,
-  t.keep = seq(1, 13*4, by = 4),
+  t.stop = 13 * 4,
+  t.keep = seq(1, 13 * 4, by = 4),
   dt = 1/4,
   spatial.covariates = spatial.covariates,
   diffusion.coef = c(0, 1, 1, 1, 1),
@@ -332,4 +307,18 @@ proc.time() - ptm
 # Note: d = SpatialPoints(t(matrix(colMeans(df1[which(df1$year==2002 & df1$y==1),10:11]))))
 # specifies the location that the scaled Guassian kernel used to specify the initial state
 # is centered. To specify d we used the centroid of the locations of positive deer from 2002.
+```
+
+# Using `SpaDES::spread`
+
+```{r SpaDES-spread}
+mpb_r <- mpb_stack[["MPB_BCAB_2010"]]
+loci <- which(mpb_r > 0)
+
+pine_r <- pine_map
+bcsm_r <- climate_stack[[2]]
+
+out <- spread2(hab, start = loci, spreadProb = 1, asymmetry = 1.2, asymmetryAngle = 90,
+               returnDistances = TRUE, returnFrom = TRUE, circle = TRUE, iterations = 1)
+
 ```
