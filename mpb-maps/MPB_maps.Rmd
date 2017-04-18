@@ -63,7 +63,9 @@ suppressPackageStartupMessages({
 })
 
 ## additional helper functions
-if (!require(amc)) devtools::install_github("achubaty/amc")
+if (!require(amc) || packageVersion("amc") < "0.1.0.9000") {
+  devtools::install_github("achubaty/amc@development")
+}
 
 ## set work dirs based on computer used
 if (._USER_. == "achubaty") {
