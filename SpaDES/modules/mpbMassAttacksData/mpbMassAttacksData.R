@@ -92,7 +92,7 @@ mpbMassAttacksDataInit <- function(sim) {
   
   f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1997-2011.tif")
 
-  sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011), amc::tf())
+  sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011))
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
 
   ids <- which(!is.na(sim$massAttacksMap[]))

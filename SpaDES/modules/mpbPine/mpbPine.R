@@ -82,16 +82,15 @@ mpbPineImportMap <- function(sim) {
   if (P(sim)$lowMemory) {
     ## load the pre-computed raster instead of doing RAM-intensive GIS
     f <- file.path(modulePath(sim), "mpbPine", "data", "kNN_pine_map.tif")
-    
-    sim$pineMap <- Cache(amc::cropReproj, f, sim$studyArea, layerName, amc::tf())
+    sim$pineMap <- Cache(amc::cropReproj, f, sim$studyArea, layerName)
   } else {
     f <- file.path(modulePath(sim), "mpbPine", "data",
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
                      "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
-  
-    tmp <- Cache(amc::cropReproj, f, sim$studyArea, c("Jack_Pine", "Lodgepole_Pine"), amc::tf())
-    sim$pineMap <- Cache(amc::mosaic2, tmp[[1]], tmp[[2]], fun = sum,
-                         layerName = layerName, filename = amc::tf())
+
+    tmp <- Cache(amc::cropReproj, f, sim$studyArea, c("Jack_Pine", "Lodgepole_Pine"))
+    sim$pineMap <- Cache(amc::mosaic2, x = tmp[[1]], y = tmp[[2]], fun = sum,
+                         layerName = layerName)
     rm(tmp)
   }
   
