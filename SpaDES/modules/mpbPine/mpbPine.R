@@ -87,8 +87,10 @@ mpbPineImportMap <- function(sim) {
     f <- file.path(modulePath(sim), "mpbPine", "data",
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
                      "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
+    s <- stack(f)
 
-    tmp <- Cache(amc::cropReproj, stack(f), sim$studyArea, c("Jack_Pine", "Lodgepole_Pine"))
+    tmp <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
+                 layerNames = c("Jack_Pine", "Lodgepole_Pine"))
     sim$pineMap <- Cache(amc::mosaic2, x = tmp[[1]], y = tmp[[2]], fun = sum,
                          layerName = layerName)
     rm(tmp)
