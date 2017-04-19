@@ -1,229 +1,163 @@
-raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
-
-#### Some variables
-
-largePatchSizeOptions <- c(500, 1000, 2000)
-largePatchesFnLoop <- length(largePatchSizeOptions) - 1 # The number is how many to run, e.g., 1 would be run just 1000
-ageClasses <- c("Young", "Immature", "Mature", "Old")
-ageClassCutOffs <- c(0, 40, 80, 120)
-ageClassZones <- lapply(seq_along(ageClassCutOffs), function(x) {
-  if (x < length(ageClassCutOffs)) {
-    paste0(ageClassCutOffs[x], "-", ageClassCutOffs[x + 1])
-  } else {
-    paste0(">", ageClassCutOffs[x])
-  }
-})
-experimentReps <- 1 # was 4
-maxNumClusters <- 5 # use 0 to turn off # otherwise detectCPUs() - 1
-library(raster)
-library(fpCompare)
-
-fireTimestep <- 10
-beginCluster(25, type = "FORK")
-#print(raster::getCluster())
-if (!exists("globalRasters")) globalRasters <- list()
-#studyArea <- "LARGE"
-#studyArea <- "MEDIUM"
-studyArea <- "FULL"
-studyArea <- "SMALL"
-successionTimestep <- 10 # was 2
-endTime <- 100 # was 4
-summaryInterval <- 10#endTime/2 # was 2
-summaryPeriod <- c(10, endTime)
-
-try(rm(mySim), silent = TRUE)
-useGGplot <- FALSE
-##########
-aaaa <- Sys.time()
-message("Started at ", aaaa)
-
-source("functions.R")
-source("shinyModules.R")
-source("footers.R")
-
-if (FALSE) { # THese are all "dangerous"! for development use only.
-  # in the sense that they should never be run inadvertently
-  # To rerun the spades initial call, delete the mySim object in the .GlobalEnv ##
-  SpaDES::clearCache(cacheRepo = paste0("cache", studyArea))
-  SpaDES::clearCache(cacheRepo = "cache/studyRegion/")
-  rm(cl)
-  file.remove(dir("outputs", recursive = TRUE, full.names = TRUE))
-  unlink("outputs", force = TRUE)
-  unlink(file.path("appCache", studyArea), force = TRUE, recursive = TRUE)
+## load packages and set various options ---------------------------------------
+if (tryCatch(packageVersion("amc") < "0.1.1", error = function(x) TRUE)) {
+  devtools::install_github("achubaty/amc")
 }
 
-if (FALSE) { # For pushing to shinyapps.io
-  message("Started at: ", Sys.time())
-  allFiles <- dir(recursive = TRUE)
-  allFiles <- grep(allFiles, pattern = "^cache", invert = TRUE, value = TRUE)
-  allFiles <- grep(allFiles, pattern = "^outputs", invert = TRUE, value = TRUE)
-  print(paste("Total size:", sum(unlist(lapply(allFiles, function(x) file.info(x)[, "size"]))) / 1e6, "MB"))
-  #rsconnect::deployApp(appName = "LandWebDemo", appFiles = allFiles, appTitle = "LandWeb Demo",
-  #                     contentCategory = "application")
-  rsconnect::deployApp(appName = "mpbBoreal", appFiles = allFiles,
-                       appTitle = "Modelling MPB spread using SpaDES",
-                       contentCategory = "application")
-}
-
-print(getwd())
-
-### Package stuff that should not be run automatically
-if (FALSE) {
-  pkgNamespaces <- c("htmlwidgets", "shiny", "shinydashboard", "shinyBS", "leaflet",
-                     "BH", "RCurl", "RandomFieldsUtils", "R.oo", "R.methodsS3", "SpaDES", "markdown",
-                     "visNetwork", "rgexf", "influenceR", "DBI", "viridis", "bit", "parallel",
-                     "devtools", "raster", "rgeos", "RSQLite", "magrittr", "raster", "sp",
-                     "dplyr", "ggplot2", "maptools", "broom", "ggvis", "rgdal", "grid", "VGAM")
-  lapply(pkgNamespaces, function(p) if (!require(p, quietly = TRUE, character.only = TRUE)) {
-    install.packages(p, dependencies = TRUE, lib = "/usr/local/lib/R/site-library")
-  })
-  if (!require("RandomFieldsUtils", character.only = TRUE)) install.packages("RandomFieldsUtils")
-  if (!require("RandomFields", character.only = TRUE)) install.packages("RandomFields")
-}
-
-## Make sure SpaDES is up to date
-if (tryCatch(packageVersion("amc") < "0.1.0.9000", error = function(x) TRUE)) {
-  devtools::install_github("achubaty/amc@development")
-}
-if (tryCatch(packageVersion("SpaDES") < "1.3.1.9064", error = function(x) TRUE)) {
+if (tryCatch(packageVersion("SpaDES") < "1.3.1.9065", error = function(x) TRUE)) {
   devtools::install_github("PredictiveEcology/SpaDES@development")
 }
 
-## Actual loading here -- not as long as the list for shinyapps.io, which fails if only these are
-###  provided. But it is not necessary to library all of them for the app
-pkgs <- c("shiny", "shinydashboard", "shinyBS", "leaflet",
-          "dplyr", "data.table", "grid", "magrittr", "markdown", "parallel",
-          "rgdal", "sp", "raster", "SpaDES", "amc"
-)
-lapply(pkgs, require, quietly = TRUE, character.only = TRUE)
+library(shiny)
+library(shinyBS)
+library(shinydashboard)
+library(shinyjs)
 
-## For shinyapps.io -- needs to see explicit require statements
-if (FALSE) {
-  require(shiny)
-  require(shinydashboard)
-  require(shinyBS)
-  require(BH)
-  require(RCurl)
-  require(RandomFieldsUtils)
-  require(R.oo)
-  require(R.methodsS3)
-  require(SpaDES)
-  library(fastmatch)
-  require(visNetwork)
-  require(rgexf)
-  require(influenceR)
-  require(DBI)
-  require(viridis)
-  require(htmlwidgets)
-  require(bit)
-  require(devtools)
-  require(raster)
-  require(rgeos)
-  require(RSQLite)
-  require(magrittr)
-  require(raster)
-  require(sp)
-  require(dplyr)
-  require(maptools)
-  require(rgdal)
-  require(grid)
-  require(data.table)
-  require(leaflet)
-  require(parallel)
-  require(markdown)
+library(sp)
+library(rgdal)
+library(raster)
+library(SpaDES)
+library(leaflet)
+
+library(amc)
+library(data.table)
+library(DiagrammeR)
+library(ggvis)
+library(magrittr)
+library(markdown)
+library(parallel)
+
+raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
+
+._MAXCLUSTERS_. <- 1
+._OS_. <- tolower(Sys.info()[["sysname"]])
+._USER_. <- Sys.info()[["user"]]
+
+## source additional app functions / modules -----------------------------------
+brk <- function() {
+  paste0(paste0(rep("-", getOption("width")), collapse = ""), "\n")
 }
+
+source("footers.R")
+#source("inputMaps.R")
+source("leaflet.R")
+#source("mapsForShiny.R")
+source("simInfo.R")
+
+## ---- begin "for development use only"
+if (FALSE) {
+  ## These are all "dangerous"!
+  ## in the sense that they should never be run inadvertently
+  ## To rerun the spades initial call, delete the mySim object in the .GlobalEnv ##
+  SpaDES::clearCache(cacheRepo = "cache")
+  rm(cl)
+  file.remove(dir("outputs", recursive = TRUE, full.names = TRUE))
+  unlink("outputs", force = TRUE)
+  unlink("cache", force = TRUE, recursive = TRUE)
+}
+## ---- end "for development use only"
+
+## initialize app --------------------------------------------------------------
+message(brk(), "  initializing app [", Sys.time(), "]", "\n", brk())
+
+if (!exists("globalRasters")) globalRasters <- list()
+
+studyArea_txt <- "FULL"
+#studyArea_txt <- "LARGE"
+#studyArea_txt <- "MEDIUM"
+#studyArea_txt <- "SMALL"
 
 curDir <- getwd()
 setwd(curDir)
+message("Current working directory: ", curDir)
 
-if (maxNumClusters > 0) {
+## start cluster if desired
+if (._MAXCLUSTERS_. > 0) {
   if (!exists("cl")) {
-    library(parallel)
-    # try(stopCluster(cl), silent = TRUE)
-    ncores <- if (Sys.info()[["user"]] == "achubaty") {
-      pmin(maxNumClusters, detectCores() / 2)
+    ncores <- if (._USER_. == "achubaty") {
+      pmin(._MAXCLUSTERS_., detectCores() / 2)
     } else {
-      maxNumClusters
+      pmin(._MAXCLUSTERS_., detectCores() - 1)
     }
 
-    ncores <-  pmin(ncores, detectCores() - 1)
-
     message("Spawning ", ncores, " threads")
-    if (Sys.info()[["sysname"]] == "Windows") {
+    if (._OS_. == "windows") {
       clusterType = "SOCK"
     } else {
       clusterType = "FORK"
     }
     cl <- makeCluster(ncores, type = clusterType)
-    if (Sys.info()[["sysname"]] == "Windows") {
+    if (._OS_. == "windows") {
       clusterExport(cl = cl, varlist = list("objects", "shpStudyRegion"))
     }
-    message("  Finished Spawning multiple threads")
+    message("  Finished Spawning multiple threads.")
   }
 }
 
-## Create mySim
+## initialize simulation -------------------------------------------------------
 paths <- list(
-  cachePath = paste0("appCache", studyArea),
-  modulePath = "m", # short name because shinyapps.io can't handle longer than 100 characters
+  cachePath = "cache",    ## symlinked to ~/SpaDES/cache
+  modulePath = "modules", ## symlinked to ~/GitHub/MPB/SpaDES/modules
   inputPath = "inputs",
-  outputPath = paste0("outputs", studyArea)
+  outputPath = "outputs"
+)
+setPaths(
+  cachePath = paths$cachePath,
+  modulePath = paths$modulePath,
+  inputPath = paths$inputPath,
+  outputPath = paths$outputPath
 )
 
-source("inputMaps.R")
-modules <- list("landWebDataPrep", "initBaseMaps", "fireDataPrep", "LandMine",
-                "LW_LBMRDataPrep", "LBMR", "timeSinceFire", "LandWebOutput")
+## load CRS for the boreal raster
+load(file.path(getOption("spades.modulePath"), "mpbRandomLandscapes", "data",
+               "west.boreal.RData")) ## loads `studyArea` object (spdf)
+crs.boreal <- CRS(proj4string(studyArea))
 
-
-fireInitialTime <- fireTimestep
-times <- list(start = 0, end = endTime)
-objects <- list("shpStudyRegionFull" = shpStudyRegionFull,
-                "shpStudySubRegion" = shpStudyRegion,
-                "successionTimestep" = successionTimestep,
-                "summaryPeriod" = summaryPeriod,
-                "useParallel" = if (maxNumClusters) cl else TRUE)
+times <- list(start = 2011, end = 2020)
 parameters <- list(
-  fireNull = list(
-    burnInitialTime = 1,
-    returnInterval = 1,
-    .statsInitialTime = 1
-  ),
-  LandWebOutput = list(
-    summaryInterval = summaryInterval
-  ),
-  LandMine = list(
-    biggestPossibleFireSizeHa = 5e5,
-    fireTimestep = fireTimestep,
-    burnInitialTime = fireInitialTime,
-    .plotInitialTime = NA
-  ),
-  LBMR = list(.plotInitialTime = times$start,
-             .saveInitialTime = NA,
-             fireDisturbanceInitialTime = fireInitialTime),
-  initBaseMaps = list(.useCache = FALSE),
-  timeSinceFire = list(startTime = fireInitialTime)
+  mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
+  mpbPine = list(lowMemory = FALSE), ## set to TRUE on laptop
+  mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
 )
-objectNamesToSave <- c("rstTimeSinceFire", "vegTypeMap")
-outputs <- data.frame(stringsAsFactors = FALSE,
-                      expand.grid(
-                        objectName = objectNamesToSave,#, "oldBigPatch"),
-                        saveTime = seq(objects$summaryPeriod[1], objects$summaryPeriod[2],
-                                       by = parameters$LandWebOutput$summaryInterval)),
-                      fun = "writeRaster", package = "raster",
-                      file = paste0(objectNamesToSave, c(".tif", ".grd")))
-outputs2 <- data.frame(stringsAsFactors = FALSE,
-                       expand.grid(
-                         objectName = c("simulationOutput"),
-                         saveTime = times$end), fun = "saveRDS", package = "base" )
+objects <- list(studyArea = studyArea)
 
-outputs$arguments <- I(rep(list(list(overwrite = TRUE, progress = FALSE, datatype = "INT2U", format = "GTiff"),
-                                list(overwrite = TRUE, progress = FALSE, datatype = "INT1U", format = "raster")),
-                           times = NROW(outputs) / length(objectNamesToSave)))
+## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData (not all three)
+modules <- list(
+  "mpbPine", "mpbClimateData",
+  "mpbMassAttacksData",
+  "mpbRedTopGrowth",
+  "mpbRedTopSpread",
+  "mpbManagement"
+)
 
-outputs <- as.data.frame(rbindlist(list(outputs, outputs2), fill = TRUE))
+# outputs <- data.frame(
+#   stringsAsFactors = FALSE,
+#   expand.grid(
+#     objectName = objectNamesToSave,#, "oldBigPatch"),
+#     saveTime = seq(objects$summaryPeriod[1], objects$summaryPeriod[2],
+#                    by = parameters$LandWebOutput$summaryInterval)
+#   ),
+#   fun = "writeRaster", package = "raster",
+#   file = paste0(objectNamesToSave, c(".tif", ".grd"))
+# )
+#
+# outputs2 <- data.frame(
+#   stringsAsFactors = FALSE,
+#   expand.grid(objectName = c("simulationOutput"), saveTime = times$end),
+#   fun = "saveRDS", package = "base"
+# )
+#
+# outputs$arguments <- I(rep(
+#   list(
+#     list(overwrite = TRUE, progress = FALSE, datatype = "INT2U", format = "GTiff"),
+#     list(overwrite = TRUE, progress = FALSE, datatype = "INT1U", format = "raster")
+#   ),
+#   times = NROW(outputs) / length(objectNamesToSave)
+# ))
+#
+# outputs <- as.data.frame(rbindlist(list(outputs, outputs2), fill = TRUE))
 
 mySim <- simInit(times = times, params = parameters, modules = modules,
-                 objects = objects, paths = paths, outputs = outputs)
+                 objects = objects, paths = paths)#, outputs = outputs)
 
-source("mapsForShiny.R")
-#devtools::load_all("~/Documents/GitHub/SpaDES/.")
+## -----------------------------------------------------------------------------
+message(brk(), "finished running global.R [", Sys.time(), "]", "\n", brk())
