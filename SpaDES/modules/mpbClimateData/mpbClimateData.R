@@ -116,6 +116,10 @@ mpbClimateDataImportMaps <- function(sim) {
                pattern = suffix, full.names = TRUE)
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
   
+  if (length(files) == 0) {
+    stop("missing data files")
+  }
+  
   fn1 <- function(files, studyArea) {
     layerNames <- c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100")
     out <- stack(files) %>%
