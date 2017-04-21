@@ -7,6 +7,7 @@ defineModule(sim, list(
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
   authors = c(
     person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
+    person(c("Eliot", "J B"), "McIntire", email = "eliot.mcintire@canada.ca", role = c("aut")),
     person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut"))
   ),
   childModules = character(),
@@ -15,7 +16,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("raster", "RColorBrewer"),
+  reqdPkgs = list("data.table", "raster", "RColorBrewer"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
@@ -26,7 +27,7 @@ defineModule(sim, list(
   ),
   inputObjects = bind_rows(
     expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
-    expectsInput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB."),
+    expectsInput("pineMap", "data.table", "Current lodgepole and jack pine available for MPB."),
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
     expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
@@ -98,7 +99,7 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
 #   - `modulenameInit()` function is required for initiliazation;
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
-### template initilization
+### initilization
 mpbRedTopSpreadInit <- function(sim) {
 
   # # ! ----- EDIT BELOW ----- ! #
@@ -110,7 +111,7 @@ mpbRedTopSpreadInit <- function(sim) {
   return(invisible(sim))
 }
 
-### template for plot events
+### plotting
 mpbRedTopSpreadPlot <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
@@ -120,16 +121,22 @@ mpbRedTopSpreadPlot <- function(sim) {
   return(invisible(sim))
 }
 
-### template for your event1
+### spread
 mpbRedTopSpreadDispersal <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
 
-  sim$totalNumberMassAttacks <- sim$totalNumberMassAttacks # doesn't do anything!
+  ids <- which(!is.na(sim$massAttacksCurrent[])) ## loci for spread2 (non-NA and non-zero)
+  
+  mpb_pnts <- xyFromCell(sim$massAttacksCurrent, cell = ids, spatial = TRUE)
+  propPine <- raster::extract(sim$pineMap, mpb_pnts)
+  
+  ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
+  ntrees_max <- 1125 * (res(sim$massAttacksCurrent) / 100) ^ 2
+  
+  
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
 
-
 ### add additional events as needed by copy/pasting from above
-

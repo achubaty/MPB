@@ -101,10 +101,15 @@ mpbPineImportMap <- function(sim) {
                          layerName = layerName)
     rm(tmp)
   }
-  
-  ## put all cells with pine into the data.table
-  ids <- which(sim$pineMap[] > 0)
-  sim$pineDT <- data.table(ID = ids, pPine = rep(TRUE, length(ids))) 
+
+  sim$pineMapDT <- data.table(
+    ID = 1L:ncell(sim$pineMap),
+    PROPPINE = sim$pineMap[]
+  )
   
   return(invisible(sim))
 }
+
+### NOTE:
+### in order to produce a pineMap raster (from the DT) for plotting,
+### use cellFromXY on the coordinates and sum(?) the values for duplicate cells.

@@ -89,17 +89,22 @@ mpbMassAttacksDataInit <- function(sim) {
   ##
   ## TO DO: incorporate code from MPB_maps.R to create the raster layers
   ##
-  
   f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1997-2011.tif")
-  
   stopifnot(file.exists(f))
 
+  ## all MPB data (all years)
   sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011))
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
 
-  ids <- which(!is.na(sim$massAttacksMap[]))
-  sim$massAttacksDT <- data.table(ID = ids, RedTrees = sim$massAttacksMap[ids])
-
+  ## only the start year's non-zero and non-NA data
+  ids <- which(!is.na(sim$massAttacksMap[[paste0("X", start(sim))]])) ## need non-zeros only
+  sim$massAttacksDT <- data.table(
+    ID = ids,
+    X = xyFromCell(sim$massAttacksMap[[paste0("X", start(sim))]], cell = ids)$x,
+    Y = xyFromCell(sim$massAttacksMap[[paste0("X", start(sim))]], cell = ids)$y,
+    NUMTREES = sim$massAttacksMap[[paste0("X", start(sim))]][ids]
+  )
+  
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
