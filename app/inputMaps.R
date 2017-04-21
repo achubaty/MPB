@@ -1,63 +1,100 @@
+message(brk(), "start running inputMaps.R [", Sys.time(), "]", "\n")
+
 ## ensure global parameters exist (from global.R)
-stopifnot(exists(c("paths", "studyArea_txt")))
+stopifnot(exists(c("paths")))
 
 ## -----------------------------------------------------------------------------
-landisInputs <- readRDS(file.path(paths$inputPath, "landisInputs.rds"))
-spEcoReg <- readRDS(file.path(paths$inputPath, "SpEcoReg.rds"))
+# load studyArea object (SpatialPointsDataFrame) and validate it using gBuffer
+f <- file.path(paths$inputPath, "west.boreal.RData")
+stopifnot(file.exists(f))
+load(f)
+studyArea <- Cache(rgeos::gBuffer, spgeom = studyArea, byid = TRUE, width = 0,
+                   cacheRepo = paths$cachePath)
+rm(f)
 
-seralStageData <- readRDS(file.path(paths$inputPath, "seralStageData.rds"))
-vegTypeData <- readRDS(file.path(paths$inputPath, "vegTypeData.rds"))
+## ecodistricts etc. for leaflet maps ------------------------------------------
+## downlooad ecodistricts etc. data
+urls_eco <- list(
+  ecozones = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+  ecoprovinces = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/province/ecoprovince_shp.zip",
+  ecoregions = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/region/ecoregion_shp.zip",
+  ecodistricts = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/district/ecodistrict_shp.zip"
+)
 
-loadShpAndMakeValid <- function(file) {
-  shapefile(file) %>% gBuffer(byid = TRUE, width = 0)
-}
-shpStudyRegionFull <- Cache(loadShpAndMakeValid,
-                            file = file.path(paths$inputPath,"shpLandWEB.shp"),
-                            cacheRepo = paths$cachePath)
-shpStudyRegionFull$fireReturnInterval <- shpStudyRegionFull$LTHRC
-shpStudyRegionFull@data <- shpStudyRegionFull@data[,!(names(shpStudyRegionFull) %in% "ECODISTRIC")]
+sapply(urls_eco, amc::dl.data, dest = paths$inputPath, unzip = TRUE)
 
-crs.knn <- CRS(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                     "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+## reproject/crop ecodistricts for studyArea
+message("reprojecting ecodistricts...")
+ecodistricts <- Cache(shapefile, file.path(paths$inputPath, "Ecodistricts", "ecodistricts"),
+                      cacheRepo = paths$cachePath)
+studyAreaEco <- spTransform(studyArea, crs(ecodistricts))
+ecodistrictsStudyRegion <- Cache(crop, ecodistricts, studyAreaEco, cacheRepo = paths$cachePath)
+ecodistricts <- spTransform(ecodistrictsStudyRegion, crs(studyArea))
 
-set.seed(853839)
-shpStudyRegion <- if (studyArea_txt != "FULL") {
-  if (studyArea_txt == "SMALL") {
-    areaKm2 <- 10000
-  } else if (studyArea_txt == "MEDIUM") {
-    areaKm2 <- 40000
-  } else if (studyArea_txt == "LARGE") {
-    areaKm2 <- 80000
-  }
+## reproject/crop ecoregions for studyArea
+message("reprojecting ecoregions...")
+ecoregions <- Cache(shapefile, file.path(paths$inputPath, "Ecoregions", "ecoregions"),
+                    cacheRepo = paths$cachePath)
+ecoregionsStudyRegion <- Cache(crop, ecoregions, studyAreaEco, cacheRepo = paths$cachePath)
+ecoregions <- spTransform(ecoregionsStudyRegion, crs(studyArea))
 
-  minY <- 7778877 - 1.6e5
-  shpStudyRegionFull <- spTransform(shpStudyRegionFull, crs.knn)
-  minX <- -1202250.2
-  maxX <- minX + sqrt(areaKm2 * 1e6)
-  maxY <- minY + sqrt(areaKm2 * 1e6)
-  meanY <- mean(c(minY, maxY))
+## reproject/crop ecoprovinces for studyArea
+message("reprojecting ecoprovinces...")
+ecoprovinces <- Cache(shapefile, file.path(paths$inputPath, "Ecoprovinces", "ecoprovinces"),
+                      cacheRepo = paths$cachePath)
+ecoprovincesStudyRegion <- Cache(crop, ecoprovinces, studyAreaEco, cacheRepo = paths$cachePath)
+ecoprovinces <- spTransform(ecoprovincesStudyRegion, crs(studyArea))
 
-  ## Add random noise to polygon
-  xAdd <- -3e5
-  yAdd <- 5e5
-  nPoints <- 20
-  betaPar <- 0.6
-  X <- c(jitter(sort(rbeta(nPoints, betaPar, betaPar) * (maxX - minX) + minX)),
-         jitter(sort(rbeta(nPoints, betaPar, betaPar) * (maxX - minX) + minX, decreasing = TRUE)))
-  Y <- c(jitter(sort(rbeta(nPoints / 2, betaPar, betaPar) * (maxY - meanY) + meanY)),
-         jitter(sort(rbeta(nPoints, betaPar, betaPar) * (maxY - minY) + minY, decreasing = TRUE)),
-         jitter(sort(rbeta(nPoints / 2, betaPar, betaPar) * (meanY - minY) + minY)))
+## reproject/crop ecodistricts for studyArea
+message("reprojecting ecozones...")
+ecozones <- Cache(shapefile, file.path(paths$inputPath, "Ecozones", "ecozones"),
+                      cacheRepo = paths$cachePath)
+ecozonesStudyRegion <- Cache(crop, ecozones, studyAreaEco, cacheRepo = paths$cachePath)
+ecozones <- spTransform(ecozonesStudyRegion, crs(studyArea))
 
-  Sr1 <- Polygon(cbind(X + xAdd, Y + yAdd))
-  Srs1 <- Polygons(list(Sr1), "s1")
-  inputMapPolygon <- SpatialPolygons(list(Srs1), 1L)
-  crs(inputMapPolygon) <- crs.knn
-  raster::intersect(shpStudyRegionFull, inputMapPolygon)
-} else {
-  shpStudyRegionFull
-}
+message("reprojections complete!")
 
-ggStudyRegion <- ggvisFireReturnInterval(shpStudyRegion, shpStudyRegionFull)
+## create list of available polygons for leaflet -------------------------------
+crs.lflt <- sp::CRS("+init=epsg:4326")
+ecodistrictsLFLT <- spTransform(ecodistricts, crs.lflt)
+ecoregionsLFLT <- spTransform(ecoregions, crs.lflt)
+ecoprovincesLFLT <- spTransform(ecoprovinces, crs.lflt)
+ecozonesLFLT <- spTransform(ecozones, crs.lflt)
+
+availablePolygons <- names(urls_eco)
+availablePolygonAdjective <- tools::toTitleCase(availablePolygons) %>%
+  sapply(function(x) {
+    substr(x, 1, nchar(x) - 1) ## trim the last letter
+  }, USE.NAMES = FALSE)
+availableProjections <- c("", "LFLT")
+available <- data.frame(
+  stringsAsFactors = FALSE,
+  expand.grid(stringsAsFactors = FALSE,
+              polygons = availablePolygons,
+              projections = availableProjections),
+  names = rep(tools::toTitleCase(availablePolygons), 2)
+)
+
+polygons <- lapply(seq_len(NROW(available)), function(ii) {
+  get(paste0(available$polygons[ii], available$projections[ii]))
+}) %>%
+  setNames(available$names)
+
+rm(list = c(names(urls_eco), paste0(names(urls_eco), "LFLT")))
+
+polygonColours <- c(rep(c("red", "blue"), length(names(urls_eco))))
+polygonIndivIdsColum <- list("ZONE_NAME", "PROVINCE_", "REGION_NAM", "ECODISTRIC") %>%
+  set_names(names(polygons[1:4]))
+
+
+##------------------------------------------------------------------------------
+
+# timeSinceFirePalette <- leaflet::colorNumeric(
+#   c(rep("red", 10), paste0(colorRampPalette(c("light green", "dark green"))(100), "FF")),
+#   domain = NULL)
+# attr(timeSinceFirePalette, "colorArgs")$na.color <- "#00000000"
+
+# ggStudyRegion <- ggvisFireReturnInterval(studyArea, studyAreaFull)
 
 ## -----------------------------------------------------------------------------
-message(brk(), "finished running inputMaps.R [", Sys.time(), "]", "\n", brk())
+message("finished running inputMaps.R [", Sys.time(), "]", "\n", brk())

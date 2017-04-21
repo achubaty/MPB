@@ -1,4 +1,10 @@
 cache/
+inputs/Ecodistricts/
+inputs/Ecoprovinces/
+inputs/Ecoregions/
+inputs/Ecozones/
+inputs/*.checksum
+inputs/*.zip
 outputs/
 packrat/lib*/
 

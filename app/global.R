@@ -38,9 +38,8 @@ brk <- function() {
 }
 
 source("footers.R")
-#source("inputMaps.R")
+source("inputMaps.R")
 source("leaflet.R")
-#source("mapsForShiny.R")
 source("simInfo.R")
 
 ## ---- begin "for development use only"
