@@ -32,6 +32,19 @@ raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 ._OS_. <- tolower(Sys.info()[["sysname"]])
 ._USER_. <- Sys.info()[["user"]]
 
+paths <- list(
+  cachePath = "cache",    ## symlinked to ~/SpaDES/cache
+  modulePath = "modules", ## symlinked to ~/GitHub/MPB/SpaDES/modules
+  inputPath = "inputs",
+  outputPath = "outputs"
+)
+setPaths(
+  cachePath = paths$cachePath,
+  modulePath = paths$modulePath,
+  inputPath = paths$inputPath,
+  outputPath = paths$outputPath
+)
+
 ## source additional app functions / modules -----------------------------------
 brk <- function() {
   paste0(paste0(rep("-", getOption("width")), collapse = ""), "\n")
@@ -93,18 +106,6 @@ if (._MAXCLUSTERS_. > 0) {
 }
 
 ## initialize simulation -------------------------------------------------------
-paths <- list(
-  cachePath = "cache",    ## symlinked to ~/SpaDES/cache
-  modulePath = "modules", ## symlinked to ~/GitHub/MPB/SpaDES/modules
-  inputPath = "inputs",
-  outputPath = "outputs"
-)
-setPaths(
-  cachePath = paths$cachePath,
-  modulePath = paths$modulePath,
-  inputPath = paths$inputPath,
-  outputPath = paths$outputPath
-)
 
 ## load CRS for the boreal raster
 load(file.path(getOption("spades.modulePath"), "mpbRandomLandscapes", "data",
