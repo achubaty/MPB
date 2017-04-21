@@ -27,8 +27,7 @@ defineModule(sim, list(
     expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   ),
   outputObjects = bind_rows(
-    createsOutput("pineMap", "RasterLayer", "Current lodgepole and jack pine available for MPB."),
-    createsOutput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB.")
+    createsOutput("pineMap", "RasterLayer", "Current lodgepole and jack pine available for MPB.")
   )
 ))
 

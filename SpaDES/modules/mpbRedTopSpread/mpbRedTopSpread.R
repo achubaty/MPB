@@ -23,36 +23,33 @@ defineModule(sim, list(
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
+    defineParameter("asymmetry", "numeric", 2, NA, NA, "The magnitude of the directional bias of spread"),
+    defineParameter("asymmetryAngle", "numeric", 90, NA, NA, "The direction of the spread bias, in degrees from north"),
     defineParameter("dispersalInterval", "numeric", 1, NA, NA, "This describes the interval time between dispersal events")
   ),
   inputObjects = bind_rows(
-    expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
-    expectsInput("pineMap", "data.table", "Current lodgepole and jack pine available for MPB."),
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
-    expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
+    expectsInput("massAttacksMap", "RasterStack", "Current MPB attack map (number of red attacked trees).")
   ),
   outputObjects = bind_rows(
-    createsOutput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
+    createsOutput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees).")
   )
 ))
 
 ## event types
-#   - type `init` is required for initiliazation
+#   - type `init` is required for initilization
 
 doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
   switch(eventType,
     "init" = {
-      ### check for more detailed object dependencies:
-      ### (use `checkObject` or similar)
-  
       # do stuff for this event
       sim <- sim$mpbRedTopSpreadInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbRedTopSpread$dispersalInterval,
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$mpbRedTopSpread$dispersalInterval,
                            "mpbRedTopSpread", "dispersal")
-      sim <- scheduleEvent(sim, params(sim)$mpbRedTopSpread$.plotInitialTime, "mpbRedTopSpread", "plot")
-      sim <- scheduleEvent(sim, params(sim)$mpbRedTopSpread$.saveInitialTime, "mpbRedTopSpread", "save")
+      sim <- scheduleEvent(sim, P(sim)$mpbRedTopSpread$.plotInitialTime, "mpbRedTopSpread", "plot")
+      sim <- scheduleEvent(sim, P(sim)$mpbRedTopSpread$.saveInitialTime, "mpbRedTopSpread", "save")
     },
     "dispersal" = {
       # ! ----- EDIT BELOW ----- ! #
@@ -60,23 +57,16 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
   
       sim <- sim$mpbRedTopSpreadDispersal(sim)
   
-      sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbRedTopSpread$dispersalInterval,
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$mpbRedTopSpread$dispersalInterval,
                            "mpbRedTopSpread", "dispersal")
   
       # ! ----- STOP EDITING ----- ! #
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-  
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-  
-      # schedule future event(s)
-  
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "mpbRedTopSpread", "plot")
-  
+
+      ## need to first convert the DT to a stack, then plot / save
+      
       # ! ----- STOP EDITING ----- ! #
     },
     warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
@@ -123,20 +113,67 @@ mpbRedTopSpreadPlot <- function(sim) {
 
 ### spread
 mpbRedTopSpreadDispersal <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-
-  ids <- which(!is.na(sim$massAttacksCurrent[])) ## loci for spread2 (non-NA and non-zero)
-  
-  mpb_pnts <- xyFromCell(sim$massAttacksCurrent, cell = ids, spatial = TRUE)
-  propPine <- raster::extract(sim$pineMap, mpb_pnts)
-  
   ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
-  ntrees_max <- 1125 * (res(sim$massAttacksCurrent) / 100) ^ 2
+  MAXTREES <- 1125 * (res(sim$massAttacksMap) / 100) ^ 2
   
+  ## asymmetric spread (biased eastward)
+  out <- spread2(a, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
+                 circle = TRUE,
+                 #asymmetry = P(sim)$mpbRedTopSpread$asymmetry,
+                 #asymmetryAngle = P(sim)$mpbRedTopSpread$asymmetryAngle,
+                 returnDistances = TRUE, returnFrom = TRUE)
+  set(out, , "abundanceActive", MAXTREES)
+  set(out, , "abundanceSettled", 0)
   
+  done <- FALSE
+  while (!done) {
+    out <- spread2(a, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
+                   circle = TRUE, returnDistances = TRUE, returnFrom = TRUE)
+    set(out, , "order", seq_len(NROW(out)))
+    attribs <- attr(out, "spreadState")
+    
+    outInactive <- out[!attr(out, "spreadState")$whActive, ]
+    setkey(outInactive, initialPixels, pixels)
+    setkey(out, initialPixels, from)
+    outW_i_columns <- out[outInactive]
+    outWLag1B <- outW_i_columns[which(state != "inactive")]
+    
+    outWLag1B[, abundanceSettled := pmin(MAXTREES, round(pine[pixels] * dispKern(distance, i.distance, 1) *
+                                                        i.abundanceActive / (.N))), by = "from"]
+    outWLag1B[, abundanceActive := pmin(MAXTREES, round((1 - pine[pixels] * dispKern(distance, i.distance, 1)) *
+                                                       i.abundanceActive / (.N))), by = "from"]
+    set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)
+    
+    out <- rbindlist(list(outInactive, outWLag1B), fill = TRUE)
+    setattr(out, "spreadState", attribs)
+    if (sum(out[which(out$state != "inactive")]$abundanceSettled) == 0) {
+      done <- TRUE
+    }
+  }
 
+  sim$mpbSpreadDT <- out
+  rm(out)
+  
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
 
-### add additional events as needed by copy/pasting from above
+## convert DT to a RasterLayer for plotting, etc.
+dt2raster <- function(dt, r, val) {
+  stopifnot(is(dt, "data.table"),
+            all(c("ID", "X", "Y") %in% colnames(dt)),
+            is(r, "Raster"),
+            is.character(val))
+  
+  xy <- SpatialPoints(cbind(dt$X, dt$Y))
+  ids <- cellFromXY(r, xy)
+  tmp <- data.table(ID  = ids, VALUE = dt[[val]])
+  tmp <- tmp[, VALUE := sum(VALUE), by = ID]
+  setkey(tmp, ID)
+  
+  rout <- r
+  if (length(tmp$ID)) rout[tmp$ID] <- tmp$VALUE
+  if (ncell(rout) - length(tmp$ID) > 0) rout[!tmp$ID] <- NA
+  return(rout)
+}
+

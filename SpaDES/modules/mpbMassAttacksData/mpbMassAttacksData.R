@@ -25,11 +25,10 @@ defineModule(sim, list(
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?")
   ),
   inputObjects = bind_rows(
-    expectsInput("studyArea", "SpatialPolygons", "The study area to which all maps will be cropped and reprojected.", sourceURL = NA),
-    expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
+    expectsInput("studyArea", "SpatialPolygons", "The study area to which all maps will be cropped and reprojected.", sourceURL = NA)
   ),
   outputObjects = bind_rows(
-    createsOutput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees).")
+    createsOutput("massAttacksMap", "RasterStack", "Historical MPB attack maps (number of red attacked trees).")
   )
 ))
 
@@ -95,15 +94,6 @@ mpbMassAttacksDataInit <- function(sim) {
   ## all MPB data (all years)
   sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011))
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
-
-  ## only the start year's non-zero and non-NA data
-  ids <- which(!is.na(sim$massAttacksMap[[paste0("X", start(sim))]])) ## need non-zeros only
-  sim$massAttacksDT <- data.table(
-    ID = ids,
-    X = xyFromCell(sim$massAttacksMap[[paste0("X", start(sim))]], cell = ids)$x,
-    Y = xyFromCell(sim$massAttacksMap[[paste0("X", start(sim))]], cell = ids)$y,
-    NUMTREES = sim$massAttacksMap[[paste0("X", start(sim))]][ids]
-  )
   
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))

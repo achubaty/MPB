@@ -27,12 +27,14 @@ defineModule(sim, list(
   ),
   inputObjects = bind_rows(
     expectsInput("climateSuitabilityMap", "RasterLayer", "A climatic suitablity map for the current year."),
-    expectsInput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB."),
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
-    expectsInput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
+    expectsInput("massAttacksMap", "RasterStack", "Historical MPB attack maps (number of red attacked trees)."),
+    expectsInput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB."),
+    expectsInput("pineMap", "data.table", "Current lodgepole and jack pine available for MPB.")
   ),
   outputObjects = bind_rows(
-    createsOutput("mpbGrowthDT", "data.table", "Current MPB attack map (number of red attacked trees).")
+    createsOutput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
+    createsOutput("pineDT", "data.table", "Current lodgepole and jack pine available for MPB.")
   )
 ))
 
@@ -97,11 +99,22 @@ mpbRedTopGrowthInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
   
   ## create a data.table consisting of the reduced map of current MPB distribution,
-  ## presence/absence of pine, and climatic suitability
-  sim$mpbGrowthDT <- Reduce(function(...) merge(..., all.x = TRUE),
-                            list(sim$massAttacksDT, sim$pineDT, sim$climateSuitabilityDT))
-  ## TO DO: climate map not same resolution etc as other maps, so this naive merge will be wrong!!!
-  
+  ## presence/absence of pine, and climatic suitability;
+  ## use only the start year's non-zero and non-NA data
+  r <- sim$massAttacksMap[[paste0("X", start(sim))]]
+  ids <- which(!is.na(r) | (r > 0))
+  mpb.sp <- xyFromCell(r, cell = ids)
+  sim$massAttacksDT <- data.table(
+    ID = ids,
+    X = mpb.sp$x,
+    Y = mpb.sp$y,
+    NUMTREES = r[ids],
+    PROPPINE = raster::extract(sim$pineMap, mpb.sp),
+    CLIMATE = raster::extract(sim$mpbClimateDataMaps, mpb.sp)
+  )
+  rm(r)
+
+  ## growth data
   sim$growthData <- switch(P(sim)$dataset,
     "Berryman1979_fit" = {
       ## Berryman1979_forced
@@ -184,7 +197,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
 mpbRedTopGrowthPlot <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   # do stuff for this event
-  Plot(sim$massAttacksT)
+  Plot(sim$massAttacksDT)
   
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
@@ -198,5 +211,5 @@ mpbRedTopGrowthGrow <- function(sim) {
     return(map.res * per.ha)
   }
   
-  sim$massAttacksDT <- sim$massAttacksDT[RedTops := xt(RedTops) * pClimate * pPine]
+  sim$massAttacksDT <- sim$massAttacksDT[NUMTREES := xt(NUMTREES) * CLIMATE]
 }
