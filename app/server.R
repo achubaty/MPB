@@ -1,5 +1,4 @@
-stopifnot(exists(c("crs.lflt", "globalRasters", #"mySim",
-                   "polygons")))
+stopifnot(exists(c("crs.lflt", "globalRasters", "mySim", "polygons")))
 
 ## -----------------------------------------------------------------------------
 function(input, output, session) {
