@@ -54,6 +54,7 @@ source("footers.R")
 source("inputMaps.R")
 source("leaflet.R")
 source("simInfo.R")
+source("simOutputs.R")
 
 ## ---- begin "for development use only"
 if (FALSE) {

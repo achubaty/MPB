@@ -12,6 +12,9 @@ dashboardPage(skin = "green",
       menuItem("Pine distribution", tabName = "pineMap", icon = icon("tree")),
       menuItem("Climate suitability", tabName = "climateMap", icon = icon("thermometer-3")),
       br(),
+      h4(HTML("&nbsp;"), "Figures"),
+      menuItem("Simulation outputs", tabName = "simFigures", icon = icon("bar-chart")),
+      br(),
       h4(HTML("&nbsp;"), "Model details"),
       menuItem("Data Sources", tabName = "dataSources", icon = icon("database")),
       menuItem("Model Overview", tabName = "simDiagrams", icon = icon("sitemap")),
@@ -25,26 +28,28 @@ dashboardPage(skin = "green",
     includeCSS("www/style.css"),
 
     tabItems(
-      tabItem("mpbMap", print("NOT WORKING YET")),
-      tabItem("pineMap", print("NOT WORKING YET")),
-      tabItem("climateMap", print("NOT WORKING YET")),
+      tabItem("mpbMap", initialMapUI("mpbMap")),
+      tabItem("pineMap", initialMapUI("pineMap")),
+      tabItem("climateMap", initialMapUI("climateMap")),
+      tabItem("simFigures", simOutputsUI("simFigs")),
+
       tabItem(
         "dataSources",
         p("NOT YET IMPLEMENTED")
       ),
       tabItem("simDiagrams", simInfoUI("simInfoTabs")),
       tabItem("moduleInfo", moduleInfoUI("modInfoBoxes")),
-      tabItem("Polygons",
-              fluidRow(
-                tabBox(width = 12,
-                       tabPanel("Current Polygons", tabName = "Polygons1",
-                                fluidRow(leafletMapUI("leafletMap"))
-                       )
-                )
-              )
-      ),
-      #tabItem("paramVals", moduleParamsUI("modParams"))
-      tabItem("paramVals", p("NOT YET IMPLEMENTED"))
+      #tabItem("paramVals", moduleParamsUI("modParams")),
+      tabItem("paramVals", p("NOT YET IMPLEMENTED")),
+
+      ## do polygons last because it takes the longest
+      tabItem("Polygons", fluidRow(
+        tabBox(width = 12,
+               tabPanel("Current Polygons", tabName = "Polygons1",
+                        fluidRow(leafletMapUI("leafletMap")))
+               )
+        )
+      )
     ),
     copyrightFooter()
   )

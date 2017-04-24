@@ -21,15 +21,18 @@ function(input, output, session) {
     message("Running Initial spades call...")
     initialRun <- Cache(spades, sim = mySimCopy, #notOlderThan = Sys.time(),
                         debug = "paste(Sys.time(), paste(unname(current(sim)), collapse = ' '))",
-                        #objects = "currentPolygon", ## use only demoArea
                         .plotInitialTime = NA)
 
   }
 
-  #callModule(dataInfo, "modDataInfo", mySim) # initialRun
-  callModule(simInfo, "simInfoTabs", mySim) # initialRun
-  callModule(moduleInfo, "modInfoBoxes", mySim) # initialRun
-  #callModule(moduleParams, "modParams", mySim) # initialRun
+  callModule(initialMap, "mpbMap", initialRun, "massAttacksMap")
+  callModule(initialMap, "pineMap", initialRun, "pineMap")
+  callModule(initialMap, "climateMap", initialRun, "climateSuitabilityMap")
+  callModule(simOutputs, "simFigs", initialRun)
+  #callModule(dataInfo, "modDataInfo", initialRun)
+  callModule(simInfo, "simInfoTabs", initialRun)
+  callModule(moduleInfo, "modInfoBoxes", initialRun)
+  #callModule(moduleParams, "modParams", initialRun)
 
   # raster::endCluster()
   # message("Running Experiment")

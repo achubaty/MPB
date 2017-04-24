@@ -56,6 +56,7 @@ message("reprojections complete!")
 
 ## create default study area for demo
 demoArea <- ecodistricts[which(ecodistricts[["ECODISTRIC"]] == 610), ]
+save(demoArea, file = file.path(paths$inputPath, "demoArea_610.rds"))
 
 ## create list of available polygons for leaflet -------------------------------
 crs.lflt <- sp::CRS("+init=epsg:4326")
