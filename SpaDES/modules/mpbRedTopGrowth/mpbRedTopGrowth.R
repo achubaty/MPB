@@ -106,8 +106,8 @@ mpbRedTopGrowthInit <- function(sim) {
   mpb.sp <- xyFromCell(r, cell = ids)
   sim$massAttacksDT <- data.table(
     ID = ids,
-    X = mpb.sp$x,
-    Y = mpb.sp$y,
+    X = mpb.sp[, 1],
+    Y = mpb.sp[, 2],
     NUMTREES = r[ids],
     PROPPINE = raster::extract(sim$pineMap, mpb.sp),
     CLIMATE = raster::extract(sim$mpbClimateDataMaps, mpb.sp)
