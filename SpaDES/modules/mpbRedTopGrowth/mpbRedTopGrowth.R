@@ -46,18 +46,18 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
     "init" = {
       ### check for more detailed object dependencies:
       ### (use `checkObject` or similar)
-  
+
       # do stuff for this event
       sim <- sim$mpbRedTopGrowthInit(sim)
       sim <- sim$mpbRedTopGrowthPlotInit(sim)
-  
+
       # schedule future event(s)
       #sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbRedTopGrowth", "plot")
     },
     "grow" = {
       # do stuff for this event
       sim <- sim$mpbRedTopGrowthGrow(sim)
-      
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "mpbRedTopGrowth", "grow")
     },
@@ -65,10 +65,10 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
       sim <- sim$mpbRedTopGrowthPlot(sim)
-      
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + 1, "mpbRedTopGrowth", "plot")
-  
+
       # ! ----- STOP EDITING ----- ! #
     },
     "save" = {
@@ -97,12 +97,12 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
 
 mpbRedTopGrowthInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
-  
+
   ## create a data.table consisting of the reduced map of current MPB distribution,
   ## proportion pine, and climatic suitability;
   ## use only the start year's non-zero and non-NA data
   r <- sim$massAttacksMap[[paste0("X", start(sim))]]
-  ids <- which(!is.na(r) | (r > 0))
+  ids <- which(!is.na(r[]) | (r[] > 0))
   mpb.sp <- xyFromCell(r, cell = ids)
   sim$massAttacksDT <- data.table(
     ID = ids,
@@ -141,7 +141,7 @@ mpbRedTopGrowthInit <- function(sim) {
       )
     }
   )
-  
+
   ## define growth function (from regression) for each dataset
   sim$growthFunction <- switch(P(sim)$dataset,
      "Berryman1979_fit" = {
@@ -186,7 +186,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
         stat_function(fun = sim$growthFunction, colour = "blue")
       }
     )
-  
+
   ### Plot it!
   Plot(gg)
 
@@ -200,9 +200,9 @@ mpbRedTopGrowthPlot <- function(sim) {
 
   currentPine <- sim$dt2raster(sim$massAttacksDT, sim$massAttacksMap, "PROPPINE")
   Plot(currentPine, addTo = "sim$massAttacksMap")
-  
+
   scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbRedTopGrowth", "plot")
-  
+
   return(invisible(sim))
 }
 
@@ -213,6 +213,6 @@ mpbRedTopGrowthGrow <- function(sim) {
     per.ha <- 10^sim$growthFunction(log10(xtminus1)) * xtminus1 ## TO DO: something is off about this
     return(map.res * per.ha)
   }
-  
+
   sim$massAttacksDT <- sim$massAttacksDT[NUMTREES := xt(NUMTREES) * CLIMATE]
 }
