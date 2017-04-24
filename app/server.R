@@ -22,6 +22,7 @@ function(input, output, session) {
     initialRun <- Cache(spades, sim = mySimCopy, #notOlderThan = Sys.time(),
                         debug = "paste(Sys.time(), paste(unname(current(sim)), collapse = ' '))",
                         .plotInitialTime = NA)
+    message("  Finished Initial spades call...")
 
   }
 

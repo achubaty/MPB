@@ -93,6 +93,7 @@ mpbMassAttacksDataInit <- function(sim) {
 
   ## all MPB data (all years)
   sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011))
+  sim$rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
   
   # ! ----- STOP EDITING ----- ! #
