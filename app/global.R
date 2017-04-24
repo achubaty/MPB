@@ -3,7 +3,7 @@ if (tryCatch(packageVersion("amc") < "0.1.1.9000", error = function(x) TRUE)) {
   devtools::install_github("achubaty/amc")
 }
 
-if (tryCatch(packageVersion("SpaDES") < "1.3.1.9065", error = function(x) TRUE)) {
+if (tryCatch(packageVersion("SpaDES") < "1.3.1.9066", error = function(x) TRUE)) {
   devtools::install_github("PredictiveEcology/SpaDES@development")
 }
 

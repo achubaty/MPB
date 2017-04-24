@@ -12,7 +12,7 @@ function(input, output, session) {
   currentPolygon <- callModule(leafletMap, "leafletMap")
 
   ## do initial run of the model for the default study area
-  if (FALSE) { ## set TRUE
+  if (TRUE) {
     ## Do initial run for each given study area so that all data prep done only once
     #initialRun1 <- spades(Copy(mySim), debug = TRUE)
     # 5 minutes for 6e3 km2
