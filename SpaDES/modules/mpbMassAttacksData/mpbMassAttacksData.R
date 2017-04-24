@@ -45,9 +45,9 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
       sim <- sim$mpbMassAttacksDataInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, params(sim)$mpbMassAttacksData$.plotInitialTime,
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime,
                            "mpbMassAttacksData", "plot", .last() - 1)
-      sim <- scheduleEvent(sim, params(sim)$mpbMassAttacksData$.saveInitialTime,
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime,
                            "mpbMassAttacksData", "save", .last())
     },
     "plot" = {
@@ -56,7 +56,7 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
       Plot(sim$massAttacksMap)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, time(sim) + params(sim)$mpbMassAttacksData$.plotInterval,
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval,
                            "mpbMassAttacksData", "plot", .last() - 1)
   
       # ! ----- STOP EDITING ----- ! #

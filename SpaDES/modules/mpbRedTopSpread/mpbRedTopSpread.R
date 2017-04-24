@@ -48,10 +48,10 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
       sim <- sim$mpbRedTopSpreadInit(sim)
   
       # schedule future event(s)
-      sim <- scheduleEvent(sim, time(sim) + P(sim)$mpbRedTopSpread$dispersalInterval,
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$dispersalInterval,
                            "mpbRedTopSpread", "dispersal")
-      sim <- scheduleEvent(sim, P(sim)$mpbRedTopSpread$.plotInitialTime, "mpbRedTopSpread", "plot")
-      sim <- scheduleEvent(sim, P(sim)$mpbRedTopSpread$.saveInitialTime, "mpbRedTopSpread", "save")
+      sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbRedTopSpread", "plot")
+      sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbRedTopSpread", "save")
     },
     "dispersal" = {
       # ! ----- EDIT BELOW ----- ! #
@@ -59,7 +59,7 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
   
       sim <- sim$mpbRedTopSpreadDispersal(sim)
   
-      sim <- scheduleEvent(sim, time(sim) + P(sim)$mpbRedTopSpread$dispersalInterval,
+      sim <- scheduleEvent(sim, time(sim) + P(sim)$dispersalInterval,
                            "mpbRedTopSpread", "dispersal")
   
       # ! ----- STOP EDITING ----- ! #
