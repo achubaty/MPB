@@ -37,10 +37,8 @@ dashboardPage(skin = "green",
                 )
               )
       ),
-      tabItem(
-        "paramVals",
-        p("NOT YET IMPLEMENTED")
-      )
+      #tabItem("paramVals", moduleParamsUI("modParams"))
+      tabItem("paramVals", p("NOT YET IMPLEMENTED"))
     ),
     copyrightFooter()
   )

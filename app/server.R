@@ -27,8 +27,10 @@ function(input, output, session) {
 
   }
 
+  #callModule(dataInfo, "modDataInfo", mySim) # initialRun
   callModule(simInfo, "simInfoTabs", mySim) # initialRun
   callModule(moduleInfo, "modInfoBoxes", mySim) # initialRun
+  #callModule(moduleParams, "modParams", mySim) # initialRun
 
   # raster::endCluster()
   # message("Running Experiment")

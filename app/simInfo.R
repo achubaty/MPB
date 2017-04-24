@@ -129,3 +129,28 @@ moduleInfo <- function(input, output, session, sim) {
     )
   })
 }
+
+
+### module parameter values ----------------------------------------------------
+moduleParamsUI <- function(id) {
+  ns <- NS(id)
+
+  uiOutput(ns("moduleParamValues"))
+}
+
+moduleParams <- function(input, output, session, sim) {
+  output$moduleParamValues <- renderUI({
+    fluidRow(
+      tagList(lapply(modules(sim), function(module) {
+        box(title = module, width = 12, status = "success", collapsible = TRUE,
+            paramList <- params(sim)[[module]],
+            paramsDF <- data.frame(
+              Parameter = as.character(names(paramList)),
+              Value = as.character(unname(unlist(paramList))),
+              stringsAsFactors = FALSE),
+            renderDataTable(dataTableOutput(paramsDF))
+        )
+      }))
+    )
+  })
+}
