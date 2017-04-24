@@ -30,19 +30,22 @@ initialMap <- function(input, output, session, sim, mapID) {
       mapID,
       "massAttacksMap" = {
         map <- sim[[mapID]][[paste0("X", start(sim))]]
-        setColors(map) <- brewer.pal(9, "YlOrRd")
+        setColors(map) <- brewer.pal(9, "Reds")
+        map_title <- paste0("MPB red attacks (", start(sim), ")")
       },
       "pineMap" = {
         map <- sim[[mapID]][[1]]
         setColors(map) <- brewer.pal(9, "Greens")
+        map_title <- paste0("Percent pine (", start(sim), ")")
       },
       "climateSuitabilityMap" = {
         map <- sim[[mapID]]
         setColors(map) <- rev(brewer.pal(9, "RdBu"))
+        map_title <- paste0("MPB climatic suitability (", start(sim), ")")
       }
     )
 
     clearPlot()
-    Plot(map)
+    Plot(map, title = map_title)
   })
 }
