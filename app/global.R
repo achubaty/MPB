@@ -25,6 +25,7 @@ library(ggvis)
 library(magrittr)
 library(markdown)
 library(parallel)
+library(RColorBrewer)
 
 raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 
