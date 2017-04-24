@@ -102,7 +102,7 @@ if (._MAXCLUSTERS_. > 0) {
 ## initialize simulation -------------------------------------------------------
 
 ## load CRS for the boreal raster
-load(file.path(getOption("spades.modulePath"), "mpbRandomLandscapes", "data",
+load(file.path(getOption("spades.modulePath"), "mpbMassAttacksData", "data",
                "west.boreal.RData")) ## loads `studyArea` object (spdf)
 crs.boreal <- CRS(proj4string(studyArea))
 

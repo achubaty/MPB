@@ -111,7 +111,7 @@ moduleInfo <- function(input, output, session, sim) {
     fluidRow(
       tagList(lapply(modules(sim), function(module) {
         m <- slot(depends(sim), "dependencies")[[module]]
-        rmdFile <- file.path("m", module, paste0(module, ".Rmd"))
+        rmdFile <- file.path(modulePath(sim), module, paste0(module, ".Rmd"))
         box(title = module, width = 12, status = "success", collapsible = TRUE,
             div(
               p(paste("Description:", slot(m, "description"))),

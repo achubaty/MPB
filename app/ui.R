@@ -38,7 +38,7 @@ dashboardPage(skin = "green",
               )
       ),
       tabItem(
-        "paramsVals",
+        "paramVals",
         p("NOT YET IMPLEMENTED")
       )
     ),
