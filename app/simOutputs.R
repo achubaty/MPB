@@ -2,18 +2,16 @@
 simOutputsUI <- function(id) {
   ns <- NS(id)
 
-  uiOutput(ns("simulationOutputs"))
+  fluidRow(
+    tabBox(width = 12,
+      tabPanel("Growth curve", plotOutput(ns("growthCurve")))
+    )
+  )
 }
 
 simOutputs <- function(input, output, session, sim) {
-  output$simulationOutputs <- renderUI({
-    fluidRow(
-      tabBox(width = 12,
-             tabPanel("Growth curve",
-                      plot(sim$mpbRedTopGrowthPlotGG)
-                      )
-      )
-    )
+  output$growthCurve <- renderPlot({
+    plot(sim$mpbRedTopGrowthPlotGG)
   })
 }
 
@@ -21,14 +19,30 @@ simOutputs <- function(input, output, session, sim) {
 initialMapUI <- function(id) {
   ns <- NS(id)
 
-  uiOutput(ns("map_init"))
+  fluidRow(
+    plotOutput(ns("map_init"))
+  )
 }
 
 initialMap <- function(input, output, session, sim, mapID) {
-  output$map_init <- renderUI({
-    fluidRow(
-      h4("Initial MPB outbreak map"),
-      Plot(sim[[mapID]])
+  output$map_init <- renderPlot({
+    switch(
+      mapID,
+      "massAttacksMap" = {
+        map <- sim[[mapID]][[paste0("X", start(sim))]]
+        setColors(map) <- brewer.pal(9, "YlOrRd")
+      },
+      "pineMap" = {
+        map <- sim[[mapID]][[1]]
+        setColors(map) <- brewer.pal(9, "Greens")
+      },
+      "climateSuitabilityMap" = {
+        map <- sim[[mapID]]
+        setColors(map) <- rev(brewer.pal(9, "RdBu"))
+      }
     )
+
+    clearPlot()
+    Plot(map)
   })
 }

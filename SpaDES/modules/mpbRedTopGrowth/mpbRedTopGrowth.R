@@ -188,7 +188,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
     )
 
   ### Plot it!
-  Plot(gg)
+  #Plot(gg)
   
   ### save the object to the simList
   sim$mpbRedTopGrowthPlotGG <- gg
