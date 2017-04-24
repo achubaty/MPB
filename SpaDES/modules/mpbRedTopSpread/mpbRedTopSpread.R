@@ -25,7 +25,9 @@ defineModule(sim, list(
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
     defineParameter("asymmetry", "numeric", 2, NA, NA, "The magnitude of the directional bias of spread"),
     defineParameter("asymmetryAngle", "numeric", 90, NA, NA, "The direction of the spread bias, in degrees from north"),
-    defineParameter("dispersalInterval", "numeric", 1, NA, NA, "This describes the interval time between dispersal events")
+    defineParameter("dispersalInterval", "numeric", 1, NA, NA, "This describes the interval time between dispersal events"),
+    defineParameter("dispersalKernel", "character", "NegExp", NA, NA, "Name of the dispersal kernel to use"),
+    defineParameter("dispersalKernelLambda", "numeric", 1, NA, NA, "Dispersal kernel lambda parameter")
   ),
   inputObjects = bind_rows(
     expectsInput("massAttacksDT", "data.table", "Current MPB attack map (number of red attacked trees)."),
@@ -65,7 +67,7 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
 
-      ## need to first convert the DT to a stack, then plot / save
+      plot(amc::dt2raster(sim$mpbSpreadDT))
       
       # ! ----- STOP EDITING ----- ! #
     },
@@ -91,12 +93,13 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
 
 ### initilization
 mpbRedTopSpreadInit <- function(sim) {
-
-  # # ! ----- EDIT BELOW ----- ! #
-
-
-
-  # ! ----- STOP EDITING ----- ! #
+  ## dispersal kernel
+  sim$dispKern <- switch(
+    P(sim)$dispersalKernel,
+    "NegExp" = function(disFar, disNear, lambda) {
+      (1 - exp(-lambda * disFar)) - (1 - exp(-lambda * disNear))
+    }
+  )
 
   return(invisible(sim))
 }
@@ -114,13 +117,13 @@ mpbRedTopSpreadPlot <- function(sim) {
 ### spread
 mpbRedTopSpreadDispersal <- function(sim) {
   ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
-  MAXTREES <- 1125 * (res(sim$massAttacksMap) / 100) ^ 2
+  MAXTREES <- round(1125 * (res(sim$massAttacksMap) / 100) ^ 2)
   
   ## asymmetric spread (biased eastward)
   out <- spread2(a, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
                  circle = TRUE,
-                 #asymmetry = P(sim)$mpbRedTopSpread$asymmetry,
-                 #asymmetryAngle = P(sim)$mpbRedTopSpread$asymmetryAngle,
+                 asymmetry = P(sim)$mpbRedTopSpread$asymmetry,
+                 asymmetryAngle = P(sim)$mpbRedTopSpread$asymmetryAngle,
                  returnDistances = TRUE, returnFrom = TRUE)
   set(out, , "abundanceActive", MAXTREES)
   set(out, , "abundanceSettled", 0)
@@ -138,10 +141,16 @@ mpbRedTopSpreadDispersal <- function(sim) {
     outW_i_columns <- out[outInactive]
     outWLag1B <- outW_i_columns[which(state != "inactive")]
     
-    outWLag1B[, abundanceSettled := pmin(MAXTREES, round(pine[pixels] * dispKern(distance, i.distance, 1) *
-                                                        i.abundanceActive / (.N))), by = "from"]
-    outWLag1B[, abundanceActive := pmin(MAXTREES, round((1 - pine[pixels] * dispKern(distance, i.distance, 1)) *
-                                                       i.abundanceActive / (.N))), by = "from"]
+    outWLag1B[, abundanceSettled := pmin(
+      MAXTREES,
+      round(pine[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda) *
+              i.abundanceActive / (.N))
+    ), by = "from"]
+    outWLag1B[, abundanceActive := pmin(
+      MAXTREES,
+      round((1 - pine[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda)) *
+              i.abundanceActive / (.N))
+    ), by = "from"]
     set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)
     
     out <- rbindlist(list(outInactive, outWLag1B), fill = TRUE)
@@ -158,7 +167,8 @@ mpbRedTopSpreadDispersal <- function(sim) {
   return(invisible(sim))
 }
 
-## convert DT to a RasterLayer for plotting, etc.
+## convert data.table objects t raster for plotting etc.
+## eventually this will move to `amc` package
 dt2raster <- function(dt, r, val) {
   stopifnot(is(dt, "data.table"),
             all(c("ID", "X", "Y") %in% colnames(dt)),
@@ -176,4 +186,3 @@ dt2raster <- function(dt, r, val) {
   if (ncell(rout) - length(tmp$ID) > 0) rout[!tmp$ID] <- NA
   return(rout)
 }
-

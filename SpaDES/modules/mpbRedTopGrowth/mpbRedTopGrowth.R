@@ -99,7 +99,7 @@ mpbRedTopGrowthInit <- function(sim) {
   # # ! ----- EDIT BELOW ----- ! #
   
   ## create a data.table consisting of the reduced map of current MPB distribution,
-  ## presence/absence of pine, and climatic suitability;
+  ## proportion pine, and climatic suitability;
   ## use only the start year's non-zero and non-NA data
   r <- sim$massAttacksMap[[paste0("X", start(sim))]]
   ids <- which(!is.na(r) | (r > 0))
@@ -195,11 +195,14 @@ mpbRedTopGrowthPlotInit <- function(sim) {
 }
 
 mpbRedTopGrowthPlot <- function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-  # do stuff for this event
-  Plot(sim$massAttacksDT)
+  currentAttack <- sim$dt2raster(sim$massAttacksDT, sim$massAttacksMap, "NUMTREES")
+  Plot(currentAttack, addTo = "sim$massAttacksMap")
+
+  currentPine <- sim$dt2raster(sim$massAttacksDT, sim$massAttacksMap, "PROPPINE")
+  Plot(currentPine, addTo = "sim$massAttacksMap")
   
-  # ! ----- STOP EDITING ----- ! #
+  scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbRedTopGrowth", "plot")
+  
   return(invisible(sim))
 }
 

@@ -84,7 +84,7 @@ mpbPineImportMap <- function(sim) {
     
     stopifnot(file.exists(f))
     
-    sim$pineMap <- Cache(amc::cropReproj, f, sim$studyArea, layerName)
+    sim$pineMap <- Cache(amc::cropReproj, f, sim$studyArea, layerName, inRAM = TRUE)
   } else {
     f <- file.path(modulePath(sim), "mpbPine", "data",
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
@@ -95,20 +95,11 @@ mpbPineImportMap <- function(sim) {
     s <- stack(f)
 
     tmp <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
-                 layerNames = c("Jack_Pine", "Lodgepole_Pine"))
+                 layerNames = c("Jack_Pine", "Lodgepole_Pine"), inRAM = TRUE)
     sim$pineMap <- Cache(amc::mosaic2, x = tmp[[1]], y = tmp[[2]], fun = sum,
                          layerName = layerName)
     rm(tmp)
   }
 
-  sim$pineMapDT <- data.table(
-    ID = 1L:ncell(sim$pineMap),
-    PROPPINE = sim$pineMap[]
-  )
-  
   return(invisible(sim))
 }
-
-### NOTE:
-### in order to produce a pineMap raster (from the DT) for plotting,
-### use cellFromXY on the coordinates and sum(?) the values for duplicate cells.

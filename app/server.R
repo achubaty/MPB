@@ -8,10 +8,10 @@ function(input, output, session) {
   set.seed(seed)
   message("Current seed is: ", seed)
 
+  ## currentPolygon is a reactiveVal object
   currentPolygon <- callModule(leafletMap, "leafletMap")
 
-  ## currentPolygon is a reactiveVal object
-
+  ## do initial run of the model for the default study area
   if (FALSE) { ## set TRUE
     ## Do initial run for each given study area so that all data prep done only once
     #initialRun1 <- spades(Copy(mySim), debug = TRUE)
@@ -89,8 +89,4 @@ function(input, output, session) {
   #   })
   #   message("  Finished reprojecting rasters & loading into RAM")
   # }
-
-  # ----------------------------------------------------------------------------
-
-  # bind_shiny(plot_id = "StudyRegion", ggStudyRegion)
 }
