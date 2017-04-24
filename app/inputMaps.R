@@ -55,8 +55,8 @@ ecozones <- spTransform(ecozonesStudyRegion, crs(studyArea))
 message("reprojections complete!")
 
 ## create default study area for demo
-demoArea <- ecodistricts[which(ecodistricts[["ECODISTRIC"]] == 610), ]
-save(demoArea, file = file.path(paths$inputPath, "demoArea_610.rds"))
+demoArea <- ecodistricts[which(ecodistricts[["ECODISTRIC"]] == ._POLYNUM_.), ]
+save(demoArea, file = file.path(paths$inputPath, paste0("demoArea_", ._POLYNUM_., ".rds")))
 
 ## create list of available polygons for leaflet -------------------------------
 crs.lflt <- sp::CRS("+init=epsg:4326")

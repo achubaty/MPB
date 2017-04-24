@@ -47,5 +47,6 @@ initialMap <- function(input, output, session, sim, mapID) {
 
     clearPlot()
     Plot(map, title = map_title)
+    Plot(demoArea, addTo = "map") ## TO DO: use studyArea fom inside simList
   })
 }

@@ -33,6 +33,8 @@ raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 ._OS_. <- tolower(Sys.info()[["sysname"]])
 ._USER_. <- Sys.info()[["user"]]
 
+._POLYNUM_. <- 592  ## ecodistrict polygon number to use for demoArea
+
 paths <- list(
   cachePath = "cache",    ## symlinked to ~/SpaDES/cache
   modulePath = "modules", ## symlinked to ~/GitHub/MPB/SpaDES/modules
