@@ -8,6 +8,9 @@ dashboardPage(skin = "green",
     sidebarMenu(id = "wholeThing",
       h4(HTML("&nbsp;"), "Maps"),
       menuItem("Change polygon layer", tabName = "Polygons", icon = icon("map-o")),
+      menuItem("MPB red attack", tabName = "mpbMab", icon = icon("bug")),
+      menuItem("Pine distribution", tabName = "pineMap", icon = icon("tree")),
+      menuItem("Climate suitability", tabName = "climateMap", icon = icon("thermometer-3")),
       br(),
       h4(HTML("&nbsp;"), "Model details"),
       menuItem("Data Sources", tabName = "dataSources", icon = icon("database")),
@@ -22,6 +25,9 @@ dashboardPage(skin = "green",
     includeCSS("www/style.css"),
 
     tabItems(
+      tabItem("mpbMap", print("NOT WORKING YET")),
+      tabItem("pineMap", print("NOT WORKING YET")),
+      tabItem("climateMap", print("NOT WORKING YET")),
       tabItem(
         "dataSources",
         p("NOT YET IMPLEMENTED")
