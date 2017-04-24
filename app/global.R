@@ -1,5 +1,5 @@
 ## load packages and set various options ---------------------------------------
-if (tryCatch(packageVersion("amc") < "0.1.1", error = function(x) TRUE)) {
+if (tryCatch(packageVersion("amc") < "0.1.1.9000", error = function(x) TRUE)) {
   devtools::install_github("achubaty/amc")
 }
 
@@ -28,7 +28,7 @@ library(parallel)
 
 raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 
-._MAXCLUSTERS_. <- 1
+._MAXCLUSTERS_. <- 2
 ._OS_. <- tolower(Sys.info()[["sysname"]])
 ._USER_. <- Sys.info()[["user"]]
 
@@ -71,15 +71,9 @@ if (FALSE) {
 ## initialize app --------------------------------------------------------------
 message(brk(), "  initializing app [", Sys.time(), "]", "\n", brk())
 
-if (!exists("globalRasters")) globalRasters <- list()
-
-studyArea_txt <- "FULL"
-#studyArea_txt <- "LARGE"
-#studyArea_txt <- "MEDIUM"
-#studyArea_txt <- "SMALL"
+if (!exists("globalRasters")) globalRasters <- list() ## what's this for?
 
 curDir <- getwd()
-setwd(curDir)
 message("Current working directory: ", curDir)
 
 ## start cluster if desired
@@ -99,7 +93,7 @@ if (._MAXCLUSTERS_. > 0) {
     }
     cl <- makeCluster(ncores, type = clusterType)
     if (._OS_. == "windows") {
-      clusterExport(cl = cl, varlist = list("objects", "shpStudyRegion"))
+      #clusterExport(cl = cl, varlist = list("objects", "shpStudyRegion"))
     }
     message("  Finished Spawning multiple threads.")
   }
@@ -115,12 +109,12 @@ crs.boreal <- CRS(proj4string(studyArea))
 times <- list(start = 2011, end = 2020)
 parameters <- list(
   mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
-  mpbPine = list(lowMemory = FALSE), ## set to TRUE on laptop
+  mpbPine = list(lowMemory = TRUE), ## set to TRUE on laptop
   mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
 )
-objects <- list(studyArea = studyArea)
 
-## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData (not all three)
+objects <- list(studyArea = demoArea) ## demoArea defined in inputMaps.R
+
 modules <- list(
   "mpbPine", "mpbClimateData",
   "mpbMassAttacksData",

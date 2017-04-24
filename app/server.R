@@ -19,10 +19,10 @@ function(input, output, session) {
     # 30 minutes for 6e4 km2
     mySimCopy <- Copy(mySim)
     end(mySimCopy) <- 0
-    message("Running Initial spades call")
+    message("Running Initial spades call...")
     initialRun <- Cache(spades, sim = mySimCopy, #notOlderThan = Sys.time(),
                         debug = "paste(Sys.time(), paste(unname(current(sim)), collapse = ' '))",
-                        objects = "shpStudyRegion",
+                        #objects = "currentPolygon", ## use only demoArea
                         .plotInitialTime = NA)
 
   }

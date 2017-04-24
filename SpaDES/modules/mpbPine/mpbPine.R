@@ -78,7 +78,7 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
 mpbPineImportMap <- function(sim) {
   layerName <- "Lodgepole_and_Jack_Pine"
   
-  if (P(sim)$lowMemory) {
+  if (isTRUE(P(sim)$lowMemory)) {
     ## load the pre-computed raster instead of doing RAM-intensive GIS
     f <- file.path(modulePath(sim), "mpbPine", "data", "kNN_pine_map.tif")
     
@@ -97,7 +97,7 @@ mpbPineImportMap <- function(sim) {
     tmp <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
                  layerNames = c("Jack_Pine", "Lodgepole_Pine"), inRAM = TRUE)
     sim$pineMap <- Cache(amc::mosaic2, x = tmp[[1]], y = tmp[[2]], fun = sum,
-                         layerName = layerName)
+                         layerName = layerName, inRAM = TRUE)
     rm(tmp)
   }
 
