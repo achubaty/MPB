@@ -4,7 +4,7 @@ author:
   - "Alex M. Chubaty"
   - "Barry J. Cooke"
   - "Eliot J. B. McIntire"
-date: "February 2, 2017"
+date: "April 24, 2017"
 output:
   html_document:
     toc: true
@@ -112,7 +112,7 @@ if (!require(raster)) {
 if (!require(amc) || packageVersion("amc") < "0.1.1.9000") {
   devtools::install_github("achubaty/amc@development", dependencies = TRUE)
 }
-if (!require(SpaDES) || packageVersion("SpaDES") < "1.3.1.9066") {
+if (!require(SpaDES) || packageVersion("SpaDES") < "1.3.1.9067") {
   devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
 }
 ```
