@@ -18,7 +18,7 @@ function(input, output, session) {
     # 5 minutes for 6e3 km2
     # 30 minutes for 6e4 km2
     mySimCopy <- Copy(mySim)
-    end(mySimCopy) <- 0
+    end(mySimCopy) <- start(mySimCopy)
     message("Running Initial spades call...")
     initialRun <- Cache(spades, sim = mySimCopy, #notOlderThan = Sys.time(),
                         debug = "paste(Sys.time(), paste(unname(current(sim)), collapse = ' '))",
