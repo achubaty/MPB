@@ -166,7 +166,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
   # do stuff for this event
 
   ### see ggplot docs at http://docs.ggplot2.org/current/
-  sim$mpbRedTopGrowthPlotGG <- ggplot(sim$growthData) +
+  gg <- ggplot(sim$growthData) +
     geom_point(aes(x = log10Xtm1, y = log10Rt, shape = study)) +
     scale_shape(solid = FALSE) +
     xlim(-3.2, 2) + ylim(-1.5, 1.5) +
@@ -188,7 +188,10 @@ mpbRedTopGrowthPlotInit <- function(sim) {
     )
 
   ### Plot it!
-  Plot(sim$mpbRedTopGrowthPlotGG)
+  Plot(gg)
+  
+  ### save the object to the simList
+  sim$mpbRedTopGrowthPlotGG <- gg
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
