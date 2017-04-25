@@ -44,8 +44,7 @@ leafletMap <- function(input, output, session) {
           addPolygons(data = demoArea, color = "red", fillColor = "blue",
                       group = "demo", fillOpacity = 0.2, weight = 1) %>%
           setView(mean(c(xmin(polyLFLT), xmax(polyLFLT))),
-                mean(c(ymin(polyLFLT), ymax(polyLFLT))),
-                zoom = 5)
+                  mean(c(ymin(polyLFLT), ymax(polyLFLT))), zoom = 5)
         setProgress(1)
     })
     a
@@ -88,7 +87,7 @@ leafletMap <- function(input, output, session) {
                               color = "red",
                               weight = 5,
                               stroke = TRUE,
-                              layerId = "Selected") ## duplicotade above
+                              layerId = "Selected") ## duplicated above
       }
     }
   })
