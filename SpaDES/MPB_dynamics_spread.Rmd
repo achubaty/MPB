@@ -74,9 +74,11 @@ The second is the linearized multi-niche model of @Berryman:1999bk, which, oddly
 
 ### `mpbRedTopSpread`
 
-Model red top spread based on availability of pine, climatic suitability, wind, and distance to beetle sources.
+Model red top spread based on availability of pine and distance to beetle sources.
 
-Not yet implemented. Currently a stub.
+Spread is modeled as an asymmetric percolation process.
+Infested pixels disperse "propagules", which follow a dispersal kernel, and settle in pixels based on their proportion pine.
+Opitimization approaches, specifically Pattern Oriented Modeling (POM; *e.g.*, Grimm 2005) are used to select the dispersal kernel and its parameters, as well as the parameters associated with asymmetric spreading.
 
 ### `canWindBiosim`
 

@@ -1,79 +1,41 @@
 ---
 title: "mpbClimate"
-author: "achubaty"
-date: "15 December 2016"
-output: pdf_document
+author:
+  - "Alex M. Chubaty"
+  - "Barry J. Cooke"
+  - "Eliot J. B. McIntire"
+date: "April 24, 2017"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+bibliography:
+  - ../../bibliography.bib
+  - ../../../mpb-maps/climate-projections.bib
 ---
 
-# Overview
+## Summary
 
-Provide an overview of what the module does / how to use the module.
+This module imports several MPB climate suitability scenarios (using four different indices: `S`, `L`, `R`, `G`) for use as model drivers.
+The Logan suitability index (`L`) is based on summer temperatures [@Logan:2003fr].
+The Regniere suitability index (`R`) is based on MPB cold tolerance (*i.e.*, winter survival) [@Regniere:2007ip].
+The Safranyik suitability index (`S`) is based on aspects of both summer temperatures and winter survival [@Safranyik:1975bk].
+Finally, the composite SLR index (`G`) takes the harmonic mean of the `S`, `L`, and `R` models.
+These are described in further detail in @Nealis:2008gc (and the updated @Nealis:2014re ?), and of course in their respective publications cited above.
+BioSim was used to generate the maps [see @Bentz:2010bs; @Logan:2003fr; @Safranyik:2010ce].
 
-Module documentation should be written so that others can use your module.
-This is a template for module documentation, and should be changed to reflect your module.
-
-## RMarkdown
-
-RMarkdown syntax allows R code, outputs, and figures to be rendered in the documentation.
-
-For help writing in RMarkdown, see http://rmarkdown.rstudio.com/.
-
-# Usage
-
-```{r module_usage}
-library(igraph)
-library(SpaDES)
-
-moduleDir <- file.path("/home/achubaty/Documents/GitHub/MPB/SpaDES/modules")
-inputDir <- file.path(moduleDir, "inputs") %>% checkPath(create = TRUE)
-outputDir <- file.path(moduleDir, "outputs")
-cacheDir <- file.path(outputDir, "cache")
-times <- list(start = 0, end = 10)
-parameters <- list(
-  #.progress = list(type = "text", interval = 1), # for a progress bar
-  ## If there are further modules, each can have its own set of parameters:
-  #module1 = list(param1 = value1, param2 = value2),
-  #module2 = list(param1 = value1, param2 = value2)
+```{r scenario-table, echo=FALSE}
+scenarios <- data.frame(
+  index = c('S', 'L', 'R', 'G'),
+  description = c('Safranyik', 'Logan', 'Regniere', 'Composite'),
+  stringsAsFactors = FALSE
 )
-modules <- list("mpbClimate")
-objects <- list()
-paths <- list(
-  cachePath = cacheDir,
-  modulePath = moduleDir,
-  inputPath = inputDir,
-  outputPath = outputDir
-)
-
-mySim <- simInit(times = times, params = parameters, modules = modules,
-                 objects = objects, paths = paths)
-
-spades(mySim)
+knitr::kable(scenarios)
 ```
 
-# Events
+For each of the four indices, there are 1981-2010 normals plus the projections from two RCP scenarios (either 4.5 or 8.5), covering a span of 120 years, split into 30-year frames.
 
-Describe what happens for each event type.
+All maps are projected using LCC and cover all of Canada.
 
-## Plotting
-
-Write what is plotted.
-
-## Saving
-
-Write what is saved.
-
-# Data dependencies
-
-## Input data
-
-How to obtain input data, and a description of the data required by the module.
-If `sourceURL` is specified, `downloadData("mpbClimate", "path/to/modules/dir")` may be sufficient.
-
-## Output data
-
-Description of the module outputs.
-
-# Links to other modules
-
-Describe any anticipated linkages to other modules.
-
+The default is to use the composite index (`G`).

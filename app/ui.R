@@ -33,10 +33,7 @@ dashboardPage(skin = "green",
       tabItem("climate_Map", initialMapUI("climateMap")),
       tabItem("simFigures", simOutputsUI("simFigs")),
 
-      tabItem(
-        "dataSources",
-        p("NOT YET IMPLEMENTED")
-      ),
+      tabItem("dataSources", dataInfoUI("modDataInfo")),
       tabItem("simDiagrams", simInfoUI("simInfoTabs")),
       tabItem("moduleInfo", moduleInfoUI("modInfoBoxes")),
       #tabItem("paramVals", moduleParamsUI("modParams")),

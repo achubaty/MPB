@@ -99,7 +99,7 @@ if (._MAXCLUSTERS_. > 0) {
     if (._OS_. == "windows") {
       #clusterExport(cl = cl, varlist = list("objects", "shpStudyRegion"))
     }
-    message("  Finished Spawning multiple threads.")
+    message("  Finished spawning multiple threads.")
   }
 }
 

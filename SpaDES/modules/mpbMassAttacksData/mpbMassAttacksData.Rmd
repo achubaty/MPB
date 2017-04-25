@@ -1,62 +1,28 @@
 ---
-title: "MPBRedTopMassAttacks"
-author: "Module Author"
-date: "12 August 2015"
-output: pdf_document
+title: "mpbRedTopMassAttacks"
+author:
+  - "Alex M. Chubaty"
+  - "Barry J. Cooke"
+  - "Eliot J. B. McIntire"
+date: "April 24, 2017"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+bibliography:
+  - ../../bibliography.bib
 ---
 
-Module documentation should be written so that others can use your module.
-This is a template for module documentation, and should be changed.
+## Summary
 
-## Plotting
+This module imports the raw MPB red top attack data from AB and BC over several years.
+@Cooke:2017ms describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`:
 
-Write what is plotted.
+> To provide an unbiased perspective on MPB damage in the two provinces, the two data sets were rasterized to a common resolution, allowing impact to be expressed in common units (hectares attacked per 4 km2 cell).
+> For BC data, raster cells were weighted according to polygon-wide average infestation rates and areas calculated from the proportion of a polygon infested within each raster cell, assuming an average stem density of 1125 mature stems per hectare, which is typical for beetle-prone lodgepole pine stands (Whitehead and Russo, 2005).
+> Data were weighted and calculated for each year in the sequence, and then summed. For Alberta data, the number of attacked trees per point attack cluster was determined from provincial government records, based on a ground survey, and summed across years within each 4 km2 raster cell.
 
-## Saving
+**NOTE:** We produced finer-resolusion rasters (250m x 250m) to match the resolution of the kNN pine maps.
 
-Write what is saved.
-
-## Input data
-
-## Output data
-
-## Anticipated linkages to other modules
-
-## Other Markdown help
-For help writing in RMarkdown, see http://rmarkdown.rstudio.com/. We have also included
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-output:
-rmarkdown::html_vignette:
-css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side.
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-output:
-rmarkdown::html_vignette:
-fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
-
+**NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).

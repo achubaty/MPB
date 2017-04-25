@@ -29,19 +29,21 @@ leafletMap <- function(input, output, session) {
         polyNum <- polygonInput()
         polyLFLT <- polygons[[polyNum + length(polygons)/2]] # leaflet projection
         a <- leaflet() %>%
-        addTiles(group = "OSM (default)") %>%
-        addPolygons(data = polyLFLT, color = "blue", group = "full",
-                    fillOpacity = 0.2, weight = 1,
-                    popup = paste(polyLFLT[[polygonIndivIdsColum[[polyNum]]]]),
-                    highlight = highlightOptions(
-                      weight = 5,
-                      color = "red",
-                      fill = TRUE,
-                      fillColor = "blue",
-                      fillOpacity = 0.7,
-                      bringToFront = TRUE
-                    )) %>%
-        setView(mean(c(xmin(polyLFLT), xmax(polyLFLT))),
+          addTiles(group = "OSM (default)") %>%
+          addPolygons(data = polyLFLT, color = "blue", group = "full",
+                      fillOpacity = 0.2, weight = 1,
+                      popup = paste(polyLFLT[[polygonIndivIdsColum[[polyNum]]]]),
+                      highlight = highlightOptions(
+                        weight = 5,
+                        color = "red",
+                        fill = TRUE,
+                        fillColor = "blue",
+                        fillOpacity = 0.7,
+                        bringToFront = TRUE
+                      )) %>%
+          addPolygons(data = demoArea, color = "red", fillColor = "blue",
+                      group = "demo", fillOpacity = 0.2, weight = 1) %>%
+          setView(mean(c(xmin(polyLFLT), xmax(polyLFLT))),
                 mean(c(ymin(polyLFLT), ymax(polyLFLT))),
                 zoom = 5)
         setProgress(1)

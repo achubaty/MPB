@@ -18,19 +18,18 @@ function(input, output, session) {
     # 30 minutes for 6e4 km2
     mySimCopy <- Copy(mySim)
     end(mySimCopy) <- start(mySimCopy)
-    message("Running Initial spades call...")
+    message("Running initial `spades` call...")
     initialRun <- Cache(spades, sim = mySimCopy, #notOlderThan = Sys.time(),
                         debug = "paste(Sys.time(), paste(unname(current(sim)), collapse = ' '))",
                         .plotInitialTime = NA)
-    message("  Finished Initial spades call...")
-
+    message("Finished Initial `spades` call...")
   }
 
   callModule(initialMap, "mpbMap", initialRun, "massAttacksMap")
   callModule(initialMap, "pineMap", initialRun, "pineMap")
   callModule(initialMap, "climateMap", initialRun, "climateSuitabilityMap")
   callModule(simOutputs, "simFigs", initialRun)
-  #callModule(dataInfo, "modDataInfo", initialRun)
+  callModule(dataInfo, "modDataInfo")
   callModule(simInfo, "simInfoTabs", initialRun)
   callModule(moduleInfo, "modInfoBoxes", initialRun)
   #callModule(moduleParams, "modParams", initialRun)
