@@ -257,7 +257,7 @@ if ((._OS_. == "Windows") && (NROW(subset(ogrDrivers(), grepl("GDB", name)))) > 
   rm(layers)
   
   ## save to shapefiles
-  output.dir <- file.path(maps.dir, "MPB", "ab_mpb_AMC")
+  output.dir <- file.path(maps.dir, "MPB", "ab_mpb_2016")
   if (!dir.exists(output.dir)) dir.create(output.dir)
   lapply(ab_pnts, function(x) {
     year <- names(x) ## IS THIS CORRECT??
@@ -285,8 +285,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
   }
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
-  #ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot")
-  ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb_AMC"), pattern = "spot")
+  #output.dir <- file.path(maps.dir, "MPB", "ab_mpb_2011")
+  output.dir <- file.path(maps.dir, "MPB", "ab_mpb_2016")
+  ab.pnts.files <- dir(path = output.dir, pattern = "spot")
   ab.pnts.dir.shp <- unique(sapply(strsplit(ab.pnts.files, "\\."), function(x) x[[1]]))
   
   ## parallel processing of data
@@ -300,7 +301,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
     
     ## TO DO: implement caching
     ab.pnts.boreal.raster.stack <- sfClusterApplyLB(ab.pnts.dir.shp, function(shp) {
-      pnts <- getOGR(shp, dir = file.path(maps.dir, "MPB", "ab_mpb"))
+      pnts <- getOGR(shp, dir = output.dir)
       names(pnts) <- toupper(names(pnts))
       
       ## reproject
@@ -452,7 +453,7 @@ bc_poly <- list(
   file.path(bc.data.dir, "2016", "FHF_Poly_2016.shp")
 )
 
-output.dir <- file.path(maps.dir, "MPB", "province_BC_AMC")
+output.dir <- file.path(maps.dir, "MPB", "bc_mpb_2016")
 if (!dir.exists(output.dir)) dir.create(output.dir)
 
 ## points data
@@ -511,8 +512,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
   }
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
-  #bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "poly")
-  bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC_AMC"), pattern = "poly")
+  #output.dir <- file.path(maps.dir, "MPB", "bc_mpb_2011")
+  output.dir <- file.path(maps.dir, "MPB", "bc_mpb_2016")
+  bc.poly.files <- dir(path = output.dir, pattern = "poly")
   bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
     
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
@@ -527,7 +529,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
     #  do as much as possible in a single step (don't save intermediate objects) to minimize RAM use.
     #  total RAM used can be controlled by adjusting the num.cpus used for processing.
     bc.poly.boreal.raster.stack <- sfClusterApplyLB(bc.poly.dir.shp, function(shp) {
-      poly.boreal <- getOGR(shp, dir = file.path(maps.dir, "MPB", "province_BC")) %>% 
+      poly.boreal <- getOGR(shp, dir = output.dir) %>% 
         ## reproject to boreal projection
         spTransform(., crs.boreal) %>%
         gBuffer(., byid = TRUE, width = 0)
