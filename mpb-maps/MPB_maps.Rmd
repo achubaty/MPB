@@ -119,7 +119,19 @@ When rasterizing, care must be taken to ensure points and polygon data are repre
 Points data are summed for each pixel, whereas for polygons an average of 1125 stems/ha is used, weighted by the proportion of a pixel overlapped by the polygon.
 See @Cooke:2017fem for more details.
 
-**NOTE:** we have AB aerial survey (point) data up to 2016, but do not have the most recent BC polygon data, thus this file currently only makes use of data up to 2011.
+### BC forest pest metadata
+
+```{r bc-metadata, comment=""}
+metadata <- file.path(maps.dir, "MPB", "bc_feds_pest_metatdata.TXT")
+cat(readLines(metadata), sep = '\n')
+```
+
+### AB aerial surveys metadata
+
+```{r ab-metadata, comment=""}
+#metadata <- file.path(maps.dir, "MPB", "bc_feds_pest_metatdata.TXT")
+#cat(readLines(metadata), sep = '\n')
+```
 
 ## Canadian administrative boundaries
 
@@ -188,10 +200,81 @@ if (isTRUE(._MAPS_USERAW_.)) {
 
 ## MPB red attack data
 
-### AB `SpatialPoints` data
+### AB `SpatialPoints` and `SpatialPolygons` data
 
-**NOTE:** this chunk below uses the AB data up to 2011, but we have access to more recent (up to 2016) aerial survey data.
-However, because we don't have more recent data (yet) for BC, we stick with using the older data for AB for now.
+#### Download all AB MPB data
+
+```{r download-ab-mpb}
+##  file originally downloaded from:
+##    ftp://ftp.env.gov.ab.ca/pub/MPB/Data/MPB_AERIAL_SURVEY.gdb.7z
+##
+##  [ password protected archive, downloaded October 19, 2016                       ]
+##  [ see email from Aaron McGill (Aaron.McGill@gov.ab.ca) forwarded by Barry Cooke ]
+##
+```
+
+#### Standardize AB MPB data
+
+```{r standardize-ab-data}
+## GDAL can only open GDB files on Windows
+if ((._OS_. == "Windows") && (NROW(subset(ogrDrivers(), grepl("GDB", name)))) > 0) {
+  f <- file.path(maps.dir, "MPB/MPB_AERIAL_SURVEY.gdb")
+  stopifnot(file.exists(f))
+  
+  ## List all feature classes in a file geodatabase
+  fc_list <- ogrListLayers(f)
+  print(fc_list)
+  
+  ## each layer represents data for a single year (2 of the last 3 characters in the name)
+  years <- str_sub(fc_list, 10, 12)
+  years <- ifelse(years < 50, paste0(20, years), paste0(19, years))
+  
+  ## Read the feature class
+  layers <- structure( vector("list", length(years)) , names = years)
+  i <- 1
+  lapply(fc_list, function(x) {
+    fc <- readOGR(dsn = file, layer = x)
+    layers[[i]] <<- fc
+    i <<- i + 1
+  })
+  
+  ## Determine the FC extent, projection, and attribute information
+  lapply(layers, summary)
+  
+  ## Extract points and polygon data into separate lists
+  id_pnts <- which(substring(names(layers), 5, 5) == "x")
+  id_poly <- which(substring(names(layers), 5, 5) == "p")
+  
+  ab_pnts <- layers[id_pnts]
+  ab_poly <- layers[id_poly]
+  
+  ## order by year
+  ab_pnts <- ab_pnts[order(names(ab_pnts))]
+  ab_poly <- ab_poly[order(names(ab_poly))]
+  
+  stopifnot(all(sapply(ab_pnts, is, class2 = "SpatialPointsDataFrame")))
+  stopifnot(all(sapply(ab_poly, is, class2 = "SpatialPolygonsDataFrame")))
+  rm(layers)
+  
+  ## save to shapefiles
+  output.dir <- file.path(maps.dir, "MPB", "ab_mpb_AMC")
+  if (!dir.exists(output.dir)) dir.create(output.dir)
+  lapply(ab_pnts, function(x) {
+    year <- names(x) ## IS THIS CORRECT??
+    f <- filepath(output.dir, paste0("ab_mpb_", year, "spot.shp"))
+    shapefile(x, filename = f, overwrite = TRUE)
+  })
+  lapply(ab_poly, function(x) {
+    year <- names(x) ## IS THIS CORRECT??
+    f <- filepath(output.dir, paste0("ab_mpb_", year, "poly.shp"))
+    shapefile(x, filename = f, overwrite = TRUE)
+  })
+}
+```
+
+#### Import AB points data
+
+**NOTE:** Until we resolve how to handle point/polygon overlap, we are only using the AB points data.
 
 ```{r import-maps-points}
 if (isTRUE(._MAPS_USERAW_.)) {
@@ -202,7 +285,8 @@ if (isTRUE(._MAPS_USERAW_.)) {
   }
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
-  ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot") 
+  #ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb"), pattern = "spot")
+  ab.pnts.files <- dir(path = file.path(maps.dir, "MPB", "ab_mpb_AMC"), pattern = "spot")
   ab.pnts.dir.shp <- unique(sapply(strsplit(ab.pnts.files, "\\."), function(x) x[[1]]))
   
   ## parallel processing of data
@@ -213,12 +297,14 @@ if (isTRUE(._MAPS_USERAW_.)) {
     sfLibrary(rgeos)
     sfLibrary(sp)
     sfExport("crs.boreal", "getOGR", "maps.dir", "rdata.path", "west.boreal.raster")
-       
+    
+    ## TO DO: implement caching
     ab.pnts.boreal.raster.stack <- sfClusterApplyLB(ab.pnts.dir.shp, function(shp) {
       pnts <- getOGR(shp, dir = file.path(maps.dir, "MPB", "ab_mpb"))
       names(pnts) <- toupper(names(pnts))
       
       ## reproject
+      ## TO DO: is this necessary?
       pnts.boreal <- spTransform(pnts, crs.boreal)
       stopifnot(gIsValid(pnts.boreal))
       
@@ -246,7 +332,175 @@ if (isTRUE(._MAPS_USERAW_.)) {
 }
 ```
 
-### BC `SpatialPolygons` data
+### BC `SpatialPolygons` and `SpatialPoints` data
+
+#### Download all BC MPB data
+
+```{r download-bc-mpb}
+bc.data.dir <- file.path(maps.dir, "MPB", "bc_mpb")
+years <- as.character(1999:2016)
+if (!dir.exists(bc.data.dir)) {
+  sapply(file.path(bc.data.dir, years), dir.create, recursive = TRUE)
+}
+
+url <- "https://www.for.gov.bc.ca/ftp/HFP/external/!publish/Aerial_Overview/"
+data1999 <- list(
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.dbf"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.prj"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.shp"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.shx"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.dbf"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.prj"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.shp"),
+  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.shx")
+)
+data2000 <- list(
+  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.dbf"),
+  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.shp"),
+  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.shx"),
+  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot.dbf"),
+  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot.shp"),
+  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot.shx")
+)
+data_zip <- list(
+  paste0(url, "2001/shape_files/fhdata2001.zip"),
+  paste0(url, "2002/fhf-nov15-2002.zip"),
+  paste0(url, "2003/fhdata_2003_20040223/2003_AOS_shapefiles.zip"),
+  paste0(url, "2004/fhf_complete_dataset_20050218.zip"),
+  paste0(url, "2005/final/fhfdata_2005.zip"),
+  paste0(url, "2006/fhdata_2006_final.zip"),
+  paste0(url, "2007/final_version/MPB_only.zip"),
+  paste0(url, "2008/2008_BC_overview.zip"),
+  paste0(url, "2009/replacement%20spatial%20and%20MDB%20files-20100111.zip"),
+  paste0(url, "2010/fhdata%20final%2012162010.zip"),
+  paste0(url, "2011/final_2011_aos_July30.zip"),
+  paste0(url, "2012/FHF_Final_12132012.zip"),
+  paste0(url, "2013/FHF_2013_Jan24.zip"),
+  paste0(url, "2014/2014_FHF_Jan23.zip"),
+  paste0(url, "2015/final_prov_data/FHF_spatial_Feb11.zip"),
+  paste0(url, "2016/AOS_2016_Shapefiles_and_TSA_Spreadsheet_Jan25.zip")
+)
+
+## the 1999 data are visible, but downloads fail (404)
+lapply(data1999, function(x) {
+  tryCatch(
+    dl.data(x, dest = file.path(bc.data.dir, "1999")),
+    error = function(e) warning(e)
+  )
+})
+
+## the 2000 data are visible, but downloads fail (404)
+lapply(data2000, function(x) {
+  tryCatch(
+    dl.data(x, dest = file.path(bc.data.dir, "2000")),
+    error = function(e) warning(e)
+  )
+})
+for (i in 3:length(years)) {
+  tryCatch(
+    dl.data(data_zip[[i - 2]], dest = file.path(bc.data.dir, years[i]), unzip = TRUE),
+    error = function(e) warning(e)
+  )
+}
+```
+
+#### Standardize BC MPB data
+
+The BC data include more than just MPB attack, and the filenames etc. are not standardized, so we need to do some initial processing to make these datasets more script-friendly.
+We need to extract all the points/polygons that were damanged by mountian pine beetle (coded as `IBM`).
+
+```{r standardize-bc-data}
+bc_pnts <- list(
+#  file.path(bc.data.dir, "1999", ""),
+#  file.path(bc.data.dir, "2000", ""),
+  file.path(bc.data.dir, "2001", "PRV_SPOT.SHP"),
+  file.path(bc.data.dir, "2002", "prv_shape.shp"),
+  file.path(bc.data.dir, "2003", "SHAPE_FILES", "fhf_spot_2003.shp"),
+  file.path(bc.data.dir, "2004", "fhf_spot_2004.shp"),
+  file.path(bc.data.dir, "2005", "fhf_spot.shp"),
+  file.path(bc.data.dir, "2006", "fhf_spot.shp"),
+  file.path(bc.data.dir, "2007", "MPB_only", "2007_prov_fhf_spot_IBM_only_final.shp"),
+  file.path(bc.data.dir, "2008", "2008_BC_overview_spot.shp"),
+  file.path(bc.data.dir, "2009", "fhf_spot.shp"),
+  file.path(bc.data.dir, "2010", "2010_fhf_spot.shp"),
+  file.path(bc.data.dir, "2011", "fhf_spot_2011.shp"),
+  file.path(bc.data.dir, "2012", "FHF_SPOT_2012.shp"),
+  file.path(bc.data.dir, "2013", "FHF_2013_Spot.shp"),
+  file.path(bc.data.dir, "2014", "FHF_SPOT_2014.shp"),
+  file.path(bc.data.dir, "2015", "FHF_Spot_2015.shp"),
+  file.path(bc.data.dir, "2016", "FHF_Spot_2016.shp")
+)
+
+bc_poly <- list(
+#  file.path(bc.data.dir, "1999", ""),
+#  file.path(bc.data.dir, "2000", ""),
+  file.path(bc.data.dir, "2001", "PRV_POLY.SHP"),
+  file.path(bc.data.dir, "2002", "prv_poly.shp"),
+  file.path(bc.data.dir, "2003", "SHAPE_FILES", "fhf_poly_2003.shp"),
+  file.path(bc.data.dir, "2004", "fhf_poly_2004.shp"),
+  file.path(bc.data.dir, "2005", "fhf_poly.shp"),
+  file.path(bc.data.dir, "2006", "fhf_poly.shp"),
+  file.path(bc.data.dir, "2007", "MPB_only", "2007_prov_fhf_poly_IBM_only_final.shp"),
+  file.path(bc.data.dir, "2008", "2008_BC_overview_polygon.shp"),
+  file.path(bc.data.dir, "2009", "fhf_poly.shp"),
+  file.path(bc.data.dir, "2010", "2010_fhf_poly.shp"),
+  file.path(bc.data.dir, "2011", "fhf_poly_2011.shp"),
+  file.path(bc.data.dir, "2012", "FHF_POLY_2012.shp"),
+  file.path(bc.data.dir, "2013", "FHF_2013_Poly.shp"),
+  file.path(bc.data.dir, "2014", "FHF_POLY_2014.shp"),
+  file.path(bc.data.dir, "2015", "FHF_Poly_2015.shp"),
+  file.path(bc.data.dir, "2016", "FHF_Poly_2016.shp")
+)
+
+output.dir <- file.path(maps.dir, "MPB", "province_BC_AMC")
+if (!dir.exists(output.dir)) dir.create(output.dir)
+
+## points data
+lapply(bc_pnts, function(f) {
+  suppressWarnings({
+    file.rename(extension(f, ".DBF"), extension(f, ".dbf"))
+    file.rename(extension(f, ".PRJ"), extension(f, ".prj"))
+    file.rename(extension(f, ".SHP"), extension(f, ".shp"))
+    file.rename(extension(f, ".SHX"), extension(f, ".shx"))
+  })
+  tmp <- shapefile(extension(f, ".shp"))
+  year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
+  year <- strsplit(f, "/")[[1]][year.id]
+  ids <- which(tmp$FHF == "IBM")
+  
+  if (!("FHF" %in% names(tmp))) {
+    warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
+  }
+
+  shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_spot_", year)),
+            overwrite = TRUE)
+})
+
+## polygons data
+lapply(bc_poly, function(f) {
+  suppressWarnings({
+    file.rename(extension(f, ".DBF"), extension(f, ".dbf"))
+    file.rename(extension(f, ".PRJ"), extension(f, ".prj"))
+    file.rename(extension(f, ".SHP"), extension(f, ".shp"))
+    file.rename(extension(f, ".SHX"), extension(f, ".shx"))
+  })
+  tmp <- shapefile(extension(f, ".shp"))
+  year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
+  year <- strsplit(f, "/")[[1]][year.id]
+  ids <- which(tmp$FHF == "IBM")
+
+  if (!("FHF" %in% names(tmp))) {
+    warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
+  }
+
+  shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_poly_", year)),
+            overwrite = TRUE)
+})
+```
+
+#### Import BC polygons data
+
+**NOTE:** Until we resolve how to handle point/polygon overlap, we are only using the BC polygons data.
 
 ```{r import-maps-polygons}
 if (isTRUE(._MAPS_USERAW_.)) {
@@ -257,8 +511,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
   }
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
   
-  bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "poly") 
-  bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]])) 
+  #bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC"), pattern = "poly")
+  bc.poly.files <- dir(path = file.path(maps.dir, "MPB", "province_BC_AMC"), pattern = "poly")
+  bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
     
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
     sfLibrary(magrittr)

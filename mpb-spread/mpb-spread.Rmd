@@ -218,7 +218,7 @@ summary(m2)
 
 ## Negative binomial regression
 
-```{r logistic-regression}
+```{r negbinom-regression}
 all2 <- cbind(b1, b4, data.frame(CLIMATE = rep(b2, length(years)), PINE = rep(b3, length(years))))
 
 ## create the model (aspatial)
