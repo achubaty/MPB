@@ -472,7 +472,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       file.rename(extension(f, ".SHX"), extension(f, ".shx"))
     })
     tmp <- shapefile(extension(f, ".shp"))
-    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
+    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb_2016") + 2
     year <- strsplit(f, "/")[[1]][year.id]
     ids <- which(tmp$FHF == "IBM")
     
@@ -493,7 +493,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       file.rename(extension(f, ".SHX"), extension(f, ".shx"))
     })
     tmp <- shapefile(extension(f, ".shp"))
-    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
+    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb_2016") + 2
     year <- strsplit(f, "/")[[1]][year.id]
     ids <- which(tmp$FHF == "IBM")
   
