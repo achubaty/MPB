@@ -47,6 +47,7 @@ suppressPackageStartupMessages({
   library(data.table)
   library(devtools)
   library(digest)
+  library(gdalUtils)
   library(magrittr)
   library(maps)
   library(mapdata)
@@ -106,7 +107,7 @@ stopifnot(all(dir.exists(c(fig.path, maps.dir, rdata.path, work.dir))))
 ._MAPS_REPROJ_. <- FALSE  ## reproject raw maps to `boreal`
 ._MAPS_MKRSTR_. <- FALSE  ## convert the maps to rasters
 
-._RES_MAPS_. <- 250       ## map resolution, in metres
+._RES_MAPS_. <- 250.0     ## map resolution, in metres
 ```
 
 \newpage
@@ -180,12 +181,19 @@ if (isTRUE(._MAPS_USERAW_.)) {
   boreal.west <- intersect(boreal, west.boreal) %>%
     gBuffer(., byid = TRUE, width = 0)
   
-  west.empty.raster <- raster(extent(west.boreal), resolution = ._RES_MAPS_.)
-  west.boreal.raster <- suppressWarnings(
-    rasterize(west.boreal, west.empty.raster,
-              filename = file.path(rdata.path, "west_boreal.grd"),
-              overwrite = TRUE)
-  )
+  shapefile(west.boreal, file.path(rdata.path, "west_boreal.shp"), overwrite = TRUE)
+  fout <- file.path(rdata.path, "west_boreal.tif")
+  gdal_rasterize(file.path(rdata.path, "west_boreal.shp"), dst_filename = fout,
+                 a = "OBJECTID", l = "west_boreal", tr = c(._RES_MAPS_., ._RES_MAPS_.))
+  west.boreal.raster <- raster(fout)
+  rm(fout)
+
+  # west.empty.raster <- raster(extent(west.boreal), resolution = ._RES_MAPS_.)
+  # west.boreal.raster <- suppressWarnings(
+  #   rasterize(west.boreal, west.empty.raster,
+  #             filename = file.path(rdata.path, "west_boreal.grd"),
+  #             overwrite = TRUE)
+  # )
   
   ### Save these new map objects for later use
   objects2save <- c("boreal", "boreal.can", "boreal.west",
@@ -195,7 +203,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   saveObjects(objects2save, rdata.path)
   rm(list = objects2save)
   rm(objects2save)
-  .cleanup()
+  .gc()
 }
 ```
 
@@ -331,7 +339,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   
   ## cleanup workspace
   rm(ab.pnts.dir.shp, ab.pnts.files, ab.pnts.boreal.raster.stack, west.boreal.raster)
-  .cleanup()
+  .gc()
   unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
 ```
@@ -572,7 +580,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   
   # clean up workspace 
   rm(bc.poly.dir.shp, bc.poly.files) 
-  .cleanup()
+  .gc()
   unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
 ```
@@ -638,7 +646,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
 
   ## cleanup workspace
   rm(bcab.boreal.raster.brick, bcab.boreal.raster.stack)
-  .cleanup()
+  .gc()
   unlink(rasterOptions()$tmpdir, recursive = TRUE)
 }
 ```
@@ -754,5 +762,5 @@ plot(ts.rts, col = c("white", colours)) # this is a *garbage* way to plot a TS
 
 saveObjects(c("brick.latlon", "ts.kml", "ts.rts"), rdata.path)
 rm(bcab.boreal.raster.brick, brick.latlon, ts.kml, ts.rts, west.boreal)
-.cleanup()
+.gc()
 ```
