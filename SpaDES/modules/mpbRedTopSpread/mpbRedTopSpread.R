@@ -119,18 +119,21 @@ mpbRedTopSpreadDispersal <- function(sim) {
   ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
   MAXTREES <- round(1125 * (res(sim$massAttacksMap) / 100) ^ 2)
   
+  r <- r <- sim$massAttacksMap[[paste0("X", start(sim))]]
+  loci <- sim$massAttacksDT$ID
+  
   ## asymmetric spread (biased eastward)
-  out <- spread2(a, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
+  out <- spread2(r, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
                  circle = TRUE,
-                 asymmetry = P(sim)$mpbRedTopSpread$asymmetry,
-                 asymmetryAngle = P(sim)$mpbRedTopSpread$asymmetryAngle,
+                 asymmetry = P(sim)$asymmetry,
+                 asymmetryAngle = P(sim)$asymmetryAngle,
                  returnDistances = TRUE, returnFrom = TRUE)
   set(out, , "abundanceActive", MAXTREES)
   set(out, , "abundanceSettled", 0)
   
   done <- FALSE
   while (!done) {
-    out <- spread2(a, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
+    out <- spread2(r, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
                    circle = TRUE, returnDistances = TRUE, returnFrom = TRUE)
     set(out, , "order", seq_len(NROW(out)))
     attribs <- attr(out, "spreadState")
@@ -143,12 +146,12 @@ mpbRedTopSpreadDispersal <- function(sim) {
     
     outWLag1B[, abundanceSettled := pmin(
       MAXTREES,
-      round(pine[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda) *
+      round(sim$massAttacksDT$PROPPINE[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda) *
               i.abundanceActive / (.N))
     ), by = "from"]
     outWLag1B[, abundanceActive := pmin(
       MAXTREES,
-      round((1 - pine[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda)) *
+      round((1 - sim$massAttacksDT$PROPPINE[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda)) *
               i.abundanceActive / (.N))
     ), by = "from"]
     set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)
