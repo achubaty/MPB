@@ -57,6 +57,7 @@ suppressPackageStartupMessages({
   library(rgeos)
   library(rts)
   library(shapefiles)
+  library(stringr)
   library(snowfall)
   library(spatstat)
   library(RColorBrewer)
@@ -217,7 +218,8 @@ if (isTRUE(._MAPS_USERAW_.)) {
 
 ```{r standardize-ab-data}
 ## GDAL can only open GDB files on Windows
-if ((._OS_. == "Windows") && (NROW(subset(ogrDrivers(), grepl("GDB", name)))) > 0) {
+if (isTRUE(._MAPS_USERAW_.) && (._OS_. == "Windows") &&
+    (NROW(subset(ogrDrivers(), grepl("GDB", name))) > 0)) {
   f <- file.path(maps.dir, "MPB/MPB_AERIAL_SURVEY.gdb")
   stopifnot(file.exists(f))
   
@@ -233,7 +235,7 @@ if ((._OS_. == "Windows") && (NROW(subset(ogrDrivers(), grepl("GDB", name)))) > 
   layers <- structure( vector("list", length(years)) , names = years)
   i <- 1
   lapply(fc_list, function(x) {
-    fc <- readOGR(dsn = file, layer = x)
+    fc <- readOGR(dsn = f, layer = x)
     layers[[i]] <<- fc
     i <<- i + 1
   })
@@ -259,15 +261,16 @@ if ((._OS_. == "Windows") && (NROW(subset(ogrDrivers(), grepl("GDB", name)))) > 
   ## save to shapefiles
   output.dir <- file.path(maps.dir, "MPB", "ab_mpb_2016")
   if (!dir.exists(output.dir)) dir.create(output.dir)
+  
   lapply(ab_pnts, function(x) {
-    year <- names(x) ## IS THIS CORRECT??
-    f <- filepath(output.dir, paste0("ab_mpb_", year, "spot.shp"))
+    year <- max(unique(c(x$BEETLE_YR, x$SURVYEAR, x$SURV_YEAR, x$survyear)), na.rm = TRUE)
+    f <- file.path(output.dir, paste0("ab_mpb_", year, "spot.shp"))
     shapefile(x, filename = f, overwrite = TRUE)
   })
   lapply(ab_poly, function(x) {
-    year <- names(x) ## IS THIS CORRECT??
-    f <- filepath(output.dir, paste0("ab_mpb_", year, "poly.shp"))
-    shapefile(x, filename = f, overwrite = TRUE)
+    year <- max(unique(c(x$SURVYEAR, x$Survyear)), na.rm = TRUE)
+    f <- file.path(output.dir, paste0("ab_mpb_", year, "poly.shp"))
+    shapefile(x, filename = f, overwrite = TRUE) ## throws warnings about field widths
   })
 }
 ```
@@ -338,8 +341,9 @@ if (isTRUE(._MAPS_USERAW_.)) {
 #### Download all BC MPB data
 
 ```{r download-bc-mpb}
-bc.data.dir <- file.path(maps.dir, "MPB", "bc_mpb")
+bc.data.dir <- file.path(maps.dir, "MPB", "bc_mpb_2016", "raw_data")
 years <- as.character(1999:2016)
+
 if (!dir.exists(bc.data.dir)) {
   sapply(file.path(bc.data.dir, years), dir.create, recursive = TRUE)
 }
@@ -397,9 +401,11 @@ lapply(data2000, function(x) {
     error = function(e) warning(e)
   )
 })
-for (i in 3:length(years)) {
+
+years <- years[-(1:2)] ## TEMPORARY: omit 1999 and 2000 due to missing data
+for (i in 1:length(years)) {
   tryCatch(
-    dl.data(data_zip[[i - 2]], dest = file.path(bc.data.dir, years[i]), unzip = TRUE),
+    dl.data(data_zip[[i]], dest = file.path(bc.data.dir, years[i]), unzip = TRUE),
     error = function(e) warning(e)
   )
 }
@@ -411,92 +417,94 @@ The BC data include more than just MPB attack, and the filenames etc. are not st
 We need to extract all the points/polygons that were damanged by mountian pine beetle (coded as `IBM`).
 
 ```{r standardize-bc-data}
-bc_pnts <- list(
-#  file.path(bc.data.dir, "1999", ""),
-#  file.path(bc.data.dir, "2000", ""),
-  file.path(bc.data.dir, "2001", "PRV_SPOT.SHP"),
-  file.path(bc.data.dir, "2002", "prv_shape.shp"),
-  file.path(bc.data.dir, "2003", "SHAPE_FILES", "fhf_spot_2003.shp"),
-  file.path(bc.data.dir, "2004", "fhf_spot_2004.shp"),
-  file.path(bc.data.dir, "2005", "fhf_spot.shp"),
-  file.path(bc.data.dir, "2006", "fhf_spot.shp"),
-  file.path(bc.data.dir, "2007", "MPB_only", "2007_prov_fhf_spot_IBM_only_final.shp"),
-  file.path(bc.data.dir, "2008", "2008_BC_overview_spot.shp"),
-  file.path(bc.data.dir, "2009", "fhf_spot.shp"),
-  file.path(bc.data.dir, "2010", "2010_fhf_spot.shp"),
-  file.path(bc.data.dir, "2011", "fhf_spot_2011.shp"),
-  file.path(bc.data.dir, "2012", "FHF_SPOT_2012.shp"),
-  file.path(bc.data.dir, "2013", "FHF_2013_Spot.shp"),
-  file.path(bc.data.dir, "2014", "FHF_SPOT_2014.shp"),
-  file.path(bc.data.dir, "2015", "FHF_Spot_2015.shp"),
-  file.path(bc.data.dir, "2016", "FHF_Spot_2016.shp")
-)
-
-bc_poly <- list(
-#  file.path(bc.data.dir, "1999", ""),
-#  file.path(bc.data.dir, "2000", ""),
-  file.path(bc.data.dir, "2001", "PRV_POLY.SHP"),
-  file.path(bc.data.dir, "2002", "prv_poly.shp"),
-  file.path(bc.data.dir, "2003", "SHAPE_FILES", "fhf_poly_2003.shp"),
-  file.path(bc.data.dir, "2004", "fhf_poly_2004.shp"),
-  file.path(bc.data.dir, "2005", "fhf_poly.shp"),
-  file.path(bc.data.dir, "2006", "fhf_poly.shp"),
-  file.path(bc.data.dir, "2007", "MPB_only", "2007_prov_fhf_poly_IBM_only_final.shp"),
-  file.path(bc.data.dir, "2008", "2008_BC_overview_polygon.shp"),
-  file.path(bc.data.dir, "2009", "fhf_poly.shp"),
-  file.path(bc.data.dir, "2010", "2010_fhf_poly.shp"),
-  file.path(bc.data.dir, "2011", "fhf_poly_2011.shp"),
-  file.path(bc.data.dir, "2012", "FHF_POLY_2012.shp"),
-  file.path(bc.data.dir, "2013", "FHF_2013_Poly.shp"),
-  file.path(bc.data.dir, "2014", "FHF_POLY_2014.shp"),
-  file.path(bc.data.dir, "2015", "FHF_Poly_2015.shp"),
-  file.path(bc.data.dir, "2016", "FHF_Poly_2016.shp")
-)
-
-output.dir <- file.path(maps.dir, "MPB", "bc_mpb_2016")
-if (!dir.exists(output.dir)) dir.create(output.dir)
-
-## points data
-lapply(bc_pnts, function(f) {
-  suppressWarnings({
-    file.rename(extension(f, ".DBF"), extension(f, ".dbf"))
-    file.rename(extension(f, ".PRJ"), extension(f, ".prj"))
-    file.rename(extension(f, ".SHP"), extension(f, ".shp"))
-    file.rename(extension(f, ".SHX"), extension(f, ".shx"))
-  })
-  tmp <- shapefile(extension(f, ".shp"))
-  year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
-  year <- strsplit(f, "/")[[1]][year.id]
-  ids <- which(tmp$FHF == "IBM")
+if (isTRUE(._MAPS_USERAW_.)) {
+  bc_pnts <- list(
+  #  file.path(bc.data.dir, "1999", ""),
+  #  file.path(bc.data.dir, "2000", ""),
+    file.path(bc.data.dir, "2001", "PRV_SPOT.SHP"),
+    file.path(bc.data.dir, "2002", "prv_shape.shp"),
+    file.path(bc.data.dir, "2003", "SHAPE_FILES", "fhf_spot_2003.shp"),
+    file.path(bc.data.dir, "2004", "fhf_spot_2004.shp"),
+    file.path(bc.data.dir, "2005", "fhf_spot.shp"),
+    file.path(bc.data.dir, "2006", "fhf_spot.shp"),
+    file.path(bc.data.dir, "2007", "MPB_only", "2007_prov_fhf_spot_IBM_only_final.shp"),
+    file.path(bc.data.dir, "2008", "2008_BC_overview_spot.shp"),
+    file.path(bc.data.dir, "2009", "fhf_spot.shp"),
+    file.path(bc.data.dir, "2010", "2010_fhf_spot.shp"),
+    file.path(bc.data.dir, "2011", "fhf_spot_2011.shp"),
+    file.path(bc.data.dir, "2012", "FHF_SPOT_2012.shp"),
+    file.path(bc.data.dir, "2013", "FHF_2013_Spot.shp"),
+    file.path(bc.data.dir, "2014", "FHF_SPOT_2014.shp"),
+    file.path(bc.data.dir, "2015", "FHF_Spot_2015.shp"),
+    file.path(bc.data.dir, "2016", "FHF_Spot_2016.shp")
+  )
   
-  if (!("FHF" %in% names(tmp))) {
-    warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
-  }
-
-  shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_spot_", year)),
-            overwrite = TRUE)
-})
-
-## polygons data
-lapply(bc_poly, function(f) {
-  suppressWarnings({
-    file.rename(extension(f, ".DBF"), extension(f, ".dbf"))
-    file.rename(extension(f, ".PRJ"), extension(f, ".prj"))
-    file.rename(extension(f, ".SHP"), extension(f, ".shp"))
-    file.rename(extension(f, ".SHX"), extension(f, ".shx"))
+  bc_poly <- list(
+  #  file.path(bc.data.dir, "1999", ""),
+  #  file.path(bc.data.dir, "2000", ""),
+    file.path(bc.data.dir, "2001", "PRV_POLY.SHP"),
+    file.path(bc.data.dir, "2002", "prv_poly.shp"),
+    file.path(bc.data.dir, "2003", "SHAPE_FILES", "fhf_poly_2003.shp"),
+    file.path(bc.data.dir, "2004", "fhf_poly_2004.shp"),
+    file.path(bc.data.dir, "2005", "fhf_poly.shp"),
+    file.path(bc.data.dir, "2006", "fhf_poly.shp"),
+    file.path(bc.data.dir, "2007", "MPB_only", "2007_prov_fhf_poly_IBM_only_final.shp"),
+    file.path(bc.data.dir, "2008", "2008_BC_overview_polygon.shp"),
+    file.path(bc.data.dir, "2009", "fhf_poly.shp"),
+    file.path(bc.data.dir, "2010", "2010_fhf_poly.shp"),
+    file.path(bc.data.dir, "2011", "fhf_poly_2011.shp"),
+    file.path(bc.data.dir, "2012", "FHF_POLY_2012.shp"),
+    file.path(bc.data.dir, "2013", "FHF_2013_Poly.shp"),
+    file.path(bc.data.dir, "2014", "FHF_POLY_2014.shp"),
+    file.path(bc.data.dir, "2015", "FHF_Poly_2015.shp"),
+    file.path(bc.data.dir, "2016", "FHF_Poly_2016.shp")
+  )
+  
+  output.dir <- file.path(maps.dir, "MPB", "bc_mpb_2016")
+  if (!dir.exists(output.dir)) dir.create(output.dir)
+  
+  ## points data
+  lapply(bc_pnts, function(f) {
+    suppressWarnings({
+      file.rename(extension(f, ".DBF"), extension(f, ".dbf"))
+      file.rename(extension(f, ".PRJ"), extension(f, ".prj"))
+      file.rename(extension(f, ".SHP"), extension(f, ".shp"))
+      file.rename(extension(f, ".SHX"), extension(f, ".shx"))
+    })
+    tmp <- shapefile(extension(f, ".shp"))
+    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
+    year <- strsplit(f, "/")[[1]][year.id]
+    ids <- which(tmp$FHF == "IBM")
+    
+    if (!("FHF" %in% names(tmp))) {
+      warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
+    }
+  
+    shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_spot_", year)),
+              overwrite = TRUE)
   })
-  tmp <- shapefile(extension(f, ".shp"))
-  year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
-  year <- strsplit(f, "/")[[1]][year.id]
-  ids <- which(tmp$FHF == "IBM")
-
-  if (!("FHF" %in% names(tmp))) {
-    warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
-  }
-
-  shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_poly_", year)),
-            overwrite = TRUE)
-})
+  
+  ## polygons data
+  lapply(bc_poly, function(f) {
+    suppressWarnings({
+      file.rename(extension(f, ".DBF"), extension(f, ".dbf"))
+      file.rename(extension(f, ".PRJ"), extension(f, ".prj"))
+      file.rename(extension(f, ".SHP"), extension(f, ".shp"))
+      file.rename(extension(f, ".SHX"), extension(f, ".shx"))
+    })
+    tmp <- shapefile(extension(f, ".shp"))
+    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb") + 1
+    year <- strsplit(f, "/")[[1]][year.id]
+    ids <- which(tmp$FHF == "IBM")
+  
+    if (!("FHF" %in% names(tmp))) {
+      warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
+    }
+  
+    shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_poly_", year)),
+              overwrite = TRUE)
+  })
+}
 ```
 
 #### Import BC polygons data
