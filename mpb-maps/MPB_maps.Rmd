@@ -117,7 +117,7 @@ AB has intensive surveying strategy that covers the whole province, whereas BC u
 All data are reprojected to match the `boreal` projection and cropped to the study area (currently AB, BC, SK).
 When rasterizing, care must be taken to ensure points and polygon data are represented in each pixel at the same scale.
 Points data are summed for each pixel, whereas for polygons an average of 1125 stems/ha is used, weighted by the proportion of a pixel overlapped by the polygon.
-See @Cooke:2017ms foc more details.
+See @Cooke:2017fem for more details.
 
 **NOTE:** we have AB aerial survey (point) data up to 2016, but do not have the most recent BC polygon data, thus this file currently only makes use of data up to 2011.
 

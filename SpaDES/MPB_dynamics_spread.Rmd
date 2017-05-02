@@ -28,7 +28,7 @@ The goal of this model is to simulate the spread of mountain pine beetle outbrea
 ### `mpbMassAttacksData`
 
 This module imports the raw MPB red top attack data from AB and BC over several years.
-@Cooke:2017ms describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`.
+@Cooke:2017fem describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`.
 
 **NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).
 
@@ -139,7 +139,7 @@ The study area is the provinces of Alberta (AB), British Columbia (BC), and Sask
 
 ```{r define-study-area}
 ## load CRS for the boreal raster
-load(file.path(getOption("spades.modulePath"), "mpbRandomLandscapes", "data",
+load(file.path(getOption("spades.modulePath"), "mpbMassAttacksData", "data",
                "west.boreal.RData")) ## loads studyArea object (spdf)
 crs.boreal <- CRS(proj4string(studyArea))
 rm(studyArea)
