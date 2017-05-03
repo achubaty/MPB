@@ -303,16 +303,17 @@ if (isTRUE(._MAPS_USERAW_.)) {
   
   ## parallel processing of data
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
+    sfLibrary(amc)
     sfLibrary(magrittr)
     sfLibrary(raster)
     sfLibrary(rgdal)
     sfLibrary(rgeos)
     sfLibrary(sp)
-    sfExport("crs.boreal", "getOGR", "maps.dir", "rdata.path", "west.boreal.raster")
+    sfExport("crs.boreal", "maps.dir", "output.dir", "rdata.path", "west.boreal.raster")
     
     ## TO DO: implement caching
     ab.pnts.boreal.raster.stack <- sfClusterApplyLB(ab.pnts.dir.shp, function(shp) {
-      pnts <- getOGR(shp, dir = output.dir)
+      pnts <- getOGR(shp, output.dir)
       names(pnts) <- toupper(names(pnts))
       
       ## reproject
@@ -534,18 +535,19 @@ if (isTRUE(._MAPS_USERAW_.)) {
   bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
     
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
+    sfLibrary(amc)
     sfLibrary(magrittr)
     sfLibrary(raster)
     sfLibrary(rgdal)
     sfLibrary(rgeos)
     sfLibrary(sp)
-    sfExport("._RES_MAPS_.", "crs.boreal", "getOGR", "maps.dir", "rdata.path", "west.boreal.raster")
+    sfExport("._RES_MAPS_.", "crs.boreal", "maps.dir", "output.dir", "rdata.path", "west.boreal.raster")
     
     ## in parallel: load, reproject, and rasterize each of the bc polygons
     #  do as much as possible in a single step (don't save intermediate objects) to minimize RAM use.
     #  total RAM used can be controlled by adjusting the num.cpus used for processing.
     bc.poly.boreal.raster.stack <- sfClusterApplyLB(bc.poly.dir.shp, function(shp) {
-      poly.boreal <- getOGR(shp, dir = output.dir) %>% 
+      poly.boreal <- getOGR(shp, output.dir) %>% 
         ## reproject to boreal projection
         spTransform(., crs.boreal) %>%
         gBuffer(., byid = TRUE, width = 0)
