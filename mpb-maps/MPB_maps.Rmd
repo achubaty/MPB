@@ -304,6 +304,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   ## parallel processing of data
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
     sfLibrary(amc)
+    #sfLibrary(gdalUtils)
     sfLibrary(magrittr)
     sfLibrary(raster)
     sfLibrary(rgdal)
@@ -313,6 +314,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
     
     ## TO DO: implement caching
     ab.pnts.boreal.raster.stack <- sfClusterApplyLB(ab.pnts.dir.shp, function(shp) {
+      yr <- strsplit(shp, "_")[[1]][3] %>% substr(1, 4)
       pnts <- getOGR(shp, output.dir)
       names(pnts) <- toupper(names(pnts))
       
@@ -320,15 +322,18 @@ if (isTRUE(._MAPS_USERAW_.)) {
       ## TO DO: is this necessary?
       pnts.boreal <- spTransform(pnts, crs.boreal)
       stopifnot(gIsValid(pnts.boreal))
+      if (is.null(pnts.boreal@data$NUM_TREES)) {
+        warning("AB points data: missing 'NUM_TREES' for year ", yr, ".")
+      }
       
       ## rasterize
-      yr <- strsplit(shp, "_")[[1]][3] %>% substr(1, 4)
+      fout <- file.path(rdata.path, paste0("MPB_AB_pnts_", yr, ".tif"))
+      
+      # TO DO: can this be done using gdal_rasterize; how to do the 'fun = sum' piece?
       out <- rasterize(pnts.boreal, west.boreal.raster,
-                field = as.numeric(pnts.boreal@data$NUM_TREES), fun = "sum",
-                filename = file.path(rdata.path, paste0("MPB_AB_pnts_", yr, ".grd")),
-                overwrite = TRUE)
-      writeRaster(out, filename = file.path(rdata.path, paste0("MPB_AB_pnts_", yr, ".tif")),
-                  overwrite = TRUE)
+                       field = as.numeric(pnts.boreal@data$NUM_TREES), fun = "sum",
+                       filename = extension(fout, ".grd"), overwrite = TRUE)
+      writeRaster(out, filename = fout, overwrite = TRUE)
       return(out)
     }) %>%
       setNames(substr(sapply(strsplit(ab.pnts.dir.shp, "_"), function(x) x[[3]]), 1, 4)) %>%
