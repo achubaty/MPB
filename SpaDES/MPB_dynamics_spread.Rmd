@@ -30,8 +30,6 @@ The goal of this model is to simulate the spread of mountain pine beetle outbrea
 This module imports the raw MPB red top attack data from AB and BC over several years.
 @Cooke:2017fem describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`.
 
-**NOTE:** currently, only the data up to and including 2011 are being used, as more recent data for BC have not yet been acquired (we have AB aerial survey data up to and including 2016).
-
 ### `mpbClimateData`
 
 This module imports several MPB climate suitability scenarios (using four different indices: `S`, `L`, `R`, `G`) for use as model drivers.
