@@ -166,7 +166,7 @@ dataInfoUI <- function(id) {
           "The Logan suitability index (`L`) is based on summer temperatures (Logan et al. 2003).",
           "The Regniere suitability index (`R`) is based on MPB cold tolerance (i.e., winter survival) (Regniere et al. 2007).",
           "The Safranyik suitability index (`S`) is based on aspects of both summer temperatures and winter survival (Safranyik et al. 1975).",
-          "Finally, the composite SLR index (`G`) takes the harmonic mean of the `S`, `L`, and `R` models.",
+          "Finally, the composite SLR index (`G`) takes the geometric mean of the `S`, `L`, and `R` models.",
           "These are described in further detail in Nealis et al. (2008 and 2014) and in their respective publications cited above."),
         p("BioSim was used to generate the maps (see Bentz et al. 2010; Logan et al. 2003; Safranyik et al. 2010)."),
 
