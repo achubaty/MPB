@@ -540,12 +540,12 @@ if (isTRUE(._MAPS_USERAW_.)) {
       gsub("[0-9][0-9][0-9][0-9][.]prj$", paste0(years.shp[id], ".prj"), prj[id])
     })
   
-    allPrjEqual <- suppressWarnings(sapply(pnts.prj, readLines)) %>%
+    allPrjEqual <- suppressWarnings(sapply(prj, readLines)) %>%
       unique() %>%
       length() %>%
       `==`(1)
     if (isTRUE(allPrjEqual)) {
-      lapply(missing.prj, function(f) file.copy(pnts.prj[1], f))
+      lapply(missing.prj, function(f) file.copy(prj[1], f))
     } else {
       warning("Not all points shapefiles use same projection!")
     }
