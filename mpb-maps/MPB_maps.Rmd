@@ -545,7 +545,10 @@ if (isTRUE(._MAPS_USERAW_.)) {
       length() %>%
       `==`(1)
     if (isTRUE(allPrjEqual)) {
-      lapply(missing.prj, function(f) file.copy(pnts.prj[1], f))
+      lapply(missing.prj, function(f) {
+        message("Creating missing projection file:\n  ", f)
+        file.copy(pnts.prj[1], f)
+      })
     } else {
       warning("Not all points shapefiles use same projection!")
     }
