@@ -486,7 +486,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       file.rename(extension(f, ".SHX"), extension(f, ".shx"))
     })
     tmp <- shapefile(extension(f, ".shp"))
-    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb_2016") + 2
+    year.id <- which(strsplit(f, "/")[[1]] == basename(output.dir)) + 2
     year <- strsplit(f, "/")[[1]][year.id]
     ids <- which(tmp$FHF == "IBM")
     
@@ -507,7 +507,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       file.rename(extension(f, ".SHX"), extension(f, ".shx"))
     })
     tmp <- shapefile(extension(f, ".shp"))
-    year.id <- which(strsplit(f, "/")[[1]] == "bc_mpb_2016") + 2
+    year.id <- which(strsplit(f, "/")[[1]] == basename(output.dir)) + 2
     year <- strsplit(f, "/")[[1]][year.id]
     ids <- which(tmp$FHF == "IBM")
   
@@ -518,6 +518,41 @@ if (isTRUE(._MAPS_USERAW_.)) {
     shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_poly_", year)),
               overwrite = TRUE)
   })
+  
+  ## ensure all shapefiles have projections
+  checkProjections <- function(type) {
+    if ((tolower(type) == "spot" || tolower(type) == "pnts")) {
+      type <- "spot"
+    } else if ((tolower(type) == "poly")) {
+      type <- "poly"
+    } else {
+      stop("invalid type.")
+    }
+    prj <- list.files(output.dir, pattern = ".prj", full.names = TRUE) %>%
+      grep(type, ., value = TRUE)
+    years.prj <- sapply(basename(prj), substr, 10, 13) %>% unname()
+    years.shp <- sapply(bc_pnts, function(f) {
+      year.id <- which(strsplit(f, "/")[[1]] == basename(output.dir)) + 2
+      strsplit(f, "/")[[1]][year.id]
+    })
+    ids <- which(!(years.shp %in% years.prj))
+    missing.prj <- sapply(ids, function(id) {
+      gsub("[0-9][0-9][0-9][0-9][.]prj$", paste0(years.shp[id], ".prj"), prj[id])
+    })
+  
+    allPrjEqual <- suppressWarnings(sapply(pnts.prj, readLines)) %>%
+      unique() %>%
+      length() %>%
+      `==`(1)
+    if (isTRUE(allPrjEqual)) {
+      lapply(missing.prj, function(f) file.copy(pnts.prj[1], f))
+    } else {
+      warning("Not all points shapefiles use same projection!")
+    }
+  }
+  
+  checkProjections("pnts")
+  checkProjections("poly")
 }
 ```
 
