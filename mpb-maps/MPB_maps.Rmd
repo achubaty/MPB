@@ -540,7 +540,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       gsub("[0-9][0-9][0-9][0-9][.]prj$", paste0(years.shp[id], ".prj"), prj[id])
     })
   
-    allPrjEqual <- suppressWarnings(sapply(pnts.prj, readLines)) %>%
+    allPrjEqual <- suppressWarnings(sapply(prj, readLines)) %>%
       unique() %>%
       length() %>%
       `==`(1)
