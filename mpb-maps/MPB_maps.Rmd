@@ -191,7 +191,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   # west.empty.raster <- raster(extent(west.boreal), resolution = ._RES_MAPS_.)
   # west.boreal.raster <- suppressWarnings(
   #   rasterize(west.boreal, west.empty.raster,
-  #             filename = file.path(rdata.path, "west_boreal.grd"),
+  #             filename = extension(fout, ".grd"),
   #             overwrite = TRUE)
   # )
   
@@ -641,7 +641,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   }
 
   ### combine bcab points and poly rasters from .tif files
-  files <- dir(rdata.path, pattern = ".tif", full.names = TRUE) %>% 
+  files <- dir(rdata.path, pattern = "[pnts|poly]_[0-9]{4}[.]tif", full.names = TRUE) %>% 
     grep("new", ., invert = TRUE, value = TRUE)
   
   yrs <- substr(basename(files), 13, 16)
@@ -669,12 +669,12 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     }) %>%
       setNames(sort(unique(yrs))) %>%
       stack() %>% 
-      writeRaster(filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2011.grd"),
+      writeRaster(filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2016.grd"),
                   overwrite = TRUE)
   sfStop()    
   
   writeRaster(bcab.boreal.raster.stack,
-              filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2011.tif"),
+              filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2016.tif"),
               overwrite = TRUE) ## TO DO: add options to compress raster depending on size
 
   ## also create a brick version
@@ -684,7 +684,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
     setNames(sort(unique(yrs)))
 
   writeRaster(bcab.boreal.raster.brick,
-              filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2001_brick.tif"),
+              filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2016_brick.tif"),
               overwrite = TRUE) ## TO DO: add options to compress raster depending on size
 
   saveObjects(c("bcab.boreal.raster.brick", "bcab.boreal.raster.stack"), rdata.path)
