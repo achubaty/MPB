@@ -3,11 +3,13 @@ if (tryCatch(packageVersion("amc") < "0.1.1.9000", error = function(x) TRUE)) {
   devtools::install_github("achubaty/amc")
 }
 
-if (tryCatch(packageVersion("SpaDES") < "1.3.1.9067", error = function(x) TRUE)) {
-  devtools::install_github("PredictiveEcology/SpaDES@development")
+if (tryCatch(packageVersion("SpaDES.core") < "0.1.0", error = function(x) TRUE)) {
+  devtools::install_github("PredictiveEcology/SpaDES.core")
 }
 
-devtools::install_github("PredictiveEcology/SpaDES.shiny@development")
+if (tryCatch(packageVersion("SpaDES.shiny") < "0.1.0", error = function(x) TRUE)) {
+  devtools::install_github("PredictiveEcology/SpaDES.shiny@development")
+}
 
 library(shiny)
 library(shinyBS)
@@ -17,7 +19,6 @@ library(shinyjs)
 library(sp)
 library(rgdal)
 library(raster)
-library(SpaDES) # loads quickPlot, reproducible, SpaDES.addins, SpaDES.core, SpaDES.shiny, SpaDES.tools
 library(leaflet)
 
 library(amc)
@@ -28,6 +29,12 @@ library(magrittr)
 library(markdown)
 library(parallel)
 library(RColorBrewer)
+
+library(quickPlot)
+library(reproducible)
+library(SpaDES.tools)
+library(SpaDES.core)
+library(SpaDES.shiny)
 
 raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 
