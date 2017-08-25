@@ -7,6 +7,8 @@ if (tryCatch(packageVersion("SpaDES") < "1.3.1.9067", error = function(x) TRUE))
   devtools::install_github("PredictiveEcology/SpaDES@development")
 }
 
+devtools::install_github("PredictiveEcology/SpaDES.shiny@development")
+
 library(shiny)
 library(shinyBS)
 library(shinydashboard)
@@ -15,7 +17,7 @@ library(shinyjs)
 library(sp)
 library(rgdal)
 library(raster)
-library(SpaDES)
+library(SpaDES) # loads quickPlot, reproducible, SpaDES.addins, SpaDES.core, SpaDES.shiny, SpaDES.tools
 library(leaflet)
 
 library(amc)
@@ -53,11 +55,11 @@ brk <- function() {
   paste0(paste0(rep("-", getOption("width")), collapse = ""), "\n")
 }
 
-source("footers.R")
+#source("footers.R")    # these functions now in SpaDES.shiny package
 source("inputMaps.R")
 source("leaflet.R")
-source("simInfo.R")
-source("simOutputs.R")
+#source("simInfo.R")    # these functions now in SpaDES.shiny package
+#source("simOutputs.R") # these functions now in SpaDES.shiny package
 
 ## ---- begin "for development use only"
 if (FALSE) {
@@ -71,6 +73,13 @@ if (FALSE) {
   unlink("cache", force = TRUE, recursive = TRUE)
 }
 ## ---- end "for development use only"
+
+copyrightInfo <- paste(
+  shiny::icon("copyright",  lib = "font-awesome"), "Copyright ",
+  format(Sys.time(), "%Y"),
+  paste("Her Majesty the Queen in Right of Canada,",
+        "as represented by the Minister of Natural Resources Canada.")
+)
 
 ## initialize app --------------------------------------------------------------
 message(brk(), "  initializing app [", Sys.time(), "]", "\n", brk())
