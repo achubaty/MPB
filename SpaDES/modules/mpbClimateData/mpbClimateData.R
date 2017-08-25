@@ -13,7 +13,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "mpbClimateData.Rmd"),
-  reqdPkgs = list("magrittr", "raster", "sp"),
+  reqdPkgs = list("magrittr", "quickPlot", "raster", "reproducible", "sp"),
   parameters = rbind(
     defineParameter("climateScenario", "character", "RCP45", NA_character_, NA_character_, "The climate scenario to use. One of RCP45 or RCP85."),
     defineParameter("suitabilityIndex", "character", "G", NA_character_, NA_character_, "The MPB climatic suitabilty index to use. One of S, L, R, or G."),

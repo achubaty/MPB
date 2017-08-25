@@ -16,7 +16,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("amc", "data.table", "raster", "RColorBrewer"),
+  reqdPkgs = list("amc", "data.table", "quickPlot", "raster", "RColorBrewer", "reproducible"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),

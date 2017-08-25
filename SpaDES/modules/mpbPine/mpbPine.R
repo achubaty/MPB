@@ -13,7 +13,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "mpbPine.Rmd"),
-  reqdPkgs = list("data.table", "magrittr", "raster", "sp"),
+  reqdPkgs = list("data.table", "magrittr", "quickPlot", "raster", "reproducible", "sp"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),

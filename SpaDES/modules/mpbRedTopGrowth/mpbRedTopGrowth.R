@@ -15,7 +15,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("data.table", "ggplot2", "raster"),
+  reqdPkgs = list("data.table", "ggplot2", "quickPlot", "raster", "reproducible"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
