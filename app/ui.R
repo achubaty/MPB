@@ -49,6 +49,6 @@ dashboardPage(skin = "green",
       )
     ),
 
-    copyrightFooter(copyrightInfo) ## defined in global.R
+    copyrightFooter(copyrightInfo)
   )
 )

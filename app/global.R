@@ -4,7 +4,7 @@ if (tryCatch(packageVersion("amc") < "0.1.1.9000", error = function(x) TRUE)) {
 }
 
 if (tryCatch(packageVersion("SpaDES.core") < "0.1.0", error = function(x) TRUE)) {
-  devtools::install_github("PredictiveEcology/SpaDES.core")
+  install.packages("SpaDES.core")
 }
 
 if (tryCatch(packageVersion("SpaDES.shiny") < "0.1.0", error = function(x) TRUE)) {
@@ -44,6 +44,18 @@ raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 
 ._POLYNUM_. <- 618  ## ecodistrict polygon number to use for demoArea
 
+## check that symlinked directories exist; if not, create them
+links <- file.path("~/GitHub/MPB/app", c("cache", "modules"))
+targets <- file.path("~/SpaDES", basename(links))
+stopifnot(length(links) == length(targets))
+
+for (i in 1:length(links)) {
+  if (Sys.readlink(links[i]) != normalizePath(targets[i])) {
+    file.symlink(links[i], targets[i])
+  }
+}
+
+## set simulation paths
 paths <- list(
   cachePath = "cache",    ## symlinked to ~/SpaDES/cache
   modulePath = "modules", ## symlinked to ~/GitHub/MPB/SpaDES/modules
@@ -73,7 +85,7 @@ if (FALSE) {
   ## These are all "dangerous"!
   ## in the sense that they should never be run inadvertently
   ## To rerun the spades initial call, delete the mySim object in the .GlobalEnv ##
-  SpaDES::clearCache(cacheRepo = "cache")
+  reproducible::clearCache(cacheRepo = "cache")
   rm(cl)
   file.remove(dir("outputs", recursive = TRUE, full.names = TRUE))
   unlink("outputs", force = TRUE)
@@ -82,7 +94,7 @@ if (FALSE) {
 ## ---- end "for development use only"
 
 copyrightInfo <- paste(
-  shiny::icon("copyright",  lib = "font-awesome"), "Copyright ",
+  shiny::icon("copyright",  lib = "font-awesome"), "Copyright",
   format(Sys.time(), "%Y"),
   paste("Her Majesty the Queen in Right of Canada,",
         "as represented by the Minister of Natural Resources Canada.")
