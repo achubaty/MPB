@@ -160,7 +160,7 @@ save(kNN_pine_map, file = file.path(kNN.dir, "kNN_pine_map.Rdata"))
 plot(kNN_pine)
 
 ## even better with rasterVis
-myTheme <- rasterTheme(region = brewer.pal('Greens', n = 9)[3:9])
+myTheme <- rasterTheme(region = brewer.pal("Greens", n = 9)[3:9])
 levelplot(kNN_pine, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
 ```
 
