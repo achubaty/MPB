@@ -1,5 +1,5 @@
 ## Boone et al. 2011 (Fig 2)
-BooneData <- read.csv("BooneCurveData2.csv")
+BooneData <- read.csv("growth-curves/BooneCurveData2.csv")
 
 str(BooneData)
 
@@ -85,30 +85,60 @@ fudge <- fudge2 + 0.3 # somewhat arbitrary;
                       # chosen so that the resulting curve passes 1 when flexed
 
 par(las = 1)
+xmin <- -2
+xmax <- 6
 
 # unweakened host defences (2004 fit)
-curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(x))), -2, 5,
+a <- 0.9
+curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(a * x))), xmin, xmax,
       col = "red", lwd = 3, ylim = c(-4, 2),
       main = "Allee effect of host defense strong",
       xlab = "log attack density(trees/ha/yr)",
       ylab = "log component recruitment")
-curve(fudge - 0.03 * exp(x), -2, 5, add = TRUE, col = "blue", lwd = 3, lty = 2)
-curve(fudge2 - 0.03 * exp(x), -2, 5, add = TRUE, col = "black", lwd = 2, lty = 1)
-curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(x))) + (fudge - 0.03 * exp(x)), -2, 5, add = TRUE,
+curve(fudge - 0.03 * exp(1 * x), xmin, xmax, add = TRUE, col = "darkgreen", lwd = 3, lty = 1)
+curve(fudge - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+
+## mortality from emmigration/dispersal
+# r: relative stocking value (0,1)
+# d: slope parameter [1,Inf)
+# s: scaling parameter (0,1)
+m_e <- function(r, d, s) {
+  s * exp(1 - d * r)
+}
+
+s <- 0.9
+d <- 3
+r <- seq(0.2, 1, 0.2)
+curve(fudge - m_e(r[1], d, s) - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2)
+curve(fudge - m_e(r[2], d, s) - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2)
+curve(fudge - m_e(r[3], d, s) - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2)
+curve(fudge - m_e(r[4], d, s) - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2)
+curve(fudge - m_e(r[5], d, s) - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2)
+
+## intensified competition via host removal (thinning)
+r <- seq(0.2, 1, 0.2)
+curve(fudge - 0.03 * exp(a * (x + r[1])), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+curve(fudge - 0.03 * exp(a * (x + r[2])), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+curve(fudge - 0.03 * exp(a * (x + r[3])), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+curve(fudge - 0.03 * exp(a * (x + r[4])), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+curve(fudge - 0.03 * exp(a * (x + r[5])), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+
+curve(fudge2 - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "black", lwd = 2, lty = 1)
+curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(a * x))) + (fudge - 0.03 * exp(x)), xmin, xmax, add = TRUE,
       col = "purple", lwd = 3, lty = 2)
 abline(h = 0)
 abline(v = 2)
 abline(v = 1.4, lwd = 2, lty = 1, col = "purple") ## needs to actually be the intersect
 
 # weakened host defenses (2003 fit)
-curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))), -2, 5,
+curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))), xmin, xmax,
       col = "red", lwd = 3, ylim = c(-4,2),
       main = "Allee effect of host defense weakened",
       xlab = "log attack density(trees/ha/yr)",
       ylab = "log component recruitment")
-curve(fudge - 0.03 * exp(x), -2, 5, add = TRUE, col = "blue", lwd = 3, lty = 2)
-curve(fudge2 - 0.03 * exp(x), -2, 5, add = TRUE, col = "black", lwd = 2, lty = 1)
-curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))) + (fudge - 0.03 * exp(x)), -2, 5, add = TRUE,
+curve(fudge - 0.03 * exp(x), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+curve(fudge2 - 0.03 * exp(x), xmin, xmax, add = TRUE, col = "black", lwd = 2, lty = 1)
+curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))) + (fudge - 0.03 * exp(x)), xmin, xmax, add = TRUE,
       col = "purple", lwd = 3, lty = 2)
 abline(h = 0)
 abline(v = 2)
