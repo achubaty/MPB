@@ -33,8 +33,8 @@ bibliography: bibliography.bib
 
 ## set R and knitr options
 if (isTRUE(._CFS_.)) {
-  options(repos = c(CRAN = "https://cran.rstudio.com/",
-                    NRCRAN = "http://132.156.148.93"))
+  options(repos = c(NRCRAN = "http://132.156.148.172",
+                    CRAN = "https://cran.rstudio.com/"))
 } else {
   options(repos = c(CRAN = "https://cran.rstudio.com/"))
 }
