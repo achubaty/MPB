@@ -1,7 +1,10 @@
 ---
 title: "Thoughts on modelling pine stem density"
-author: "Barry J. Cooke"
-date: "October 20, 2017"
+author:
+- "Barry J. Cooke"
+- "Alex M. Chubaty"
+date: "November 21, 2017"
+bibliography: bibliography.bib
 output: pdf_document
 ---
 
@@ -11,13 +14,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ***Originally from email attachment sent from Barry to Alex on October 20, 2017, following discussion of determining pine stem denisty from stand management diagrams during Alex's visit to GLFC.***
 
-Beaudoin et al. (2014) provide data on pine % and stand volume on 250m x 250m pixels.
-From this we can compute pine volumes, m3/ha.
+@Beaudoin:2014cf provide data on pine % and stand volume on 250m x 250m pixels.
+From this we can compute pine volumes, $m^3/ha$.
 They also provide ages of leading species.
 In mixed landscapes such as the boreal plains, pine is a low % of the volume and rarely leads, so stand age and pine volume will be – we assume – somewhat independent of one another.
 To the extent that stand age is determined by time-since-fire, then homogenous ages across species within stands means that stand age might correlate better with pine age.
 Can we therefore use pine volume and stand age to derive stems per hectare? The reason we want stems/ha is so that we can cause MPB, in a red-top model, to subtract stems from the landscape.
-(MPB don’t remove xylem volume; they kill stems.) Stem density, however, is a function of age, and changed dynamically as a product of self-thinning over time.
+(MPB don’t remove xylem volume; they kill stems.)
+Stem density, however, is a function of age, and changed dynamically as a product of self-thinning over time.
 (This underlies the principle of stand management diagrams.) As pure stands of pine self-thin the growing space created allows diameter increments to rise.
 So diameter growth is not a smooth function of age, but, rather, punctuated.
 Height growth, in contrast, is less stymied by crown closure, so is a smoother function of stem/stand age.
@@ -55,4 +59,9 @@ We don’t to dismiss this possibility in the mid-term; we do want to focus on s
 
 We evaluated some materials from Rich Fleming regarding these ideas.
 We will check in with Peter Newton as to the appropriateness (cost/limitations) of our proposed approach.
- It may be overly simplistic, but it may be "good enough".
+It may be overly simplistic, but it may be "good enough".
+
+See also @Nunifu:2009cf.
+
+# References
+
