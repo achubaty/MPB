@@ -29,6 +29,7 @@ library(httr)
 library(magrittr)
 library(raster)
 library(rasterVis)
+library(RCurl)
 
 if (!require(amc) || packageVersion("amc") < "0.1.2.9000") {
   devtools::install_github("achubaty/amc@development")
@@ -125,7 +126,7 @@ if (isTRUE(download.data)) {
   docFiles <- c("NFI_and_kNN_Mapping_20160628.docx",
                 "FR_NFI_and_kNN_Mapping_20160628.docx",
                 "cjfr-2013-0401suppl.pdf")
-  dataFiles <- c("kNN-Species.tar", ## percent pine layers
+  dataFiles <- c("kNN-Species.tar",              ## percent pine layers
                  "kNN-StructureStandVolume.tar") ## age & total volume layers
 
   dl.data(paste0(url, c(docFiles, dataFiles)), kNN.dir)
