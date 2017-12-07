@@ -3,7 +3,7 @@
 # mountain pine beetle in natural and thinned forests. 
 #
 # This file contains the code necessary to reproduce our analysis and construct figures 2 and 3 (note the 
-# publication version of Figures 2 and 3 were touched up a bit in Inscape prior to publication. Currently, 
+# publication version of Figures 2 and 3 were touched up a bit in Inkscape prior to publication. Currently, 
 # the lattice package does not make it easy to add supplemental text to the panels, so I added the 
 # figure identification labels (a,b,c, etc...) and the asterisks (*) to Figure 3 by hand.
 #                                  

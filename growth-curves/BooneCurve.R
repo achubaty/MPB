@@ -96,7 +96,7 @@ curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(a * x))), xmi
       xlab = "log attack density(trees/ha/yr)",
       ylab = "log component recruitment")
 curve(fudge - 0.03 * exp(1 * x), xmin, xmax, add = TRUE, col = "darkgreen", lwd = 3, lty = 1)
-curve(fudge - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
+curve(fudge - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 1)
 
 ## mortality from emmigration/dispersal
 # r: relative stocking value (0,1)
@@ -124,8 +124,8 @@ curve(fudge - 0.03 * exp(a * (x + r[4])), xmin, xmax, add = TRUE, col = "blue", 
 curve(fudge - 0.03 * exp(a * (x + r[5])), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
 
 curve(fudge2 - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "black", lwd = 2, lty = 1)
-curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(a * x))) + (fudge - 0.03 * exp(x)), xmin, xmax, add = TRUE,
-      col = "purple", lwd = 3, lty = 2)
+curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(a * x))) +
+        (fudge - 0.03 * exp(a * x)), xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2)
 abline(h = 0)
 abline(v = 2)
 abline(v = 1.4, lwd = 2, lty = 1, col = "purple") ## needs to actually be the intersect
@@ -138,7 +138,8 @@ curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))), xmin, x
       ylab = "log component recruitment")
 curve(fudge - 0.03 * exp(x), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 2)
 curve(fudge2 - 0.03 * exp(x), xmin, xmax, add = TRUE, col = "black", lwd = 2, lty = 1)
-curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))) + (fudge - 0.03 * exp(x)), xmin, xmax, add = TRUE,
+curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))) +
+        (fudge - 0.03 * exp(x)), xmin, xmax, add = TRUE,
       col = "purple", lwd = 3, lty = 2)
 abline(h = 0)
 abline(v = 2)
