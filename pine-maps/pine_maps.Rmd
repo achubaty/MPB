@@ -1,7 +1,7 @@
 ---
 title: "Pine maps"
 author: "Alex Chubaty"
-date: "October 18, 2017"
+date: "November 24, 2017"
 output: pdf_document
 bibliography: bibliography.bib
 editor_options: 
@@ -17,7 +17,7 @@ editor_options:
 ## set R and knitr options
 if (isTRUE(._CFS_.)) {
   options(repos = c(CRAN = "https://cran.rstudio.com/",
-                    NRCRAN = "http://132.156.148.93"))
+                    NRCRAN = "http://132.156.148.172"))
 } else {
   options(repos = c(CRAN = "https://cran.rstudio.com/"))
 }
@@ -29,6 +29,7 @@ library(httr)
 library(magrittr)
 library(raster)
 library(rasterVis)
+library(RCurl)
 
 if (!require(amc) || packageVersion("amc") < "0.1.2.9000") {
   devtools::install_github("achubaty/amc@development")
@@ -125,50 +126,64 @@ if (isTRUE(download.data)) {
   docFiles <- c("NFI_and_kNN_Mapping_20160628.docx",
                 "FR_NFI_and_kNN_Mapping_20160628.docx",
                 "cjfr-2013-0401suppl.pdf")
-  dataFiles <- c("kNN-Species.tar", ## percent pine layers
+  dataFiles <- c("kNN-Species.tar",              ## percent pine layers
                  "kNN-StructureStandVolume.tar") ## age & total volume layers
 
   dl.data(paste0(url, c(docFiles, dataFiles)), kNN.dir)
 
   ## percent pine layers
-  destDir <- file.path("kNN-Species", kNN.dir)
+  destDir <- file.path(kNN.dir, "kNN-Species")
+  if (!dir.exists(destDir)) dir.create(destDir)
+  
   untar(file.path(kNN.dir, dataFiles[1]),
         files = c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip",
                   "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip"),
-        exdir = destDir)
-  unzip(file.path(destDir, "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip"),
-        exdir = file.path("kNN-Species", kNN.dir))
-  unzip(file.path(destDir, "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip"), exdir = kNN.dir)
+        exdir = path.expand(destDir))
+  
+  zipFile <- file.path(destDir, "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip")
+  destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
+  unzip(zipFile, exdir = destDir2)
+  
+  zipFile <- file.path(destDir, "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip")
+  destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
+  unzip(zipFile, exdir = destDir2)
   
   ## age & total volume layers
-  destDir <- file.path("kNN-StructureStandVolume", kNN.dir)
+  destDir <- file.path(kNN.dir, "kNN-StructureStandVolume")
+  if (!dir.exists(destDir)) dir.create(destDir)
+  
   untar(file.path(kNN.dir, dataFiles[2]),
         files = c("NFI_MODIS250m_kNN_Structure_Stand_Age_v0.zip",
                   "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.zip"),
-        exdir = outDir)
-  unzip(file.path(destDir, "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.zip"), exdir = destDir)
-  unzip(file.path(destDir, "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.zip"), exdir = destDir)
+        exdir = path.expand(destDir))
+  
+  zipFile <- file.path(destDir, "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.zip")
+  destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
+  unzip(zipFile, exdir = destDir2)
+  
+  zipFile <- file.path(destDir, "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.zip")
+  destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
+  unzip(zipFile, exdir = destDir2)
 }
 ```
 
 ### Percent pine (%)
 
 ```{r knn-raster-percentPine}
-files <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
-                   "kNN-Species",
+files <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"), "kNN-Species",
+                   c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0",
+                     "NFI_MODIS250m_kNN_Species_Pinu_Con_v0"),
                    c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
                      "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
+stopifnot(file.exists(files))
 
 kNN_percentPine <- stack(x = files) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
 
-### Merge the jack pine and lodgepole pine layers
-# The Yemshanov map has both pine species combined in the same layer,
-# so we should do the same here.
-kNN_percentPine_map <- mosaic(kNN_percentPine[[1]], kNN_percentPine[[2]], fun = sum) %>% 
-  setNames("Lodgepole_and_Jack_Pine")
-
-writeRaster(kNN_percentPine_map, filename = file.path(kNN.dir, "kNN_percentPine_map.tif"))
-save(kNN_percentPine_map, file = file.path(kNN.dir, "kNN_percentPine_map.Rdata"))
+save(kNN_percentPine, file = file.path(kNN.dir, "kNN_percentPine.Rdata"))
+writeRaster(kNN_percentPine, filename = file.path(kNN.dir, "kNN_percentPine.tif"), overwrite = TRUE)
+file.copy(file.path(kNN.dir, "kNN_percentPine.Rdata"),
+          "~/Documents/GitHub/MPB/SpaDES/modules/mpbPine/data/kNN_pine_map.tif",
+          overwrite = TRUE)
 ```
 
 ```{r knn-plot-percentPine}
@@ -185,14 +200,19 @@ levelplot(kNN_percentPine, margin = list(median), maxpixels = 1e6, par.settings 
 ```{r knn-raster-volumePine}
 f <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
                "kNN-StructureStandVolume",
+               "NFI_MODIS250m_kNN_Structure_Volume_Total_v0",
                "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.tif")
+stopifnot(file.exists(f))
 
 kNN_volumeTotal <- raster(f) %>% setNames("Volume_Total")
 save(kNN_volumeTotal, file = file.path(kNN.dir, "kNN_volumeTotal.Rdata"))
 
-kNN_volumePine <- kNN_percentPine * kNN_volumeTotal / 100
+kNN_volumePine <- kNN_percentPine
+kNN_volumePine[[1]] <- kNN_percentPine[[1]] * kNN_volumeTotal / 100 # Jack_Pine
+kNN_volumePine[[2]] <- kNN_percentPine[[2]] * kNN_volumeTotal / 100 # Lodgepole_Pine
 names(kNN_volumePine) <- names(kNN_percentPine)
 save(kNN_volumePine, file = file.path(kNN.dir, "kNN_volumePine.Rdata"))
+writeRaster(kNN_volumePine, filename = file.path(kNN.dir, "kNN_volumePine.tif"))
 ```
 
 ```{r knn-plot-volumePine}
@@ -211,7 +231,9 @@ levelplot(kNN_volumePine, margin = list(median), maxpixels = 1e6, par.settings =
 ```{r knn-raster-standAge}
 f <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
                "kNN-StructureStandVolume",
+               "NFI_MODIS250m_kNN_Structure_Stand_Age_v0",
                "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.tif")
+stopifnot(file.exists(f))
 
 kNN_standAge <- raster(f) %>% setNames("Stand_Age")
 save(kNN_standAge, file = file.path(kNN.dir, "kNN_standAge.Rdata"))
@@ -224,6 +246,12 @@ plot(kNN_standAge)
 ## even better with rasterVis
 myTheme2 <- rasterTheme(region = brewer.pal("Blues", n = 9))
 levelplot(kNN_standAge, margin = list(median), maxpixels = 1e6, par.settings = myTheme2)
+```
+
+### Other data sources
+
+```
+Kyle Lochhead; Valerie LeMay; Gary Bull; Olaf Schwab; James Halperin, 2017-07-26, "Multivariate maps of forest attributes for management units in Canada's boreal forest", http://hdl.handle.net/11272/10515 V2 [Version]
 ```
 
 # References

@@ -1,0 +1,67 @@
+---
+title: "Thoughts on modelling pine stem density"
+author:
+- "Barry J. Cooke"
+- "Alex M. Chubaty"
+date: "November 21, 2017"
+bibliography: bibliography.bib
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***Originally from email attachment sent from Barry to Alex on October 20, 2017, following discussion of determining pine stem denisty from stand management diagrams during Alex's visit to GLFC.***
+
+@Beaudoin:2014cf provide data on pine % and stand volume on 250m x 250m pixels.
+From this we can compute pine volumes, $m^3/ha$.
+They also provide ages of leading species.
+In mixed landscapes such as the boreal plains, pine is a low % of the volume and rarely leads, so stand age and pine volume will be – we assume – somewhat independent of one another.
+To the extent that stand age is determined by time-since-fire, then homogenous ages across species within stands means that stand age might correlate better with pine age.
+Can we therefore use pine volume and stand age to derive stems per hectare? The reason we want stems/ha is so that we can cause MPB, in a red-top model, to subtract stems from the landscape.
+(MPB don't remove xylem volume; they kill stems.)
+Stem density, however, is a function of age, and changed dynamically as a product of self-thinning over time.
+(This underlies the principle of stand management diagrams.) As pure stands of pine self-thin the growing space created allows diameter increments to rise.
+So diameter growth is not a smooth function of age, but, rather, punctuated.
+Height growth, in contrast, is less stymied by crown closure, so is a smoother function of stem/stand age.
+A critical determinant of the intensity of self-thinning is site richness, which includes soil texture, soil depth and soil moisture – a fact which underlies the "site productivity index" concept.
+We may have maps of stand volumes and leading-species ages, but we do not have corresponding maps of site quality.
+And we don't know diameters and heights, (also these are somewhat correlated and may be inferred from stem volumes).
+Given the multi-determined nature of volume growth over time, and accumulated volume over space, we lack the necessary inputs to inferentially calculate (with accuracy) stem densities.
+Thus these will have to be estimated, and rather crudely.
+While age is a coarse determinant of stem and stand volume over time (and space) it is a stronger determinant in early life (age 0-60) than later in life (60-160) [reference needed].
+Given we are talking about a landscape that is dominated by mature forests (except where they've burned recently), age may be a rather poor predictor of volume, and a rather weak variable for making inferences about stem densities.
+Given all this imprecision, it is perhaps just as meritorious to compute average/expected stem density in (250m)^2 cells by dividing cell/stand volume by mean per-stem volume.
+So 80m3/ha, with average tree volumes of 0.4 m^3/stem represents a mean stem density of 200 (pine) stems per hectare (with the rest of the volume being non-pine; hence the well-below average stocking of 1125 stems/ha).
+This is crude.
+More precision can come from the use of SDMDs (especially if there are better data on ages and site qualities), but at some cost.
+In the boreal plains region (where we are modeling MPB invasive spread) we expect site qualities don't vary nearly as much as in the rockier geography of BC and Quebec [reference needed].
+
+More advanced approaches have been contemplated, for example, making use of TIPSY/TASS inspired yield projections.
+In fact Allan and Barry noted that TIPSY and SORTIE-BC produce very different age distributions even for pure lodgepole stands originating post-fire.
+The SORTIE approach retained a much larger cohort of suppressed trees in the endemic niche that could harbor endemic populations of MPB.
+In contrast, such a large suppressed class is not simulated in TIPSY (because of its focus on commercial merchantability).
+
+Eastern researchers (*e.g.*, Candau, Fleming) began researching these aspects in 2009-11, but well after Allan and Barry had considered them in 2008, and realized that long-term forecasting would require linking with well-parameterized grown and succession models that were beyond our interest/ability to program de novo.
+And why re-invent the wheel?
+C&F concluded Peter Newton on how to approach this issue for jack pine (building from experience in the lodgepole system).
+At the time, many of us expected and hoped significant funding for MPB in jack pine would materialize.
+However after 2011 that never happened.
+Therefore work on beetle-succession modeling stagnated.
+
+For long-run forecasting of eruptive behaviour in mixed-age (mixed-cohort) forests (with endemic niche plus epidemic niche) or for determining the efficacy of stand "sanitation" it would be valuable to re-visit these earlier ideas.
+But for the purposes of invasive spread modeling in the AB-SK border region all this may be overkill for our modest objective of evaluating eruptive potential in the short-run, as determined by spatial variations in forest attributes and microclimate, and effort put into attack-cluster spot detection and removal (given continual immigration).
+These are going to be the primary determinants of eruptive potential in the next few decades, not endemic niche characterization – especially when "sanitation" is not even remotely considered as a practical stand management tactic.
+
+One caveat here is the high abundance of mistletoe-infected pine in AB/SK, which, unburned, could represent a massive endemic niche.
+We don't to dismiss this possibility in the mid-term; we do want to focus on simpler scenarios in the immediate term.
+
+We evaluated some materials from Rich Fleming regarding these ideas.
+We will check in with Peter Newton as to the appropriateness (cost/limitations) of our proposed approach.
+It may be overly simplistic, but it may be "good enough".
+
+See also @Nunifu:2009cf.
+
+# References
+

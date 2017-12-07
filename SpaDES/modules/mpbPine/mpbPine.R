@@ -78,28 +78,14 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
 mpbPineImportMap <- function(sim) {
   layerName <- "Lodgepole_and_Jack_Pine"
   
-  if (isTRUE(P(sim)$lowMemory)) {
-    ## load the pre-computed raster instead of doing RAM-intensive GIS
-    f <- file.path(modulePath(sim), "mpbPine", "data", "kNN_pine_map.tif")
-    
-    stopifnot(file.exists(f))
-    
-    sim$pineMap <- Cache(amc::cropReproj, f, sim$studyArea, layerName, inRAM = TRUE)
-  } else {
-    f <- file.path(modulePath(sim), "mpbPine", "data",
-                   c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
-                     "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
-    
-    stopifnot(all(file.exists(f)))
-    
-    s <- stack(f)
-
-    tmp <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
-                 layerNames = c("Jack_Pine", "Lodgepole_Pine"), inRAM = TRUE)
-    sim$pineMap <- Cache(amc::mosaic2, x = tmp[[1]], y = tmp[[2]], fun = sum,
-                         layerName = layerName, inRAM = TRUE)
-    rm(tmp)
-  }
-
+  f <- file.path(modulePath(sim), "mpbPine", "data",
+                 c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
+                   "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
+  stopifnot(all(file.exists(f)))
+  
+  s <- stack(f)
+  sim$pineMap <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
+                       layerNames = c("Jack_Pine", "Lodgepole_Pine"), inRAM = TRUE)
+  
   return(invisible(sim))
 }
