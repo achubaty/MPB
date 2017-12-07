@@ -718,7 +718,7 @@ rm(boreal.can)
 
 ```{r plot-western.boreal, fig.height=12, fig.width=16}
 loadObjects(c("boreal.west", "west.boreal"), rdata.path)
-darkgreen <- col2rgb("darkgreen")/255
+darkgreen <- col2rgb("darkgreen") / 255
 col.bor <- rgb(darkgreen[1], darkgreen[2], darkgreen[3], alpha = 0.5)
 rm(darkgreen)
 

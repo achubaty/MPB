@@ -42,8 +42,8 @@ BioSim was used to generate the maps [see @Bentz:2010bs; @Logan:2003fr; @Safrany
 
 ```{r scenario-table, echo=FALSE}
 scenarios <- data.frame(
-  index = c('S', 'L', 'R', 'G'),
-  description = c('Safranyik', 'Logan', 'Regniere', 'Composite'),
+  index = c("S", "L", "R", "G"),
+  description = c("Safranyik", "Logan", "Regniere", "Composite"),
   stringsAsFactors = FALSE
 )
 knitr::kable(scenarios)
