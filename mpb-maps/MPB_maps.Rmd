@@ -65,7 +65,7 @@ suppressPackageStartupMessages({
 })
 
 ## additional helper functions
-if (!require(amc) || packageVersion("amc") < "0.1.0.9000") {
+if (!require(amc) || packageVersion("amc") < "0.1.2.9000") {
   devtools::install_github("achubaty/amc@development")
 }
 
@@ -178,15 +178,19 @@ if (isTRUE(._MAPS_USERAW_.)) {
   west2.boreal <- spTransform(canada2.west, CRSobj =  crs.boreal)
   canada1.boreal <- spTransform(CAN_adm1, CRSobj =  crs.boreal)
   canada2.boreal <- spTransform(CAN_adm2, CRSobj =  crs.boreal)
+  
+  # this next line is BROKEN; not sure what happened :(
   boreal.west <- intersect(boreal, west.boreal) %>%
     gBuffer(., byid = TRUE, width = 0)
   
-  shapefile(west.boreal, file.path(rdata.path, "west_boreal.shp"), overwrite = TRUE)
-  fout <- file.path(rdata.path, "west_boreal.tif")
-  gdal_rasterize(file.path(rdata.path, "west_boreal.shp"), dst_filename = fout,
-                 a = "OBJECTID", l = "west_boreal", tr = c(._RES_MAPS_., ._RES_MAPS_.))
+  f <- normalizePath(file.path(rdata.path, "west_boreal.shp"))
+  shapefile(west.boreal, f, overwrite = TRUE)
+  fout <- normalizePath(file.path(rdata.path, "west_boreal.tif"))
+  gdal_rasterize(src_datasource = f, dst_filename = fout,
+                 a = "OBJECTID", l = "west_boreal",
+                 tr = c(._RES_MAPS_., ._RES_MAPS_.))
   west.boreal.raster <- raster(fout)
-  rm(fout)
+  rm(f, fout)
 
   # west.empty.raster <- raster(extent(west.boreal), resolution = ._RES_MAPS_.)
   # west.boreal.raster <- suppressWarnings(
@@ -196,7 +200,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   # )
   
   ### Save these new map objects for later use
-  objects2save <- c("boreal", "boreal.can", "boreal.west",
+  objects2save <- c("boreal", "boreal.can", #"boreal.west",
                     "canada1.west", "canada2.west",
                     "canada1.boreal", "canada2.boreal",
                     "west.boreal", "west2.boreal", "west.boreal.raster")
@@ -285,7 +289,7 @@ if (isTRUE(._MAPS_USERAW_.) && (._OS_. == "Windows") &&
 
 #### Import AB points data
 
-**NOTE:** Until we resolve how to handle point/polygon overlap, we are only using the AB points data.
+**NOTE:** Until we resolve how to handle point/polygon overlap [issue #13](https://github.com/achubaty/MPB/issues/13), we are only using the AB points data.
 
 ```{r import-maps-points}
 if (isTRUE(._MAPS_USERAW_.)) {
@@ -363,23 +367,14 @@ if (!dir.exists(bc.data.dir)) {
 }
 
 url <- "https://www.for.gov.bc.ca/ftp/HFP/external/!publish/Aerial_Overview/"
-data1999 <- list(
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.dbf"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.prj"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.shp"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point.shx"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.dbf"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.prj"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.shp"),
-  paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly.shx")
+exts <- c(".dbf", ".prj", ".shp", ".shx")
+data1999 <- append(
+  as.list(paste0(url, "1999/shape/prov_ibm/PROV_IBM_point_point", exts)),
+  as.list(paste0(url, "1999/shape/prov_ibm/PROV_IBM_poly_poly", exts))
 )
-data2000 <- list(
-  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.dbf"),
-  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.shp"),
-  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.shx"),
-  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot.dbf"),
-  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot.shp"),
-  paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot.shx")
+data2000 <- append(
+  as.list(paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_ibm.dbf", exts[-2])),
+  as.list(paste0(url, "2000/provincial_data/shape/2000%20IBM/prv_spot", exts[-2]))
 )
 data_zip <- list(
   paste0(url, "2001/shape_files/fhdata2001.zip"),
