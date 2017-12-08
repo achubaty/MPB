@@ -15,7 +15,7 @@ bibliography:
   - ../../../mpb-maps/climate-projections.bib
 ---
 
-## Summary
+### `mpbClimateData`
 
 This module imports several MPB climate suitability scenarios (using four different indices: `S`, `L`, `R`, `G`) for use as model drivers.
 The Logan suitability index (`L`) is based on summer temperatures [@Logan:2003fr].
@@ -27,8 +27,8 @@ BioSim was used to generate the maps [see @Bentz:2010bs; @Logan:2003fr; @Safrany
 
 ```{r scenario-table, echo=FALSE}
 scenarios <- data.frame(
-  index = c('S', 'L', 'R', 'G'),
-  description = c('Safranyik', 'Logan', 'Regniere', 'Composite'),
+  index = c("S", "L", "R", "G"),
+  description = c("Safranyik", "Logan", "Regniere", "Composite"),
   stringsAsFactors = FALSE
 )
 knitr::kable(scenarios)
@@ -40,4 +40,4 @@ All maps are projected using LCC and cover all of Canada.
 
 The default is to use the composite index (`G`).
 
-![](fig4_Cooke&Carroll_climate_indices.png)
+![](modules/mpbClimateData/fig4_Cooke&Carroll_climate_indices.png)

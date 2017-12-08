@@ -14,7 +14,7 @@ bibliography:
   - ../../bibliography.bib
 ---
 
-## Summary
+### `mpbManagement`
 
 Implement several management scenarios and evaluate their efficacy.
 

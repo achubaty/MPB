@@ -14,7 +14,7 @@ bibliography:
   - ../../bibliography.bib
 ---
 
-## Summary
+### `mpbPine`
 
 Calculating the initial density of red tops and the effect of growth in their number requires read and write access to a forest landscape of susceptible pine.
 This module imports the [@Beaudoin:2014cf] kNN estimates for lodgepole pine and jack pine availability in Canada.
