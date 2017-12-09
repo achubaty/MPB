@@ -65,7 +65,7 @@ suppressPackageStartupMessages({
 })
 
 ## additional helper functions
-if (!require(amc) || packageVersion("amc") < "0.1.2.9000") {
+if (!require(amc) || packageVersion("amc") < "0.1.3") {
   devtools::install_github("achubaty/amc@development")
 }
 

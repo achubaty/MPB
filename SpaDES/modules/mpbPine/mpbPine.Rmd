@@ -6,10 +6,9 @@ author:
   - "Eliot J. B. McIntire"
 date: "April 24, 2017"
 output:
-  html_document:
+  pdf_document:
     toc: true
     toc_depth: 3
-    toc_float: true
 bibliography:
   - ../../bibliography.bib
 ---
