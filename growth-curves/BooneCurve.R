@@ -58,7 +58,7 @@ curve(lm05$coefficients[[1]] + lm05$coefficients[[2]] * x, -1, 5, add = TRUE, co
 legend(3, -2.5, c(2001:2005), col = c("black", "yellow", "blue", "green", "red"), lty = 1)
 
 ## Devin Goodsman's Hill function
-## (this ends up being euqivalent as Cooke's approach)
+## (this ends up being equivalent as Cooke's approach)
 hill <- function(a, b, x) {
  exp(a) * x^b / (1 + exp(a) * x^b)
 }
@@ -143,7 +143,7 @@ curve(log(hill(lm03$coefficients[[1]], lm03$coefficients[[2]], exp(x))) +
       col = "purple", lwd = 3, lty = 2)
 abline(h = 0)
 abline(v = 2)
-abline(v = -.95, lwd = 2, lty = 1, col = "purple")
+abline(v = -0.95, lwd = 2, lty = 1, col = "purple")
 
 # grouped
 stressed <- rbind(Yr2002, Yr2003, Yr2005)
