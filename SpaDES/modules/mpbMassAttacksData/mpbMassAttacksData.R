@@ -97,6 +97,13 @@ mpbMassAttacksDataInit <- function(sim) {
   sim$rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
   
+  ## data.table of MPB attacks in study area
+  sim$massAttacksDT <- as.data.table(rasterToPoints(sim$massAttacksMap))
+  colnames(sim$massAttacksDT) <- c("x", "y", "NUMTREES") ## NUMTREES is number of attacked trees!
+  
+  # join with pine data.table
+  sim$massAttacksDT <- sim$massAttacksDT[sim$pineMapDT]
+  
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }

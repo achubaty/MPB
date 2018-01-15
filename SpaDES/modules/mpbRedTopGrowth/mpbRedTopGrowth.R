@@ -139,6 +139,12 @@ mpbRedTopGrowthInit <- function(sim) {
         study = c(rep("Tunnock 1970", 9), rep("Parker 1973", 6)),
         stringsAsFactors = TRUE
       )
+    },
+    "Boone2001" = {
+      data <- read.csv(file.path(modulePath(sim), "mpbRedTopGrowth", "data", "BooneCurveData2.csv"))
+      data$Site <- c(rep("A", 6), rep("B", 6), rep("D", 5), rep("E", 4), rep("F", 4), rep("G", 3))
+      data$Year <- c(2000:2005, 2000:2005, 2001:2005, 2002:2005, 2002:2005, 2003:2005)
+      data
     }
   )
 
@@ -155,6 +161,32 @@ mpbRedTopGrowthInit <- function(sim) {
          poly3.params <- c(1.1, -0.2, -0.9, -0.24)
          (poly3.params[4] * x^3 + poly3.params[3] * x^2 + poly3.params[2] * x + poly3.params[1])
        }
+     },
+     "Boone2001" = {
+       function(x) {
+         ## mortality from emigration/dispersal
+         # r: relative stocking value (0,1)
+         # d: slope parameter [1,Inf)
+         # s: scaling parameter (0,1)
+         m_e <- function(r, d, s) {
+           s * exp(1 - d * r)
+         }
+         
+         # use 2004 data as baseline for unweakened hosts (i.e., a good year for trees)
+         m <- lm(amc::logit(PropKilled) ~ log(Attacked), data = subset(BooneData, Year == "2004"))
+         a <- 0.9              # scale parameter; TODO: explain this
+         s <- 0.9              # s: scaling parameter (0,1); TODO: based on climate
+         #s <- sim$climateSuitabilityMap[x]
+         #s <- massAttacksDT["CLIMATE"]
+         d <- 3                # d: slope parameter [1,Inf)
+         r <- 0.2              # r: relative stocking value (0,1)
+         fudge2 <- 0.9         # from MacQuarrie 2011 (Fig 3d); TODO: extract from raw data
+         fudge <- fudge2 + 0.3 # somewhat arbitrary; chosen so that the resulting curve passes 1 when flexed
+         
+         # resulting function
+         log(amc::hill(m$coefficients[[1]], m$coefficients[[2]], exp(a * x))) +
+           (fudge - m_e(r, d, s) - 0.03 * exp(a * x))
+         }
      }
   )
   # ! ----- STOP EDITING ----- ! #
@@ -166,29 +198,36 @@ mpbRedTopGrowthPlotInit <- function(sim) {
   # do stuff for this event
 
   ### see ggplot docs at http://docs.ggplot2.org/current/
-  gg <- ggplot(sim$growthData) +
-    geom_point(aes(x = log10Xtm1, y = log10Rt, shape = study)) +
-    scale_shape(solid = FALSE) +
-    xlim(-3.2, 2) + ylim(-1.5, 1.5) +
-    labs(title = switch(P(sim)$dataset,
-                        "Berryman1979_fit" = "Berryman (1979) [fit]",
-                        "Berryman1979_forced" = "Berryman (1979) [forced]"
-                ),
-         x = "X[t-1] (log10 trees/ha/yr)",
-         y = "R[t] = log10 x[t]/x[t-1]") +
-    geom_hline(aes(yintercept = 0)) +
-    switch(P(sim)$dataset,
-      "Berryman1979_fit" = {
-        stat_smooth(aes(x = log10Xtm1, y = log10Rt), method = "lm",
-                    formula = y ~ poly(x, 3, raw = TRUE))
-      },
-      "Berryman1979_forced" = {
-        stat_function(fun = sim$growthFunction, colour = "blue")
-      }
-    )
-
-  ### Plot it!
-  #Plot(gg)
+  gg <- if (grepl("Berryman1979", P(sim)$dataset)) {
+    ggplot(sim$growthData) +
+      geom_point(aes(x = log10Xtm1, y = log10Rt, shape = study)) +
+      scale_shape(solid = FALSE) +
+      xlim(-3.2, 2) + ylim(-1.5, 1.5) +
+      labs(title = switch(P(sim)$dataset,
+                          "Berryman1979_fit" = "Berryman (1979) [fit]",
+                          "Berryman1979_forced" = "Berryman (1979) [forced]"
+                  ),
+           x = "X[t-1] (log10 trees/ha/yr)",
+           y = "R[t] = log10 x[t]/x[t-1]") +
+      geom_hline(aes(yintercept = 0)) +
+      switch(P(sim)$dataset,
+        "Berryman1979_fit" = {
+          stat_smooth(aes(x = log10Xtm1, y = log10Rt), method = "lm",
+                      formula = y ~ poly(x, 3, raw = TRUE))
+        },
+        "Berryman1979_forced" = {
+          stat_function(fun = sim$growthFunction, colour = "blue")
+        }
+      )
+  } else if (P(sim)$dataset == "Boone2001") {
+    ggplot(sim$growthData) +
+      xlim(-3.2, 6) + ylim(-1.5, 1.5) +
+      labs(title = "Boone et al. (2001)",
+           x = "X[t-1] (log trees/ha/yr)",
+           y = "R[t] = log x[t]/x[t-1]") +
+      geom_hline(aes(yintercept = 0)) +
+      stat_function(fun = sim$growthFunction, colour = "purple")
+  }
   
   ### save the object to the simList
   sim$mpbRedTopGrowthPlotGG <- gg
@@ -198,10 +237,10 @@ mpbRedTopGrowthPlotInit <- function(sim) {
 }
 
 mpbRedTopGrowthPlot <- function(sim) {
-  currentAttack <- sim$dt2raster(sim$massAttacksDT, sim$massAttacksMap, "NUMTREES")
+  currentAttack <- amc::dt2raster(sim$massAttacksDT, sim$massAttacksMap, "NUMTREES")
   Plot(currentAttack, addTo = "sim$massAttacksMap")
 
-  currentPine <- sim$dt2raster(sim$massAttacksDT, sim$massAttacksMap, "PROPPINE")
+  currentPine <- amc::dt2raster(sim$massAttacksDT, sim$massAttacksMap, "PROPPINE")
   Plot(currentPine, addTo = "sim$massAttacksMap")
 
   scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbRedTopGrowth", "plot")
@@ -217,5 +256,5 @@ mpbRedTopGrowthGrow <- function(sim) {
     return(map.res * per.ha)
   }
 
-  sim$massAttacksDT <- sim$massAttacksDT[NUMTREES := xt(NUMTREES) * CLIMATE]
+  sim$massAttacksDT <- sim$massAttacksDT[NUMTREES := xt(NUMTREES)]
 }

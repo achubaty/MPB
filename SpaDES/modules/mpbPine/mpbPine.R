@@ -178,5 +178,15 @@ mpbPineImportMap <- function(sim) {
   sim$pineMap <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
                        layerNames = layerNames, inRAM = TRUE)
   
+  ## create data.table version
+  jackpineDT <- as.data.table(rasterToPoints(sim$pineMap[["Jack_Pine"]])); gc()
+  jackpineDT <- jackpineDT[SPECIES := "jack"]
+  
+  lodgepolepineDT <- as.data.table(rasterToPoints(sim$pineMap[["Lodgepole_Pine"]])); gc()
+  lodgepolepineDT <- lodgepolepineDT[SPECIES := "lodgepole"]
+  
+  sim$pineDT <- merge(lodgepolepineDT, jackpineDT, all = TRUE)
+  setkey(sim$pineDT, x, y)
+  
   return(invisible(sim))
 }
