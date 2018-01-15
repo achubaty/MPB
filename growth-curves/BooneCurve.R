@@ -98,7 +98,7 @@ curve(log(hill(lm04$coefficients[[1]], lm04$coefficients[[2]], exp(a * x))), xmi
 curve(fudge - 0.03 * exp(1 * x), xmin, xmax, add = TRUE, col = "darkgreen", lwd = 3, lty = 1)
 curve(fudge - 0.03 * exp(a * x), xmin, xmax, add = TRUE, col = "blue", lwd = 3, lty = 1)
 
-## mortality from emmigration/dispersal
+## mortality from emigration/dispersal
 # r: relative stocking value (0,1)
 # d: slope parameter [1,Inf)
 # s: scaling parameter (0,1)

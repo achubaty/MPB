@@ -316,7 +316,7 @@ plot.box(pred.seq = seq(1, 6, 0.25), model = fm1control.lm, x.data = cntrl$lnxt,
                                           italic(F)["1,29"], " = 15.63; ", 
                                           italic(p), " < 0.01" )))
 
-par( mar = c( 0, 0, 0, 0 ) )
+par(mar = c( 0, 0, 0, 0))
 
 # plot c+d subtitle
 text.box(label.text = expression(bold("thinned forests")), cex = 2.0)
@@ -326,10 +326,10 @@ par(mar = c(1, 2, 1, 1))
 # limit data
 plot.box(pred.seq = seq(-2, 6, 0.25), model = fm2limit.lm, x.data = limit$lnxt, y.data = limit$lnr,
          cex = 1.5, IDletter.plot = "c", name.plot = "limit",
-         equation.text = expression( paste(   italic(y), " = 0.39 - 0.04e"^italic(x), "; ",
-                                              italic(r)^2, " = 0.50; ",
-                                              italic(F)["1,31"], " = 33.31; ",
-                                              italic(p), " < 0.01" )))
+         equation.text = expression(paste(italic(y), " = 0.39 - 0.04e"^italic(x), "; ",
+                                          italic(r)^2, " = 0.50; ",
+                                          italic(F)["1,31"], " = 33.31; ",
+                                          italic(p), " < 0.01")))
 
 # basal data
 plot.box(pred.seq = seq(-2, 6, 0.25), model = fm2basal.lm, x.data = basal$lnxt,
