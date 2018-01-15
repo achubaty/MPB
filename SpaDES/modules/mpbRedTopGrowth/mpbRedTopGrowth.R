@@ -6,7 +6,7 @@ defineModule(sim, list(
   description = "Mountain Pine Beetle Red Top Growth Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
   authors = c(
-    person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut", "cre")),
+    person(c("Barry", "J"), "Cooke", email = "barry.cooke@canada.ca", role = c("aut", "cre")),
     person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre"))
   ),
   childModules = character(),
@@ -15,14 +15,14 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("data.table", "ggplot2", "quickPlot", "raster", "reproducible"),
+  reqdPkgs = list("amc", "data.table", "ggplot2", "quickPlot", "raster", "reproducible"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", start(sim), NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the interval between plot events"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
     defineParameter(".saveInterval", "numeric", NA, NA, NA, "This describes the interval between save events"),
     defineParameter(".useCache", "numeric", FALSE, NA, NA, "Should this entire module be run with caching activated?"),
-    defineParameter("dataset", "character", "Berryman1979_forced", NA, NA, "Which dataset to use for stand dynamic model fitting. One of 'Berrman1979_fit', 'Berrman1979_forced' (default). Others to be implemented later."),
+    defineParameter("dataset", "character", "Boone2001", NA, NA, "Which dataset to use for stand dynamic model fitting. One of 'Boone2001' (default), 'Berryman1979_fit', or 'Berryman1979_forced'. Others to be implemented later."),
     defineParameter("growthInterval", "numeric", 1, NA, NA, "This describes the interval time between growth events")
   ),
   inputObjects = bind_rows(
@@ -121,9 +121,9 @@ mpbRedTopGrowthInit <- function(sim) {
       data.frame(
         year = c(1:15),
         log10Xtm1 = c(-3.1, -2.75, -2.7, -2.4, -2.3, -1.2, -1, 0.2, 0.9, 0.65,
-                    1.05, 0.95, 1.1, 1.5, 1.85),
+                      1.05, 0.95, 1.1, 1.5, 1.85),
         log10Rt = c(0.35, 0.4, 0.1, -0.4, -0.65, 0.3, 1, 0.75, 1.2, -0.7,
-                      -0.4, 0.2, 0.45, 0.3, -0.78),
+                    -0.4, 0.2, 0.45, 0.3, -0.78),
         study = c(rep("Tunnock 1970", 9), rep("Parker 1973", 6)),
         stringsAsFactors = TRUE
       )

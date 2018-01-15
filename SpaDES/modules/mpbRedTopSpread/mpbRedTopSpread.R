@@ -16,7 +16,7 @@ defineModule(sim, list(
   timeframe = as.POSIXlt(c(NA, NA)),
   timeunit = "year",
   citation = list(),
-  reqdPkgs = list("data.table", "quickPlot", "raster", "RColorBrewer", "reproducible"),
+  reqdPkgs = list("amc", "data.table", "quickPlot", "raster", "RColorBrewer", "reproducible"),
   parameters = rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", 1, NA, NA, "This describes the interval between plot events"),
@@ -119,7 +119,7 @@ mpbRedTopSpreadDispersal <- function(sim) {
   ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
   MAXTREES <- round(1125 * (res(sim$massAttacksMap) / 100) ^ 2)
   
-  r <- r <- sim$massAttacksMap[[paste0("X", start(sim))]]
+  r <- sim$massAttacksMap[[paste0("X", start(sim))]]
   loci <- sim$massAttacksDT$ID
   
   ## asymmetric spread (biased eastward)
@@ -168,24 +168,4 @@ mpbRedTopSpreadDispersal <- function(sim) {
   
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
-}
-
-## convert data.table objects t raster for plotting etc.
-## eventually this will move to `amc` package
-dt2raster <- function(dt, r, val) {
-  stopifnot(is(dt, "data.table"),
-            all(c("ID", "X", "Y") %in% colnames(dt)),
-            is(r, "Raster"),
-            is.character(val))
-  
-  xy <- SpatialPoints(cbind(dt$X, dt$Y))
-  ids <- cellFromXY(r, xy)
-  tmp <- data.table(ID  = ids, VALUE = dt[[val]])
-  tmp <- tmp[, VALUE := sum(VALUE), by = ID]
-  setkey(tmp, ID)
-  
-  rout <- r
-  if (length(tmp$ID)) rout[tmp$ID] <- tmp$VALUE
-  if (ncell(rout) - length(tmp$ID) > 0) rout[!tmp$ID] <- NA
-  return(rout)
 }

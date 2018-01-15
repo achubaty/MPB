@@ -85,14 +85,15 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
 ### template initilization
 mpbMassAttacksDataInit <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  ##
-  ## TO DO: incorporate code from MPB_maps.R to create the raster layers
-  ##
+  
+  # TODO: incorporate code from MPB_maps.R to create the raster layers
   f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1997-2011.tif")
   stopifnot(file.exists(f))
 
   ## all MPB data (all years)
   sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011))
+  
+  # TODO: use fasterize (requires use of sf)
   sim$rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
   
