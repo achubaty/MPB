@@ -4,7 +4,7 @@ author:
   - "Alex M. Chubaty"
   - "Barry J. Cooke"
   - "Eliot J. B. McIntire"
-date: "December 1, 2017"
+date: "January 15, 2018"
 output:
   html_document:
     toc: true
@@ -23,6 +23,10 @@ knitr::opts_chunk$set(cache = TRUE, echo = TRUE, eval = TRUE, message = FALSE,
 # Introduction
 
 The goal of this model is to simulate the spread of mountain pine beetle outbreaks as a function of the growth and dispersal of beetle-killed trees, called "red tops".
+
+## Study area
+
+Lorem ipsum...
 
 ## Module descriptions
 

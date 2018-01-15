@@ -17,7 +17,7 @@ author:
     Victoria, BC V8Z 1M5
     +1.250.298.2374
     eliot.mcintire@canada.ca
-date: "January 20, 2016"
+date: "January 11, 2018"
 output:
   pdf_document:
     toc: yes
@@ -57,6 +57,7 @@ suppressPackageStartupMessages({
   library(rgdal)
   library(rgeos)
   library(rts)
+  library(sf)
   library(shapefiles)
   library(stringr)
   library(snowfall)
@@ -160,6 +161,10 @@ if (isTRUE(._MAPS_USERAW_.)) {
     dl.data(url, dest = maps.dir, unzip = TRUE)
   }
   
+  # TODO: use sf
+  #
+  #boreal <- read_sf(f)
+
   files <- file.path(rdata.path, c("boreal.RData", "boreal.can.RData"))
   if (all(file.exists(files))) {
     lapply(files, load, envir = .GlobalEnv)
@@ -188,7 +193,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   fout <- normalizePath(file.path(rdata.path, "west_boreal.tif"))
   gdal_rasterize(src_datasource = f, dst_filename = fout,
                  a = "OBJECTID", l = "west_boreal",
-                 tr = c(._RES_MAPS_., ._RES_MAPS_.))
+                 tr = c(._RES_MAPS_., ._RES_MAPS_.)) # TODO: use fasterize (requires sf)
   west.boreal.raster <- raster(fout)
   rm(f, fout)
 
@@ -196,7 +201,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   # west.boreal.raster <- suppressWarnings(
   #   rasterize(west.boreal, west.empty.raster,
   #             filename = extension(fout, ".grd"),
-  #             overwrite = TRUE)
+  #             overwrite = TRUE) # TODO: use fasterize (requires sf)
   # )
   
   ### Save these new map objects for later use
@@ -333,7 +338,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       ## rasterize
       fout <- file.path(rdata.path, paste0("MPB_AB_pnts_", yr, ".tif"))
       
-      # TO DO: can this be done using gdal_rasterize; how to do the 'fun = sum' piece?
+      # TODO: use fasterize (requires sf)
       out <- rasterize(pnts.boreal, west.boreal.raster,
                        field = as.numeric(pnts.boreal@data$NUM_TREES), fun = "sum",
                        filename = extension(fout, ".grd"), overwrite = TRUE)
@@ -598,7 +603,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       yr <- strsplit(shp, "_")[[1]][3]
       out <- rasterize(poly.boreal, west.boreal.raster, getCover = TRUE,
                        filename = file.path(rdata.path, paste0("MPB_BC_poly_", yr, ".grd")),
-                       overwrite = TRUE)
+                       overwrite = TRUE) # TODO: use fasterize (requires sf)
       
       out <- out / 100 * 1125 * (._RES_MAPS_. / 100) ^ 2
       f <- filename(out) ## keep track of this tmp file for deletion later

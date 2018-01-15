@@ -117,7 +117,7 @@ mpbClimateDataImportMaps <- function(sim) {
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
   
   if (length(files) == 0) {
-    stop("missing data files")
+    stop("mpbClimateData: missing data files")
   }
   
   fn1 <- function(files, studyArea) {
@@ -125,6 +125,11 @@ mpbClimateDataImportMaps <- function(sim) {
     out <- stack(files) %>%
       amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif")) %>%
       stack()
+    
+    # ensure all cell values between 0 and 1
+    out[out < 0.0] <- 0
+    out[out > 1.0] <- 1
+    out <- setMinMax(out)
     
     return(out)
   }
