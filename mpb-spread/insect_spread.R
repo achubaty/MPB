@@ -106,11 +106,14 @@ system.time({
           pixelsWithTooMany <- overfull[V1 > saturationDensity]$pixels
           set(out, , "cumsumAbSett", 0)
           set(out, , "abundanceSettledTemp", 0)
-          out[(pixels %in% pixelsWithTooMany), cumsumAbSett := cumsum(abundanceSettled), #rem = cumsumAbSett > saturationDensity),
+          out[(pixels %in% pixelsWithTooMany), cumsumAbSett := cumsum(abundanceSettled),
               by = c("pixels")]
           cumsumAboveSaturation <- which(out$cumsumAbSett > saturationDensity)
-          abundanceSettledTemp <- pmax(0, saturationDensity - (out$cumsumAbSett[cumsumAboveSaturation] - out$abundanceSettled[cumsumAboveSaturation]))
-          set(out, cumsumAboveSaturation, "abundanceActive", out$abundanceActive[cumsumAboveSaturation] + (out$abundanceSettled[cumsumAboveSaturation] - abundanceSettledTemp))
+          abundanceSettledTemp <- pmax(0, saturationDensity -
+                                         (out$cumsumAbSett[cumsumAboveSaturation] -
+                                            out$abundanceSettled[cumsumAboveSaturation]))
+          set(out, cumsumAboveSaturation, "abundanceActive", out$abundanceActive[cumsumAboveSaturation] +
+                (out$abundanceSettled[cumsumAboveSaturation] - abundanceSettledTemp))
           set(out, cumsumAboveSaturation, "abundanceSettled", abundanceSettledTemp)
         }
         
