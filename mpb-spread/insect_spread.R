@@ -71,10 +71,10 @@ system.time({
 
         # Calculate the abundance received, as a function of distance
         outWLag1B[, abundanceReceived :=
-                    pmin(i.Total, ceiling(dispKern(effectiveDistance, i.effectiveDistance, LAMBDA) *
+                    ceiling(dispKern(effectiveDistance, i.effectiveDistance, LAMBDA) *
                                             proportion *
                                             i.Total + i.abundanceActive *
-                                            proportion / sum(proportion))),
+                                            proportion / sum(proportion)),
                   by = c("initialPixels", "from")] # Extra ones if they didn't settle
         # Calculate the abundance received, as a function of angle,
         # which was already calculated in spread2, and is called "proportion".
@@ -84,7 +84,7 @@ system.time({
                                                      sum(abundanceReceived * pix[pixels])),
                                              ceiling(abundanceReceived * pix[pixels])),
                   by = c("pixels")]
-        outWLag1B[, abundanceActive := pmin(i.Total, floor(abundanceReceived - abundanceSettled))]
+        outWLag1B[, abundanceActive := floor(abundanceReceived - abundanceSettled)]
 
         set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)
 
