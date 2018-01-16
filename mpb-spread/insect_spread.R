@@ -1,4 +1,4 @@
-#install_github("PredictiveEcology/SpaDES.tools@development")
+#install_github("PredictiveEcology/SpaDES.tools@prepInputs")
 #devtools::load_all("~/GitHub/SpaDES.tools")
 library(data.table)
 library(quickPlot)
@@ -8,13 +8,13 @@ library(SpaDES.tools)
 dev()
 
 # inputs
-XMAX <- YMAX <- 100
+XMAX <- YMAX <- 40
 a <- raster(extent(0, XMAX, 0, YMAX), res = 1)
 pine <- gaussMap(a)
 pine[] <- pine[] / maxValue(pine) 
 #pine[] <- 1 ## TEMPORARY
 
-LAMBDA <- 0.363
+LAMBDA <- 0.12
 
 dispKern <- function(disFar, disNear, lambda) {
   (1 - exp(-lambda * disFar)) - (1 - exp(-lambda * disNear))
@@ -26,13 +26,14 @@ dispKern <- function(disFar, disNear, lambda) {
 
 loci <- c(ncell(a) / 3 + 1, ncell(a) * 2 / 3 + 1) ## get cell ids for attacked pixels
 loci <- loci[1]
-loci <- c(3334, 3339)
+loci <- sample(ncell(a), 2)
 ## max num red trees [= 1125 trees/ha * (MAPRES / 100)^2]
 TOTAL <- round(1125 * (250 / 100)^2) 
 saturationDensity <- 1000
+asymm <- 5
 
 out <- spread2(a, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
-               asymmetry = 3, asymmetryAngle = 0,
+               asymmetry = asymm, asymmetryAngle = 0,
                circle = TRUE,
                returnDistances = TRUE, returnFrom = TRUE)
 set(out, , "abundanceActive", 0)
@@ -46,7 +47,7 @@ for (year in 2012:2012) {
   while (!done) {
     nrowOut <- NROW(out)
     out <- spread2(a, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
-                   asymmetry = 5, asymmetryAngle = 90,
+                   asymmetry = asymm, asymmetryAngle = 90,
                    circle = TRUE, allowOverlap = TRUE,
                    returnDistances = TRUE, returnFrom = TRUE)
     if (nrowOut != NROW(out)) {# might spread and have none that are <1 unit. Just go back to while loop
@@ -121,5 +122,6 @@ for (year in 2012:2012) {
   aa[out1$pixels] <- out1$abundanceSettled
   #aa[out1$pixels] <- out1$abundanceReceived
   
-  plot(aa)
+  clearPlot()
+  Plot(aa, zero.color = "red", new = TRUE)
 }
