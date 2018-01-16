@@ -1,4 +1,4 @@
-#install_github("PredictiveEcology/SpaDES.tools@development")
+#install_github("PredictiveEcology/SpaDES.tools@prepInputs")
 #devtools::load_all("~/GitHub/SpaDES.tools")
 library(data.table)
 library(quickPlot)
