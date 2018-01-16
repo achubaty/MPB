@@ -16,6 +16,7 @@ a <- raster(extent(0, XMAX, 0, YMAX), res = 1)
 pine <- gaussMap(a) ## gaussMap resets DT threads, so be sure to reset it below
 pine[] <- pine[] / maxValue(pine)
 #pine[] <- 0.6 ## TEMPORARY
+pix <- pine[]
 
 setDTthreads(._NUMCPUS_.)
 
@@ -78,10 +79,10 @@ system.time({
         # Calculate the abundance received, as a function of angle,
         # which was already calculated in spread2, and is called "proportion".
         # The pmin is about saturation density.
-        outWLag1B[, abundanceSettled := pmin(floor(abundanceReceived * pine[][pixels] *
+        outWLag1B[, abundanceSettled := pmin(floor(abundanceReceived * pix[pixels] *
                                                      saturationDensity /
-                                                     sum(abundanceReceived * pine[][pixels])),
-                                             ceiling(abundanceReceived * pine[][pixels])),
+                                                     sum(abundanceReceived * pix[pixels])),
+                                             ceiling(abundanceReceived * pix[pixels])),
                   by = c("pixels")]
         outWLag1B[, abundanceActive := pmin(i.Total, floor(abundanceReceived - abundanceSettled))]
 
@@ -137,6 +138,6 @@ system.time({
     #aa[out1$pixels] <- out1$abundanceReceived
 
     clearPlot()
-    Plot(aa, zero.color = "red", new = TRUE)
+    Plot(aa, zero.color = "red", new = TRUE, col = "Reds")
   }
 })
