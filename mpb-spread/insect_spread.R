@@ -113,11 +113,8 @@ system.time({
         if (all(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"])) {
           done <- TRUE
         }
-        # b <- raster(a)
-        # clearPlot()
-        # b[out[state == "activeSource", pixels]] <- 2
-        # b[out[state != "activeSource", pixels]] <- 1
-        # Plot(b)
+
+        ## print debugging/status info
         print(paste(attr(out, "spreadState")$totalIterations, 
                     paste(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), 
                               by = "initialPixels"]$V1, 
