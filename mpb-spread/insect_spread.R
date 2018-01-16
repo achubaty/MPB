@@ -8,7 +8,7 @@ library(SpaDES.tools)
 ._NUMCPUS_. <- parallel::detectCores() / 2
 setDTthreads(._NUMCPUS_.)
 
-# dev.useRSGD(FALSE) 
+dev.useRSGD(FALSE) 
 dev()
 
 # inputs
