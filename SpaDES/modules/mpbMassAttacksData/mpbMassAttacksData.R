@@ -87,18 +87,18 @@ mpbMassAttacksDataInit <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   
   # TODO: incorporate code from MPB_maps.R to create the raster layers
-  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1997-2011.tif")
+  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1998-2016.tif")
   stopifnot(file.exists(f))
 
-  ## all MPB data (all years)
-  sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, paste0("X", 1997:2011))
+  ## all MPB data (all years -- missing 1999 and 2000)
+  sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, c("X1998", paste0("X", 2001:2016)))
   
   # TODO: use fasterize (requires use of sf)
   sim$rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
   
   ## data.table of MPB attacks in study area
-  sim$massAttacksDT <- as.data.table(rasterToPoints(sim$massAttacksMap))
+  sim$massAttacksDT <- as.data.table(rasterToPoints(sim$massAttacksMap, fun = function(x) { x > 0 }))
   colnames(sim$massAttacksDT) <- c("x", "y", "NUMTREES") ## NUMTREES is number of attacked trees!
   
   # join with pine data.table

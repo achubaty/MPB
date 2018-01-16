@@ -5,6 +5,9 @@ library(quickPlot)
 library(raster)
 library(SpaDES.tools)
 
+dev.useRSGD(FALSE) 
+dev.new(useRSGD = FALSE) 
+
 dev()
 
 # inputs
@@ -26,7 +29,9 @@ dispKern <- function(disFar, disNear, lambda) {
 
 loci <- c(ncell(a) / 3 + 1, ncell(a) * 2 / 3 + 1) ## get cell ids for attacked pixels
 loci <- loci[1]
-loci <- sample(ncell(a), 2)
+#loci <- c(3334, 3339)
+loci <- sample(ncell(a), 10)
+
 ## max num red trees [= 1125 trees/ha * (MAPRES / 100)^2]
 TOTAL <- round(1125 * (250 / 100)^2) 
 saturationDensity <- 1000
@@ -76,7 +81,6 @@ for (year in 2012:2012) {
                                            ceiling(abundanceReceived * pine[pixels])),
                 by = c("initialPixels", "pixels")]
       sources[, sum(abundanceSettled), by = c("initialPixels", "pixels")]
-      browser(expr = isTRUE(any(outWLag1B[, sum(abundanceSettled), by = c("initialPixels", "pixels")]$V1 > saturationDensity)))
       outWLag1B[, abundanceActive := pmin(i.Total, floor(abundanceReceived - abundanceSettled))]#, by = "from"]
       
       set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)

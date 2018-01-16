@@ -13,6 +13,8 @@ output:
 bibliography:
   - bibliography.bib
   - ../mpb-maps/climate-projections.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -69,6 +71,12 @@ if (!require(devtools)) {
 if (!require(igraph)) {
   install.packages("igraph")
 }
+if (!require(sp)) {
+  install.packages("sp")
+}
+if (!require(rgdal)) {
+  install.packages("rgdal")
+}
 if (!require(raster)) {
   install.packages("raster")
 }
@@ -94,20 +102,35 @@ if (interactive()) dev.useRSGD(FALSE)
 
 ## Define study area
 
-The study area is the provinces of Alberta (AB), British Columbia (BC), and Saskatchewan (SK); however, during development, a much smaller area may be used.
+The study area straddles the Alberta (AB) and Saskatchewan (SK) border between Lesser Slave Lake to the west and Cold Lake to the east, per discussions with Barry.
+This area includes the Martin Hills in AB.
 
 **NOTE:** major GIS operations such as reprojecting and cropping are cached, to speed up subsequent running of the model.
 
 ```{r define-study-area, eval=FALSE}
 ## load CRS for the boreal raster
+103
+ 
 load(file.path(getOption("spades.modulePath"), "mpbMassAttacksData", "data",
+104
+ 
                "west.boreal.RData")) ## loads studyArea object (spdf)
+105
+ 
 crs.boreal <- CRS(proj4string(studyArea))
+106
+ 
 rm(studyArea)
 
-## define (small) study area for development
-## skip this step if you want to use the default area af BC, AB, SK
-load("app/inputs/demoArea_618.rds") ## loads `demoArea`
+## load studyArea
+f <- normalizePath("studyArea/studyArea.kml")
+#ogrInfo(f)
+#ogrListLayers(f)
+studyArea <- readOGR(f, "studyArea.kml")
+
+if (!file.exists(extension(f, ".shp"))) {
+  writeOGR(studyArea, dsn = extension(f, ".shp"), layer = "studyArea.kml", driver = "ESRI Shapefile")
+}
 
 times <- list(start = 2011, end = 2020)
 params <- list(
