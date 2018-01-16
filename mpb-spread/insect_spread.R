@@ -6,7 +6,6 @@ library(raster)
 library(SpaDES.tools)
 
 ._NUMCPUS_. <- parallel::detectCores() / 2
-setDTthreads(._NUMCPUS_.)
 
 dev.useRSGD(FALSE) 
 dev()
@@ -14,9 +13,11 @@ dev()
 # inputs
 XMAX <- YMAX <- 400
 a <- raster(extent(0, XMAX, 0, YMAX), res = 1)
-pine <- gaussMap(a)
+pine <- gaussMap(a) ## gaussMap resets DT threads, so be sure to reset it below
 pine[] <- pine[] / maxValue(pine) 
 #pine[] <- 0.6 ## TEMPORARY
+
+setDTthreads(._NUMCPUS_.)
 
 # parameter in the dispKern function, describes steepness of curve, 
 #  higher towards 1 is steeper, lower towards 0 is flatter
