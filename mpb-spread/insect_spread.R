@@ -30,7 +30,7 @@ loci <- sample(ncell(a), 100)
 
 ## max num red trees [= 1125 trees/ha * (MAPRES / 100)^2]
 TOTAL <- round(1125 * (250 / 100)^2) 
-saturationDensity <- TOTAL
+saturationDensity <- 332
 asymm <- 5
 
 out <- spread2(a, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
@@ -104,10 +104,14 @@ system.time({
         overfull <- out[, sum(abundanceSettled), by = "pixels"]
         if (isTRUE(any(overfull$V1 > saturationDensity))) {
           pixelsWithTooMany <- overfull[V1 > saturationDensity]$pixels
-          set(out, , "rem", FALSE)
-          out[(pixels %in% pixelsWithTooMany), `:=`(rem = cumsum(abundanceSettled) > saturationDensity),
+          set(out, , "cumsumAbSett", 0)
+          set(out, , "abundanceSettledTemp", 0)
+          out[(pixels %in% pixelsWithTooMany), cumsumAbSett := cumsum(abundanceSettled), #rem = cumsumAbSett > saturationDensity),
               by = c("pixels")]
-          out[which(rem), `:=`(abundanceActive = abundanceActive + abundanceSettled, abundanceSettled = 0)]
+          cumsumAboveSaturation <- which(out$cumsumAbSett > saturationDensity)
+          abundanceSettledTemp <- pmax(0, saturationDensity - (out$cumsumAbSett[cumsumAboveSaturation] - out$abundanceSettled[cumsumAboveSaturation]))
+          set(out, cumsumAboveSaturation, "abundanceActive", out$abundanceActive[cumsumAboveSaturation] + (out$abundanceSettled[cumsumAboveSaturation] - abundanceSettledTemp))
+          set(out, cumsumAboveSaturation, "abundanceSettled", abundanceSettledTemp)
         }
         
         if (all(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"])) {
