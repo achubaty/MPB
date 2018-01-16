@@ -5,6 +5,9 @@ library(quickPlot)
 library(raster)
 library(SpaDES.tools)
 
+dev.useRSGD(FALSE) 
+dev.new(useRSGD = FALSE) 
+
 dev()
 
 # inputs
