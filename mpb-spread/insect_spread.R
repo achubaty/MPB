@@ -31,7 +31,7 @@ dispKern <- function(disFar, disNear, lambda) {
 
 loci <- c(ncell(a) / 3 + 1, ncell(a) * 2 / 3 + 1) ## get cell ids for attacked pixels
 loci <- loci[1]
- loci <- sample(ncell(a), 100)
+loci <- sample(ncell(a), 100)
 
 ## max num red trees [= 1125 trees/ha * (MAPRES / 100)^2]
 TOTAL <- round(1125 * (250 / 100)^2) 
@@ -111,8 +111,8 @@ for (year in 2012:2012) {
       if (isTRUE(any(overfull$V1 > saturationDensity))) {
         pixelsWithTooMany <- overfull[V1 > saturationDensity]$pixels
         set(out, , "rem", FALSE)
-        out[rem, `:=`(abundanceActive = abundanceActive + abundanceSettled, abundanceSettled = 0)] 
         out[(pixels %in% pixelsWithTooMany), `:=`(rem = cumsum(abundanceSettled) > saturationDensity), by = c("pixels")]
+        out[which(rem), `:=`(abundanceActive=abundanceActive + abundanceSettled, abundanceSettled = 0)]  
       }
       
       if (all(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"])) {
