@@ -5,17 +5,17 @@ library(quickPlot)
 library(raster)
 library(SpaDES.tools)
 
-dev.useRSGD(FALSE) 
-dev.new(useRSGD = FALSE) 
+# dev.useRSGD(FALSE) 
+# dev.new(useRSGD = FALSE) 
 
 dev()
 
 # inputs
-XMAX <- YMAX <- 40
+XMAX <- YMAX <- 400
 a <- raster(extent(0, XMAX, 0, YMAX), res = 1)
 pine <- gaussMap(a)
 pine[] <- pine[] / maxValue(pine) 
-#pine[] <- 1 ## TEMPORARY
+pine[] <- 0.6 ## TEMPORARY
 
 # parameter in the dispKern function, describes steepness of curve, 
 #  higher towards 1 is steeper, lower towards 0 is flatter
@@ -31,7 +31,7 @@ dispKern <- function(disFar, disNear, lambda) {
 
 loci <- c(ncell(a) / 3 + 1, ncell(a) * 2 / 3 + 1) ## get cell ids for attacked pixels
 loci <- loci[1]
-loci <- sample(ncell(a), 10)
+ loci <- sample(ncell(a), 100)
 
 ## max num red trees [= 1125 trees/ha * (MAPRES / 100)^2]
 TOTAL <- round(1125 * (250 / 100)^2) 
@@ -80,8 +80,8 @@ for (year in 2012:2012) {
       # The pmin is about saturation density. 
       outWLag1B[, abundanceSettled := pmin(floor(abundanceReceived * pine[pixels] * saturationDensity / sum(abundanceReceived * pine[pixels])),
                                            ceiling(abundanceReceived * pine[pixels])),
-                by = c("initialPixels", "pixels")]
-      sources[, sum(abundanceSettled), by = c("initialPixels", "pixels")]
+                by = c("pixels")]
+      # sources[, sum(abundanceSettled), by = c("initialPixels", "pixels")]
       outWLag1B[, abundanceActive := pmin(i.Total, floor(abundanceReceived - abundanceSettled))]#, by = "from"]
       
       set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)
@@ -103,11 +103,10 @@ for (year in 2012:2012) {
       # Because of multiple starting loci, a given pixel can get overfull. 
       overfull <- out[, sum(abundanceSettled), by = "pixels"]
       if(isTRUE(any(overfull$V1 > saturationDensity))) {
-        browser()  
         pixelsWithTooMany <- overfull[V1 > saturationDensity]$pixels
         set(out, , "rem", FALSE)
         out[(pixels %in% pixelsWithTooMany), `:=`(rem=cumsum(abundanceSettled) > saturationDensity), by = c("pixels")]
-        out[rem, `:=`(abundanceActive=abundanceActive + abundanceSettled, abundanceSettled=0)] 
+        out[which(rem), `:=`(abundanceActive=abundanceActive + abundanceSettled, abundanceSettled = 0)] 
         
         
       }
@@ -120,7 +119,10 @@ for (year in 2012:2012) {
       # b[out[state == "activeSource", pixels]] <- 2
       # b[out[state != "activeSource", pixels]] <- 1
       # Plot(b)
-      print(paste(attr(out, "spreadState")$totalIterations, out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"]))
+      print(paste(attr(out, "spreadState")$totalIterations, 
+                  paste(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), 
+                            by = "initialPixels"]$V1, 
+                  collapse = ", ")))
     }
   }
   aa <- raster(a)
