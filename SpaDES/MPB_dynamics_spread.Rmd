@@ -109,17 +109,9 @@ This area includes the Martin Hills in AB.
 
 ```{r define-study-area, eval=FALSE}
 ## load CRS for the boreal raster
-103
- 
 load(file.path(getOption("spades.modulePath"), "mpbMassAttacksData", "data",
-104
- 
                "west.boreal.RData")) ## loads studyArea object (spdf)
-105
- 
 crs.boreal <- CRS(proj4string(studyArea))
-106
- 
 rm(studyArea)
 
 ## load studyArea

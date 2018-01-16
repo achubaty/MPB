@@ -179,17 +179,17 @@ mpbPineImportMap <- function(sim) {
                        layerNames = layerNames, inRAM = TRUE)
   
   ## create data.table version
-  jackpineDT <- as.data.table(rasterToPoints(sim$pineMap[["Jack_Pine"]]))
+  jpDT <- as.data.table(rasterToPoints(sim$pineMap[["Jack_Pine"]]))
   amc::.gc()
-  colnames(jackpineDT) <- c("x", "y", "VALUE")
-  jackpineDT <- jackpineDT[, SPECIES := "jack"]
+  colnames(jpDT) <- c("x", "y", "VALUE")
+  jpDT <- jpDT[, SPECIES := "jack"]
   
-  lodgepolepineDT <- as.data.table(rasterToPoints(sim$pineMap[["Lodgepole_Pine"]]))
+  lpDT <- as.data.table(rasterToPoints(sim$pineMap[["Lodgepole_Pine"]]))
   amc::.gc()
-  colnames(lodgepolepineDT) <- c("x", "y", "VALUE")
-  lodgepolepineDT <- lodgepolepineDT[, SPECIES := "lodgepole"]
+  colnames(lpDT) <- c("x", "y", "VALUE")
+  lpDT <- lpDT[, SPECIES := "lodgepole"]
   
-  sim$pineDT <- merge(lodgepolepineDT, jackpineDT, all = TRUE)
+  sim$pineDT <- merge(lpDT, jpDT, all = TRUE)
   setkey(sim$pineDT, x, y)
   
   return(invisible(sim))

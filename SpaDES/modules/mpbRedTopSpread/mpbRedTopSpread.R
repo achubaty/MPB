@@ -79,7 +79,7 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
 
 .inputObjects <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
+  if (!("studyArea" %in% sim$.userSuppliedObjNames)) {
     load(file.path(modulePath(sim), "mpbRedTopSpread", "data", "west.boreal.RData"), envir = envir(sim))
   }
   # ! ----- STOP EDITING ----- ! #
