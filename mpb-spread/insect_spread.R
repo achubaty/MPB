@@ -124,7 +124,8 @@ for (year in 2012:2012) {
       # b[out[state == "activeSource", pixels]] <- 2
       # b[out[state != "activeSource", pixels]] <- 1
       # Plot(b)
-      print(paste(attr(out, "spreadState")$totalIterations, out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"]))
+      print(paste(attr(out, "spreadState")$totalIterations,
+                  out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"]))
     }
   }
   aa <- raster(a)
