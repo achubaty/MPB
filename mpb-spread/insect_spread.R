@@ -19,7 +19,7 @@ pine[] <- 0.6 ## TEMPORARY
 
 # parameter in the dispKern function, describes steepness of curve, 
 #  higher towards 1 is steeper, lower towards 0 is flatter
-LAMBDA <- 0.12 
+LAMBDA <- 0.12
 
 dispKern <- function(disFar, disNear, lambda) {
   (1 - exp(-lambda * disFar)) - (1 - exp(-lambda * disNear))
@@ -74,11 +74,17 @@ for (year in 2012:2012) {
       
       # Calculate the abundance received, as a function of distance
       outWLag1B[, abundanceReceived :=
-                  pmin(i.Total, ceiling(dispKern(effectiveDistance, i.effectiveDistance, LAMBDA) * proportion *
-                                          i.Total + i.abundanceActive * proportion/sum(proportion))), by = c("initialPixels", "from")] # Extra ones if they didn't settle
-      # Calculate the abundance received, as a function of angle, which was already calculated in spread2, and is called "proportion"
+                  pmin(i.Total, ceiling(dispKern(effectiveDistance, i.effectiveDistance, LAMBDA) *
+                                          proportion *
+                                          i.Total + i.abundanceActive *
+                                          proportion / sum(proportion))),
+                by = c("initialPixels", "from")] # Extra ones if they didn't settle
+      # Calculate the abundance received, as a function of angle,
+      # which was already calculated in spread2, and is called "proportion".
       # The pmin is about saturation density. 
-      outWLag1B[, abundanceSettled := pmin(floor(abundanceReceived * pine[pixels] * saturationDensity / sum(abundanceReceived * pine[pixels])),
+      outWLag1B[, abundanceSettled := pmin(floor(abundanceReceived * pine[pixels] *
+                                                   saturationDensity /
+                                                   sum(abundanceReceived * pine[pixels])),
                                            ceiling(abundanceReceived * pine[pixels])),
                 by = c("pixels")]
       # sources[, sum(abundanceSettled), by = c("initialPixels", "pixels")]
@@ -102,13 +108,11 @@ for (year in 2012:2012) {
       
       # Because of multiple starting loci, a given pixel can get overfull. 
       overfull <- out[, sum(abundanceSettled), by = "pixels"]
-      if(isTRUE(any(overfull$V1 > saturationDensity))) {
+      if (isTRUE(any(overfull$V1 > saturationDensity))) {
         pixelsWithTooMany <- overfull[V1 > saturationDensity]$pixels
         set(out, , "rem", FALSE)
-        out[(pixels %in% pixelsWithTooMany), `:=`(rem=cumsum(abundanceSettled) > saturationDensity), by = c("pixels")]
-        out[which(rem), `:=`(abundanceActive=abundanceActive + abundanceSettled, abundanceSettled = 0)] 
-        
-        
+        out[rem, `:=`(abundanceActive = abundanceActive + abundanceSettled, abundanceSettled = 0)] 
+        out[(pixels %in% pixelsWithTooMany), `:=`(rem = cumsum(abundanceSettled) > saturationDensity), by = c("pixels")]
       }
       
       if (all(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"])) {
@@ -127,8 +131,8 @@ for (year in 2012:2012) {
   }
   aa <- raster(a)
   aa[] <- NA_integer_
-  out1 <- out[, list(abundanceSettled=sum(abundanceSettled), 
-                     abundanceReceived=sum(abundanceReceived)), by = c("pixels")]
+  out1 <- out[, list(abundanceSettled = sum(abundanceSettled),
+                     abundanceReceived = sum(abundanceReceived)), by = c("pixels")]
   aa[out1$pixels] <- out1$abundanceSettled
   #aa[out1$pixels] <- out1$abundanceReceived
   
