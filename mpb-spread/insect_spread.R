@@ -17,7 +17,9 @@ pine <- gaussMap(a)
 pine[] <- pine[] / maxValue(pine) 
 #pine[] <- 1 ## TEMPORARY
 
-LAMBDA <- 0.12
+# parameter in the dispKern function, describes steepness of curve, 
+#  higher towards 1 is steeper, lower towards 0 is flatter
+LAMBDA <- 0.12 
 
 dispKern <- function(disFar, disNear, lambda) {
   (1 - exp(-lambda * disFar)) - (1 - exp(-lambda * disNear))
@@ -29,7 +31,6 @@ dispKern <- function(disFar, disNear, lambda) {
 
 loci <- c(ncell(a) / 3 + 1, ncell(a) * 2 / 3 + 1) ## get cell ids for attacked pixels
 loci <- loci[1]
-#loci <- c(3334, 3339)
 loci <- sample(ncell(a), 10)
 
 ## max num red trees [= 1125 trees/ha * (MAPRES / 100)^2]
@@ -88,7 +89,9 @@ for (year in 2012:2012) {
       out <- rbindlist(list(sources, outWLag1B), fill = TRUE)
       
       # Squash down duplicates
-      outSum <- out[, list(abundanceActive = sum(abundanceActive), abundanceSettled = sum(abundanceSettled), abundanceReceived = sum(abundanceReceived)), 
+      outSum <- out[, list(abundanceActive = sum(abundanceActive), 
+                           abundanceSettled = sum(abundanceSettled), 
+                           abundanceReceived = sum(abundanceReceived)), 
                     by = c("initialPixels", "pixels")]
       out <- unique(out, by = c("initialPixels", "pixels"))
       set(out, , "abundanceActive", outSum$abundanceActive)
@@ -122,7 +125,8 @@ for (year in 2012:2012) {
   }
   aa <- raster(a)
   aa[] <- NA_integer_
-  out1 <- out[, list(abundanceSettled=sum(abundanceSettled), abundanceReceived=sum(abundanceReceived)), by = c("pixels")]
+  out1 <- out[, list(abundanceSettled=sum(abundanceSettled), 
+                     abundanceReceived=sum(abundanceReceived)), by = c("pixels")]
   aa[out1$pixels] <- out1$abundanceSettled
   #aa[out1$pixels] <- out1$abundanceReceived
   
