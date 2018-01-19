@@ -72,6 +72,7 @@ insect_spread <- function(r, loci, asymmetry, asymmetryAngle, lambda,
                           Ncpus = getOption("Ncpus", parallel::detectCores() / 2),
                           debug = FALSE) {
 
+  ## TODO: implement other dispersal kernels
   dispKern <- function(disFar, disNear, lambda) {
      (1 - exp(-lambda * disFar)) - (1 - exp(-lambda * disNear))
   }
