@@ -4,7 +4,7 @@ defineModule(sim, list(
   keywords = c("insert key words here"),
   authors = c(
     person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
-    person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut"))
+    person(c("Barry", "J"), "Cooke", email = "barry.cooke@canada.ca", role = c("aut"))
   ),
   childModules = character(0),
   version = numeric_version("0.0.1"),
@@ -41,10 +41,10 @@ doEvent.mpbManagement = function(sim, eventTime, eventType, debug = FALSE) {
     "init" = {
       ### check for more detailed object dependencies:
       ### (use `checkObject` or similar)
-  
+
       # do stuff for this event
       sim <- sim$mpbManagementInit(sim)
-  
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbManagement", "plot")
       sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbManagement", "save")
@@ -52,41 +52,41 @@ doEvent.mpbManagement = function(sim, eventTime, eventType, debug = FALSE) {
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-  
+
       #Plot(objectFromModule) # uncomment this, replace with object to plot
       # schedule future event(s)
-  
+
       # e.g.,
       #sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbManagement", "plot")
-  
+
       # ! ----- STOP EDITING ----- ! #
     },
     "save" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-  
+
       # e.g., call your custom functions/methods here
       # you can define your own methods below this `doEvent` function
-  
+
       # schedule future event(s)
-  
+
       # e.g.,
       # sim <- scheduleEvent(sim, time(sim) + P(sim)$.saveInterval, "mpbManagement", "save")
-  
+
       # ! ----- STOP EDITING ----- ! #
     },
     "manage" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-  
+
       # e.g., call your custom functions/methods here
       # you can define your own methods below this `doEvent` function
-  
+
       # schedule future event(s)
-  
+
       # e.g.,
       # sim <- scheduleEvent(sim, time(sim) + increment, "mpbManagement", "manage")
-  
+
       # ! ----- STOP EDITING ----- ! #
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -156,7 +156,7 @@ mpbManagementManage <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
 
   # MANAGEMENT BASED ON MANAGEMENT SCENARIO PARAMETER
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }

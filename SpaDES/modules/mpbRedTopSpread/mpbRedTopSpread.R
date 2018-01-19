@@ -8,7 +8,7 @@ defineModule(sim, list(
   authors = c(
     person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
     person(c("Eliot", "J B"), "McIntire", email = "eliot.mcintire@canada.ca", role = c("aut")),
-    person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut"))
+    person(c("Barry", "J"), "Cooke", email = "barry.cooke@canada.ca", role = c("aut"))
   ),
   childModules = character(),
   version = numeric_version("0.0.1"),
