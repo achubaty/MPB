@@ -269,7 +269,7 @@ pine <- scale(pine_map)
 set.seed(1291)
 ptm <- proc.time()
 
-chain1 <- fit.model.mcmc( ## TO DO: parameterive these for my MPB stuff!
+chain1 <- fit.model.mcmc( ## TODO: parameterize these for my MPB stuff!
   n.iter = 250 * 1000,    ## use 250,000 for analysis; use 1000 for e.g., testing
   print.iter = TRUE,
   thin.u = 100,
