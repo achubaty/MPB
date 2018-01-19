@@ -80,7 +80,7 @@ if (!require(rgdal)) {
 if (!require(raster)) {
   install.packages("raster")
 }
-if (!require(amc) || packageVersion("amc") < "0.1.3") {
+if (!require(amc) || packageVersion("amc") < "0.1.3.9001") {
   devtools::install_github("achubaty/amc@development", dependencies = TRUE)
 }
 if (!require(SpaDES) || packageVersion("SpaDES") < "2.0.0") {
