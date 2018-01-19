@@ -108,15 +108,15 @@ mpbRedTopGrowthInit <- function(sim) {
   ## use only the start year's non-zero and non-NA data
   r <- sim$massAttacksMap[[paste0("X", start(sim))]]
   ids <- which(!is.na(r[]) | (r[] > 0))
-  mpb.sp <- xyFromCell(r, cell = ids)
+  mpb.sp <- raster::xyFromCell(r, cell = ids)
   sim$massAttacksDT <- data.table(
     ID = ids,
-    X = mpb.sp[, 1],
-    Y = mpb.sp[, 2],
+    #X = mpb.sp[, 1],
+    #Y = mpb.sp[, 2],
     NUMTREES = r[ids],
-    PROPPINE = raster::extract(sim$pineMap, mpb.sp),
     CLIMATE = raster::extract(sim$mpbClimateDataMaps, mpb.sp)
   )
+  sim$massAttacksDT[NUMTREES > 0]
   rm(r)
 
   ## growth data
@@ -156,19 +156,24 @@ mpbRedTopGrowthInit <- function(sim) {
   ## define growth function (from regression) for each dataset
   sim$growthFunction <- switch(P(sim)$dataset,
      "Berryman1979_fit" = {
-       function(x) {
+       function(x, s) {
+         # TODO: check this works
          m <- lm(log10Rt ~ poly(log10Xtm1, 3, raw = TRUE), data = sim$growthData)
-         unname(predict(m, newdata = data.frame(log10Xtm1 = x)))
+         s * unname(predict(m, newdata = data.frame(log10Xtm1 = x)))
        }
      },
      "Berryman1979_forced" = {
-       function(x) {
+       function(x, s) {
+         # TODO: check this works
          poly3.params <- c(1.1, -0.2, -0.9, -0.24)
-         (poly3.params[4] * x^3 + poly3.params[3] * x^2 + poly3.params[2] * x + poly3.params[1])
+         s * (poly3.params[4] * x^3 + poly3.params[3] * x^2 + poly3.params[2] * x + poly3.params[1])
        }
      },
      "Boone2001" = {
-       function(x) {
+       function(x, s) {
+         ## x is number of attacked trees (NUMTREES)
+         ## s is scaling parameter (0,1), based on climate (CLIMATE)
+
          ## mortality from emigration/dispersal
          # r: relative stocking value (0,1)
          # d: slope parameter [1,Inf)
@@ -180,9 +185,6 @@ mpbRedTopGrowthInit <- function(sim) {
          # use 2004 data as baseline for unweakened hosts (i.e., a good year for trees)
          m <- lm(amc::logit(PropKilled) ~ log(Attacked), data = subset(BooneData, Year == "2004"))
          a <- 0.9              # scale parameter; TODO: explain this
-         s <- 0.9              # s: scaling parameter (0,1); TODO: based on climate
-         #s <- sim$climateSuitabilityMap[x]
-         #s <- massAttacksDT["CLIMATE"]
          d <- 3                # d: slope parameter [1,Inf)
          r <- 0.2              # r: relative stocking value (0,1)
          fudge2 <- 0.9         # from MacQuarrie 2011 (Fig 3d); TODO: extract from raw data
@@ -255,11 +257,11 @@ mpbRedTopGrowthPlot <- function(sim) {
 
 mpbRedTopGrowthGrow <- function(sim) {
   ## determine the actual growth based on the actual number of attacked trees/ha
-  xt <- function(xtminus1) {
+  xt <- function(xtminus1, cs) {
     map.res <- xres(xtminus1)
-    per.ha <- 10^sim$growthFunction(log10(xtminus1)) * xtminus1 ## TO DO: something is off about this
+    per.ha <- 10^sim$growthFunction(log10(xtminus1), cs) * xtminus1 ## TODO: something is off about this
     return(map.res * per.ha)
   }
 
-  sim$massAttacksDT <- sim$massAttacksDT[NUMTREES := xt(NUMTREES)]
+  sim$massAttacksDT <- sim$massAttacksDT[NUMTREES := xt(NUMTREES, CLIMATE)]
 }
