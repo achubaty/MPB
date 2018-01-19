@@ -96,7 +96,7 @@ insect_spread <- function(r, loci, asymmetry, asymmetryAngle, lambda,
     nrowOut <- NROW(out)
     out <- spread2(r, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
                    asymmetry = asymmetry, asymmetryAngle = 90,
-                   circle = TRUE, allowOverlap = TRUE,
+                   circle = TRUE, allowOverlap = NA,
                    returnDistances = TRUE, returnFrom = TRUE)
     if (nrowOut != NROW(out)) {
       # might spread and have none that are <1 unit. Just go back to while loop
