@@ -53,7 +53,7 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
       Plot(sim$pineMap, title = c("Percent Jack Pine", "Percent Lodgepole Pine"))
-      Plot(MPB$studyArea, addTo = "sim$pineMap") # TODO: check that this correctly adds polygons to each map
+      Plot(sim$studyArea, addTo = "sim$pineMap") # TODO: check that this correctly adds polygons to each map
 
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbPine", "plot")
@@ -176,24 +176,24 @@ mpbPineImportMap <- function(sim) {
                    "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
   stopifnot(all(file.exists(f)))
 
-  s <- raster::stack(f)# / 100 # use proportion instead of percentage
+  s <- raster::stack(f) # this map is a percentage; need to use proportion (see below)
   names(s) <- layerNames
   sim$pineMap <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
                        layerNames = layerNames, inRAM = TRUE)
 
   ## create data.table version
-  jpDT <- data.table(PIXELID = 1L:ncell(sim$pineMap[["Jack_Pine"]]),
-                     VALUE = sim$pineMap[["Jack_Pine"]][] / 100)
+  jpDT <- data.table(ID = 1L:ncell(sim$pineMap[["Jack_Pine"]]),
+                     VALUE = sim$pineMap[["Jack_Pine"]][] / 100) # use proportion
   jpDT <- jpDT[VALUE > 0]
   jpDT <- jpDT[, SPECIES := "jack"]
 
-  lpDT <- data.table(PIXELID = 1L:ncell(sim$pineMap[["Lodgepole_Pine"]]),
-                     VALUE = sim$pineMap[["Lodgepole_Pine"]][] / 100)
+  lpDT <- data.table(ID = 1L:ncell(sim$pineMap[["Lodgepole_Pine"]]),
+                     VALUE = sim$pineMap[["Lodgepole_Pine"]][] / 100) # use proportion
   lpDT <- lpDT[VALUE > 0]
   lpDT <- lpDT[, SPECIES := "lodgepole"]
 
   sim$pineDT <- merge(lpDT, jpDT, all = TRUE)
-  setkey(sim$pineDT, PIXELID)
+  setkey(sim$pineDT, ID)
 
   return(invisible(sim))
 }

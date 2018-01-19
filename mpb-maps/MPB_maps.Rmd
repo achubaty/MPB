@@ -321,14 +321,14 @@ if (isTRUE(._MAPS_USERAW_.)) {
     sfLibrary(sp)
     sfExport("crs.boreal", "maps.dir", "output.dir", "rdata.path", "west.boreal.raster")
     
-    ## TO DO: implement caching
+    ## TODO: implement caching
     ab.pnts.boreal.raster.stack <- sfClusterApplyLB(ab.pnts.dir.shp, function(shp) {
       yr <- strsplit(shp, "_")[[1]][3] %>% substr(1, 4)
       pnts <- getOGR(shp, output.dir)
       names(pnts) <- toupper(names(pnts))
       
       ## reproject
-      ## TO DO: is this necessary?
+      ## TODO: is this necessary?
       pnts.boreal <- spTransform(pnts, crs.boreal)
       stopifnot(gIsValid(pnts.boreal))
       if (is.null(pnts.boreal@data$NUM_TREES)) {
@@ -675,7 +675,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
   
   writeRaster(bcab.boreal.raster.stack,
               filename = file.path(rdata.path, "mpb_bcab_boreal_1998-2016.tif"),
-              overwrite = TRUE) ## TO DO: add options to compress raster depending on size
+              overwrite = TRUE) ## TODO: add options to compress raster depending on size
 
   ## also create a brick version
   bcab.boreal.raster.brick <- brick(bcab.boreal.raster.stack,
@@ -685,7 +685,7 @@ if (isTRUE(._MAPS_MKRSTR_.)) {
 
   writeRaster(bcab.boreal.raster.brick,
               filename = file.path(rdata.path, "mpb_bcab_boreal_1997-2016_brick.tif"),
-              overwrite = TRUE) ## TO DO: add options to compress raster depending on size
+              overwrite = TRUE) ## TODO: add options to compress raster depending on size
 
   saveObjects(c("bcab.boreal.raster.brick", "bcab.boreal.raster.stack"), rdata.path)
 
