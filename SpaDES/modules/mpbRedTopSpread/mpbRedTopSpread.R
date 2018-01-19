@@ -123,54 +123,20 @@ mpbRedTopSpreadPlot <- function(sim) {
 mpbRedTopSpreadDispersal <- function(sim) {
   ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
   MAXTREES <- round(1125 * (res(sim$massAttacksMap) / 100) ^ 2)
-  
-  r <- sim$massAttacksMap[[paste0("X", start(sim))]]
-  loci <- sim$massAttacksDT$ID
-  
-  ## asymmetric spread (biased eastward)
-  out <- spread2(r, start = loci, spreadProb = 1, asRaster = FALSE, iterations = 0,
-                 circle = TRUE,
-                 asymmetry = P(sim)$asymmetry,
-                 asymmetryAngle = P(sim)$asymmetryAngle,
-                 returnDistances = TRUE, returnFrom = TRUE)
-  set(out, , "abundanceActive", MAXTREES)
-  set(out, , "abundanceSettled", 0)
-  
-  done <- FALSE
-  while (!done) {
-    out <- spread2(r, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
-                   circle = TRUE, returnDistances = TRUE, returnFrom = TRUE)
-    set(out, , "order", seq_len(NROW(out)))
-    attribs <- attr(out, "spreadState")
-    
-    outInactive <- out[!attr(out, "spreadState")$whActive, ]
-    setkey(outInactive, initialPixels, pixels)
-    setkey(out, initialPixels, from)
-    outW_i_columns <- out[outInactive]
-    outWLag1B <- outW_i_columns[which(state != "inactive")]
-    
-    outWLag1B[, abundanceSettled := pmin(
-      MAXTREES,
-      round(sim$massAttacksDT$PROPPINE[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda) *
-              i.abundanceActive / (.N))
-    ), by = "from"]
-    outWLag1B[, abundanceActive := pmin(
-      MAXTREES,
-      round((1 - sim$massAttacksDT$PROPPINE[pixels] * sim$dispKern(distance, i.distance, P(sim)$dispersalKernelLambda)) *
-              i.abundanceActive / (.N))
-    ), by = "from"]
-    set(outWLag1B, , grep(colnames(outWLag1B), pattern = "^i\\.", value = TRUE), NULL)
-    
-    out <- rbindlist(list(outInactive, outWLag1B), fill = TRUE)
-    setattr(out, "spreadState", attribs)
-    if (sum(out[which(out$state != "inactive")]$abundanceSettled) == 0) {
-      done <- TRUE
-    }
-  }
 
-  sim$mpbSpreadDT <- out
-  rm(out)
-  
+  r <- sim$massAttacksMap[[paste0("X", start(sim))]]
+  ASYMM <- 5     ## TODO: parameterize this
+  BIAS <- 90     ## TODO: parameterize this
+  LAMBDA <- 0.12 ## TODO: parameterize this
+  SATDENS <- 332 ## TODO: parameterize this
+
+  DEBUG <- FALSE ## TODO: parameterize this
+
+  ## asymmetric spread (biased eastward)
+  insect_spread(r = sim$pineMap, loci = sim$massAttacksDT$ID,
+                asymmetry = ASYMM, asymmetryAngle = BIAS, lambda = LAMBDA,
+                saturationDensity = SATDENS, total = MAXTREES, Ncpus = 2, debug = DEBUG)
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
