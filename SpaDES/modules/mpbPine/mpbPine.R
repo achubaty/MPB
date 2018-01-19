@@ -183,13 +183,13 @@ mpbPineImportMap <- function(sim) {
 
   ## create data.table version
   jpDT <- data.table(ID = 1L:ncell(sim$pineMap[["Jack_Pine"]]),
-                     VALUE = sim$pineMap[["Jack_Pine"]][] / 100) # use proportion
-  jpDT <- jpDT[VALUE > 0]
+                     PROPPINE = sim$pineMap[["Jack_Pine"]][] / 100) # use proportion
+  jpDT <- jpDT[PROPPINE > 0]
   jpDT <- jpDT[, SPECIES := "jack"]
 
   lpDT <- data.table(ID = 1L:ncell(sim$pineMap[["Lodgepole_Pine"]]),
-                     VALUE = sim$pineMap[["Lodgepole_Pine"]][] / 100) # use proportion
-  lpDT <- lpDT[VALUE > 0]
+                     PROPPINE = sim$pineMap[["Lodgepole_Pine"]][] / 100) # use proportion
+  lpDT <- lpDT[PROPPINE > 0]
   lpDT <- lpDT[, SPECIES := "lodgepole"]
 
   sim$pineDT <- merge(lpDT, jpDT, all = TRUE)

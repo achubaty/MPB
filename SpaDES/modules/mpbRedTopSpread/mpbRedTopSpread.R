@@ -98,7 +98,7 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
 
 ### initilization
 mpbRedTopSpreadInit <- function(sim) {
-  ## dispersal kernel
+  ## dispersal kernels
   sim$dispKern <- switch(
     P(sim)$dispersalKernel,
     "NegExp" = function(disFar, disNear, lambda) {
@@ -121,10 +121,17 @@ mpbRedTopSpreadPlot <- function(sim) {
 
 ### spread
 mpbRedTopSpreadDispersal <- function(sim) {
-  ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
-  MAXTREES <- round(1125 * (res(sim$massAttacksMap) / 100) ^ 2)
+  ## check that MPB and pine rasters are the same resolution and ncells
 
-  r <- sim$massAttacksMap[[paste0("X", start(sim))]]
+  stopifnot(identical(res(sim$massAttacksMap), res(sim$pineMap)))
+
+  ## X and Y map resolutions should be equal (square pixels)
+  MAPRES <- unique(res(sim$massAttacksMap))
+  stopifnot(length(MAPRES) == 1)
+
+  ## use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (unpublished)
+  MAXTREES <- round(1125 * (MAPRES / 100) ^ 2)
+
   ASYMM <- 5     ## TODO: parameterize this
   BIAS <- 90     ## TODO: parameterize this
   LAMBDA <- 0.12 ## TODO: parameterize this
@@ -133,7 +140,9 @@ mpbRedTopSpreadDispersal <- function(sim) {
   DEBUG <- FALSE ## TODO: parameterize this
 
   ## asymmetric spread (biased eastward)
-  insect_spread(r = sim$pineMap, loci = sim$massAttacksDT$ID,
+  # lodgepole pine and jack pine together ## TODO: allow different parameterizations per species
+  propPineMap <- (sim$pineMap[["Jack_Pine"]] + sim$pineMap[["Lodgepole_Pine"]]) / 100
+  insect_spread(r = propPineMap, loci = sim$massAttacksDT$ID,
                 asymmetry = ASYMM, asymmetryAngle = BIAS, lambda = LAMBDA,
                 saturationDensity = SATDENS, total = MAXTREES, Ncpus = 2, debug = DEBUG)
 

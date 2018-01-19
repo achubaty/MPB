@@ -90,23 +90,30 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
 mpbMassAttacksDataInit <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
 
-  # TODO: incorporate code from MPB_maps.R to create the raster layers
-  f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1998-2016.tif")
-  stopifnot(file.exists(f))
+  ## MPB data for 2008 onward (NOTE: missing 1999 and 2000)
+  ## TODO: incorporate code from MPB_maps.R to create the raster layers
 
-  ## all MPB data (all years -- missing 1999 and 2000)
-  sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, c("X1998", paste0("X", 2001:2016)))
+  # load each of the annual rasters and stack them
+  layerNames <- paste0("X", 2008:2016)
+  files <- file.path(modulePath(sim), "mpbMassAttacksData", "data",
+                     paste0("MPB_BCAB_", substr(layerNames, 2, 5), ".tif"))
+  allMaps <- stack(files) %>% set_names(layerNames)
 
-  # TODO: use fasterize (requires use of sf)
-  sim$rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
+  ## crop and reproject for the study area
+  sim$massAttacksMap <- Cache(amc::cropReproj, allMaps, sim$studyArea, layerNames)
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
 
-  ## data.table of MPB attacks in study area
-  sim$massAttacksDT <- data.table(PIXELID = 1L:ncell(sim$massAttacksMap),
-                                  NUMTREES = sim$massAttacksMap[]) ## NUMTREES is number of attacked trees!
+  # TODO: use fasterize (requires use of sf)
+  rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
+
+  ## data.table of MPB attacks in study area (NUMTREES is number of attacked trees)
+  sim$massAttacksDT <- data.table(ID = 1L:ncell(sim$massAttacksMap),
+                                  NUMTREES = sim$massAttacksMap[[paste0("X", start(sim))]][])
+  setkey(sim$massAttacksDT, "ID")
+  sim$massAttacksDT <- sim$massAttacksDT[NUMTREES > 0]
 
   # join with pine data.table
-  sim$massAttacksDT <- sim$massAttacksDT[sim$pineMapDT]
+  sim$massAttacksDT <- sim$massAttacksDT[sim$pineDT, nomatch = 0]
 
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
