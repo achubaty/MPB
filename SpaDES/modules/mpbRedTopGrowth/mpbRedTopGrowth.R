@@ -84,8 +84,13 @@ doEvent.mpbRedTopGrowth <- function(sim, eventTime, eventType, debug = FALSE) {
 .inputObjects <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbRedTopGrowth", "data", "west.boreal.RData"), envir = envir(sim))
+    f <- file.path(modulePath(sim), "mpbRedTopGrowth", "data", "studyArea.kml")
+    prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    sim$studyArea <- readOGR(f, "studyArea.kml") %>%
+      sp::spTransform(., prj)
   }
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -171,7 +176,7 @@ mpbRedTopGrowthInit <- function(sim) {
          m_e <- function(r, d, s) {
            s * exp(1 - d * r)
          }
-         
+
          # use 2004 data as baseline for unweakened hosts (i.e., a good year for trees)
          m <- lm(amc::logit(PropKilled) ~ log(Attacked), data = subset(BooneData, Year == "2004"))
          a <- 0.9              # scale parameter; TODO: explain this
@@ -182,7 +187,7 @@ mpbRedTopGrowthInit <- function(sim) {
          r <- 0.2              # r: relative stocking value (0,1)
          fudge2 <- 0.9         # from MacQuarrie 2011 (Fig 3d); TODO: extract from raw data
          fudge <- fudge2 + 0.3 # somewhat arbitrary; chosen so that the resulting curve passes 1 when flexed
-         
+
          # resulting function
          log(amc::hill(m$coefficients[[1]], m$coefficients[[2]], exp(a * x))) +
            (fudge - m_e(r, d, s) - 0.03 * exp(a * x))
@@ -228,7 +233,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
       geom_hline(aes(yintercept = 0)) +
       stat_function(fun = sim$growthFunction, colour = "purple")
   }
-  
+
   ### save the object to the simList
   sim$mpbRedTopGrowthPlotGG <- gg
 

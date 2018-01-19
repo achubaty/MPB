@@ -46,7 +46,7 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
     "init" = {
       # do stuff for this event
       sim <- sim$mpbRedTopSpreadInit(sim)
-  
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + P(sim)$dispersalInterval,
                            "mpbRedTopSpread", "dispersal")
@@ -56,19 +56,19 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
     "dispersal" = {
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
-  
+
       sim <- sim$mpbRedTopSpreadDispersal(sim)
-  
+
       sim <- scheduleEvent(sim, time(sim) + P(sim)$dispersalInterval,
                            "mpbRedTopSpread", "dispersal")
-  
+
       # ! ----- STOP EDITING ----- ! #
     },
     "plot" = {
       # ! ----- EDIT BELOW ----- ! #
 
       plot(amc::dt2raster(sim$mpbSpreadDT))
-      
+
       # ! ----- STOP EDITING ----- ! #
     },
     warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
@@ -79,9 +79,14 @@ doEvent.mpbRedTopSpread <- function(sim, eventTime, eventType, debug = FALSE) {
 
 .inputObjects <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  if (!("studyArea" %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbRedTopSpread", "data", "west.boreal.RData"), envir = envir(sim))
+  if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
+    f <- file.path(modulePath(sim), "mpbRedTopSpread", "data", "studyArea.kml")
+    prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    sim$studyArea <- readOGR(f, "studyArea.kml") %>%
+      sp::spTransform(., prj)
   }
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }

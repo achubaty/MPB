@@ -118,7 +118,8 @@ rm(studyArea)
 f <- normalizePath("studyArea/studyArea.kml")
 #ogrInfo(f)
 #ogrListLayers(f)
-studyArea <- readOGR(f, "studyArea.kml")
+studyArea <- readOGR(f, "studyArea.kml") %>% 
+  spTransform(., crs.boreal)
 
 if (!file.exists(extension(f, ".shp"))) {
   writeOGR(studyArea, dsn = extension(f, ".shp"), layer = "studyArea.kml", driver = "ESRI Shapefile")

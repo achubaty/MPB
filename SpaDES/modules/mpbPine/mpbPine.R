@@ -44,7 +44,7 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
     "init" = {
       # do stuff for this event
       sim <- sim$mpbPineImportMap(sim)
-  
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbPine", "plot")
       sim <- scheduleEvent(sim, P(sim)$.saveInitialTime, "mpbPine", "save")
@@ -54,7 +54,7 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
       # do stuff for this event
       Plot(sim$pineMap, title = c("Percent Jack Pine", "Percent Lodgepole Pine"))
       Plot(MPB$studyArea, addTo = "sim$pineMap") # TODO: check that this correctly adds polygons to each map
-      
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbPine", "plot")
       # ! ----- STOP EDITING ----- ! #
@@ -68,24 +68,24 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
 .inputObjects <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   dataDir <- file.path(modulePath(sim), "mpbPine", "data")
-  
+
   ## percent pine layers
   message("Checking for kNN-Species data layers...")
   destDir <- file.path(dataDir, "kNN-Species")
   if (!dir.exists(destDir)) dir.create(destDir)
-  
+
   f <- c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip",
          "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip")
   if (!all(file.exists(file.path(destDir, f)))) {
     message("Extracting kNN-Species data layers...")
     untar(file.path(dataDir, "kNN-Species.tar"), files = f, exdir = path.expand(destDir))
   }
-  
+
   zipFile <- file.path(destDir, f[1])
   destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
-  files <- file.path(destDir2, 
+  files <- file.path(destDir2,
                      c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
-                       "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif.aux.xml", 
+                       "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif.aux.xml",
                        "NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif.xml"))
   if (!all(file.exists(files))) {
     message("  Extracting NFI_MODIS250m_kNN_Species_Pinu_Ban_v0...")
@@ -94,12 +94,12 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
   if (!all(file.exists(file.path(dataDir, basename(files))))) {
     file.copy(files, file.path(dataDir, basename(files)))
   }
-  
+
   zipFile <- file.path(destDir, f[2])
   destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
   files <- file.path(destDir2,
                      c("NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif",
-                       "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif.aux.xml", 
+                       "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif.aux.xml",
                        "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif.xml"))
   if (!all(file.exists(files))) {
     message("  Extracting NFI_MODIS250m_kNN_Species_Pinu_Con_v0...")
@@ -108,25 +108,25 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
   if (!all(file.exists(file.path(dataDir, basename(files))))) {
     file.copy(files, file.path(dataDir, basename(files)))
   }
-  
+
   ## age & total volume layers
   message("Checking for kNN-StructureStandVolume data layers...")
   destDir <- file.path(dataDir, "kNN-StructureStandVolume")
   if (!dir.exists(destDir)) dir.create(destDir)
-  
+
   f <- c("NFI_MODIS250m_kNN_Structure_Stand_Age_v0.zip",
          "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.zip")
   if (!all(file.exists(file.path(destDir, f)))) {
     message("Extracting kNN-StructureStandVolume data layers...")
     untar(file.path(dataDir, "kNN-StructureStandVolume.tar"), files = f, exdir = path.expand(destDir))
   }
-  
+
   zipFile <- file.path(destDir, "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.zip")
   destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
   unzip(zipFile, exdir = destDir2)
   files <- file.path(destDir2,
                      c("NFI_MODIS250m_kNN_Structure_Stand_Age_v0.tif",
-                       "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.tif.aux.xml", 
+                       "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.tif.aux.xml",
                        "NFI_MODIS250m_kNN_Structure_Stand_Age_v0.tif.xml"))
   if (!all(file.exists(files))) {
     message("  Extracting NFI_MODIS250m_kNN_Structure_Stand_Age_v0...")
@@ -135,12 +135,12 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
   if (!all(file.exists(file.path(dataDir, basename(files))))) {
     file.copy(files, file.path(dataDir, basename(files)))
   }
-  
+
   zipFile <- file.path(destDir, "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.zip")
   destDir2 <- file.path(tools::file_path_sans_ext(zipFile))
   files <- file.path(destDir2,
                      c("NFI_MODIS250m_kNN_Structure_Volume_Total_v0.tif",
-                       "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.tif.aux.xml", 
+                       "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.tif.aux.xml",
                        "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.tif.xml"))
   if (!all(file.exists(files))) {
     message("  Extracting NFI_MODIS250m_kNN_Structure_Volume_Total_v0...")
@@ -149,13 +149,16 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
   if (!all(file.exists(file.path(dataDir, basename(files))))) {
     file.copy(files, file.path(dataDir, basename(files)))
   }
-  
+
   ## load study area
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    message("Loading studyArea...")
-    load(file.path(dataDir, "west.boreal.RData"), envir = envir(sim))
+    f <- file.path(modulePath(sim), "mpbPine", "data", "studyArea.kml")
+    prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    sim$studyArea <- readOGR(f, "studyArea.kml") %>%
+      sp::spTransform(., prj)
   }
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -167,30 +170,30 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
 
 mpbPineImportMap <- function(sim) {
   layerNames <- c("Jack_Pine", "Lodgepole_Pine")
-  
+
   f <- file.path(modulePath(sim), "mpbPine", "data",
                  c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.tif",
                    "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.tif"))
   stopifnot(all(file.exists(f)))
-  
-  s <- raster::stack(f)
+
+  s <- raster::stack(f)# / 100 # use proportion instead of percentage
   names(s) <- layerNames
   sim$pineMap <- Cache(amc::cropReproj, x = s, studyArea = sim$studyArea,
                        layerNames = layerNames, inRAM = TRUE)
-  
+
   ## create data.table version
-  jpDT <- as.data.table(rasterToPoints(sim$pineMap[["Jack_Pine"]]))
-  amc::.gc()
-  colnames(jpDT) <- c("x", "y", "VALUE")
+  jpDT <- data.table(PIXELID = 1L:ncell(sim$pineMap[["Jack_Pine"]]),
+                     VALUE = sim$pineMap[["Jack_Pine"]][] / 100)
+  jpDT <- jpDT[VALUE > 0]
   jpDT <- jpDT[, SPECIES := "jack"]
-  
-  lpDT <- as.data.table(rasterToPoints(sim$pineMap[["Lodgepole_Pine"]]))
-  amc::.gc()
-  colnames(lpDT) <- c("x", "y", "VALUE")
+
+  lpDT <- data.table(PIXELID = 1L:ncell(sim$pineMap[["Lodgepole_Pine"]]),
+                     VALUE = sim$pineMap[["Lodgepole_Pine"]][] / 100)
+  lpDT <- lpDT[VALUE > 0]
   lpDT <- lpDT[, SPECIES := "lodgepole"]
-  
+
   sim$pineDT <- merge(lpDT, jpDT, all = TRUE)
-  setkey(sim$pineDT, x, y)
-  
+  setkey(sim$pineDT, PIXELID)
+
   return(invisible(sim))
 }

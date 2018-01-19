@@ -7,7 +7,7 @@ defineModule(sim, list(
   keywords = c("mountain pine beetle, outbreak dynamics, eruptive potential, spread, climate change, twitch response"),
   authors = c(
     person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
-    person(c("Barry", "J"), "Cooke", email = "barry.cooke@ontario.ca", role = c("aut")),
+    person(c("Barry", "J"), "Cooke", email = "barry.cooke@canada.ca", role = c("aut")),
     person(c("Eliot", "J B"), "McIntire", email = "eliot.mcintire@canada.ca", role = c("aut"))
   ),
   childModules = character(),
@@ -40,10 +40,10 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
     "init" = {
       ### check for more detailed object dependencies:
       ### (use `checkObject` or similar)
-  
+
       # do stuff for this event
       sim <- sim$mpbMassAttacksDataInit(sim)
-  
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, P(sim)$.plotInitialTime,
                            "mpbMassAttacksData", "plot", .last() - 1)
@@ -54,11 +54,11 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
       # ! ----- EDIT BELOW ----- ! #
       # do stuff for this event
       Plot(sim$massAttacksMap)
-  
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval,
                            "mpbMassAttacksData", "plot", .last() - 1)
-  
+
       # ! ----- STOP EDITING ----- ! #
     },
     warning(paste("Undefined event type: '", events(sim)[1, "eventType", with = FALSE],
@@ -70,9 +70,13 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
 .inputObjects <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbMassAttacksData", "data", "west.boreal.RData"), envir = envir(sim))
+    f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "studyArea.kml")
+    prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    sim$studyArea <- readOGR(f, "studyArea.kml") %>%
+      sp::spTransform(., prj)
   }
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }
@@ -85,25 +89,25 @@ doEvent.mpbMassAttacksData <- function(sim, eventTime, eventType, debug = FALSE)
 ### template initilization
 mpbMassAttacksDataInit <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
-  
+
   # TODO: incorporate code from MPB_maps.R to create the raster layers
   f <- file.path(modulePath(sim), "mpbMassAttacksData", "data", "mpb_bcab_boreal_1998-2016.tif")
   stopifnot(file.exists(f))
 
   ## all MPB data (all years -- missing 1999 and 2000)
   sim$massAttacksMap <- Cache(amc::cropReproj, f, sim$studyArea, c("X1998", paste0("X", 2001:2016)))
-  
+
   # TODO: use fasterize (requires use of sf)
   sim$rstStudyArea <- Cache(rasterize, sim$studyArea, sim$massAttacksMap)
   setColors(sim$massAttacksMap) <- rep(list(brewer.pal(9, "YlOrRd")), nlayers(sim$massAttacksMap))
-  
+
   ## data.table of MPB attacks in study area
-  sim$massAttacksDT <- as.data.table(rasterToPoints(sim$massAttacksMap, fun = function(x) { x > 0 }))
-  colnames(sim$massAttacksDT) <- c("x", "y", "NUMTREES") ## NUMTREES is number of attacked trees!
-  
+  sim$massAttacksDT <- data.table(PIXELID = 1L:ncell(sim$massAttacksMap),
+                                  NUMTREES = sim$massAttacksMap[]) ## NUMTREES is number of attacked trees!
+
   # join with pine data.table
   sim$massAttacksDT <- sim$massAttacksDT[sim$pineMapDT]
-  
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }

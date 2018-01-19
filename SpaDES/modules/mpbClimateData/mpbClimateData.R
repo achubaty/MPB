@@ -39,10 +39,10 @@ doEvent.mpbClimateData <- function(sim, eventTime, eventType, debug = FALSE) {
     "init" = {
       ### check sim init params etc.
       stopifnot(start(sim) > 1981, end(sim) < 2100)
-  
+
       # do stuff for this event
       sim <- sim$mpbClimateDataImportMaps(sim)
-  
+
       # schedule future event(s)
       sim <- scheduleEvent(sim, start(sim), "mpbClimateData", "switchLayer", .first())
       sim <- scheduleEvent(sim, P(sim)$.plotInitialTime, "mpbClimateData", "plot", .last())
@@ -54,15 +54,15 @@ doEvent.mpbClimateData <- function(sim, eventTime, eventType, debug = FALSE) {
       names(sim$climateSuitabilityMap) <- "layer"
       Plot(sim$climateSuitabilityMap, title = "Climate Suitability Map", new = TRUE)
       Plot(sim$studyArea, addTo = "sim$climateSuitabilityMap")
-      
+
       # schedule future event(s)
-  
+
       sim <- scheduleEvent(sim, time(sim) + P(sim)$.plotInterval, "mpbClimateData", "plot")
       # ! ----- STOP EDITING ----- ! #
     },
     "switchLayer" = {
       sim <- mpbClimateDataSwitchLayer(sim)
-      
+
       sim <- scheduleEvent(sim, time(sim) + 40, "mpbClimateData", "switchLayer")
     },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
@@ -98,7 +98,11 @@ mpbClimateDataSwitchLayer <- function(sim) {
 .inputObjects <- function(sim) {
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbClimateData", "data", "west.boreal.RData"), envir = envir(sim))
+    f <- file.path(modulePath(sim), "mpbClimateData", "data", "studyArea.kml")
+    prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    sim$studyArea <- readOGR(f, "studyArea.kml") %>%
+      sp::spTransform(., prj)
   }
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
@@ -115,25 +119,25 @@ mpbClimateDataImportMaps <- function(sim) {
   files <- dir(path = file.path(modulePath(sim), "mpbClimateData", "data"),
                pattern = suffix, full.names = TRUE)
   files <- c(files[1], grep(P(sim)$climateScenario, files, value = TRUE))
-  
+
   if (length(files) == 0) {
     stop("mpbClimateData: missing data files")
   }
-  
+
   fn1 <- function(files, studyArea) {
     layerNames <- c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100")
     out <- stack(files) %>%
       amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif")) %>%
       stack()
-    
+
     # ensure all cell values between 0 and 1
     out[out < 0.0] <- 0
     out[out > 1.0] <- 1
     out <- setMinMax(out)
-    
+
     return(out)
   }
   sim$mpbClimateDataMaps <- Cache(fn1, files, sim$studyArea)
-  
+
   return(sim)
 }
