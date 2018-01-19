@@ -108,18 +108,16 @@ This area includes the Martin Hills in AB.
 **NOTE:** major GIS operations such as reprojecting and cropping are cached, to speed up subsequent running of the model.
 
 ```{r define-study-area, eval=FALSE}
-## load CRS for the boreal raster
-load(file.path(getOption("spades.modulePath"), "mpbMassAttacksData", "data",
-               "west.boreal.RData")) ## loads studyArea object (spdf)
-crs.boreal <- CRS(proj4string(studyArea))
-rm(studyArea)
-
 ## load studyArea
+prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+
 f <- normalizePath("studyArea/studyArea.kml")
+
 #ogrInfo(f)
 #ogrListLayers(f)
 studyArea <- readOGR(f, "studyArea.kml") %>% 
-  spTransform(., crs.boreal)
+  spTransform(., prj)
 
 if (!file.exists(extension(f, ".shp"))) {
   writeOGR(studyArea, dsn = extension(f, ".shp"), layer = "studyArea.kml", driver = "ESRI Shapefile")

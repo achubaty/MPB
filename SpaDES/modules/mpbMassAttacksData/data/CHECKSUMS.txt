@@ -1,3 +1,2 @@
 "file" "checksum" "algorithm"
-"mpb_bcab_boreal_1998-2016.tif" "734e58f2c2ca1b22" "xxhash64"
-"studyArea.kml" "20be3d3adbda3391" "xxhash64"
+"studyArea.kml" "14b675d7c5574dc8" "xxhash64"
