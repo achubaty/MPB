@@ -65,7 +65,7 @@
 #' dev.useRSGD(FALSE)
 #' dev()
 #' clearPlot()
-#' Plot(r2, zero.color = "red", new = TRUE, col = "Reds")
+#' Plot(r2, zero.color = "blue", new = TRUE, col = "Reds")
 #'
 insect_spread <- function(r, loci, asymmetry, asymmetryAngle, lambda,
                           saturationDensity, total,
