@@ -47,7 +47,7 @@ suppressPackageStartupMessages({
   library(data.table)
   library(devtools)
   library(digest)
-  library(gdalUtils)
+  library(fasterize)
   library(magrittr)
   library(maps)
   library(mapdata)
@@ -83,7 +83,11 @@ if (._USER_. == "achubaty") {
     }
     work.dir <- "~/Documents/GitHub/MPB/mpb-maps"
   } else if (._OS_. == "Windows") {
-    maps.dir <- "//W-VIC-A105388/shared/data"
+    if (grepl("W-VIC-A105254", Sys.info()[["nodename"]])) {
+      maps.dir <- "G:/data"
+    } else {
+      maps.dir <- "//W-VIC-A105388/shared/data"
+    }
     work.dir <- "~/GitHub/MPB/mpb-maps"
   } else {
     stop("Which operating system are you using?")
@@ -144,7 +148,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   if (!dir.exists(adm.path)) dir.create(adm.path)
   for (s in 0:3) {
     assign(paste0("CAN_adm", s),
-           raster::getData('GADM', path = adm.path, country = "Canada", level = s),
+           as(raster::getData('GADM', path = adm.path, country = "Canada", level = s), "sf"),
            envir = .GlobalEnv)
     save(list = paste0("CAN_adm", s), file = file.path(adm.path, paste0("CAN_adm", s, ".Rdata")))
   }
@@ -161,49 +165,37 @@ if (isTRUE(._MAPS_USERAW_.)) {
     dl.data(url, dest = maps.dir, unzip = TRUE)
   }
   
-  # TODO: use sf
-  #
-  #boreal <- read_sf(f)
-
   files <- file.path(rdata.path, c("boreal.RData", "boreal.can.RData"))
   if (all(file.exists(files))) {
     lapply(files, load, envir = .GlobalEnv)
   } else {
-    boreal <- getOGR("NABoreal", file.path(maps.dir, "boreal"))
-    boreal.can <- boreal[boreal$COUNTRY == "CANADA",]
+    boreal <- read_sf(f)
+    boreal.can <- boreal[boreal$COUNTRY == "CANADA", ]
+    save(boreal, file = files[1])
+    save(boreal.can, file = files[2])
   }
-  crs.boreal <- CRS(proj4string(boreal))
+  crs.boreal <- st_crs(boreal)
   rm(f, files)
   
   west.provs <- c("Alberta", "British Columbia", "Saskatchewan")
   canada1.west <- CAN_adm1[CAN_adm1$NAME_1 %in% west.provs, ]
   canada2.west <- CAN_adm2[CAN_adm2$NAME_1 %in% west.provs, ]
 
-  west.boreal <- spTransform(canada1.west, CRSobj =  crs.boreal)
-  west2.boreal <- spTransform(canada2.west, CRSobj =  crs.boreal)
-  canada1.boreal <- spTransform(CAN_adm1, CRSobj =  crs.boreal)
-  canada2.boreal <- spTransform(CAN_adm2, CRSobj =  crs.boreal)
+  west.boreal <- st_transform(canada1.west, crs.boreal)
+  west2.boreal <- st_transform(canada2.west, crs.boreal)
+  canada1.boreal <- st_transform(CAN_adm1, crs.boreal)
+  canada2.boreal <- st_transform(CAN_adm2, crs.boreal)
   
-  # this next line is BROKEN; not sure what happened :(
-  boreal.west <- intersect(boreal, west.boreal) %>%
-    gBuffer(., byid = TRUE, width = 0)
+  boreal.west <- st_intersection(boreal, west.boreal)# %>% st_buffer(., 0)
   
   f <- normalizePath(file.path(rdata.path, "west_boreal.shp"))
-  shapefile(west.boreal, f, overwrite = TRUE)
-  fout <- normalizePath(file.path(rdata.path, "west_boreal.tif"))
-  gdal_rasterize(src_datasource = f, dst_filename = fout,
-                 a = "OBJECTID", l = "west_boreal",
-                 tr = c(._RES_MAPS_., ._RES_MAPS_.)) # TODO: use fasterize (requires sf)
-  west.boreal.raster <- raster(fout)
+  st_write(west.boreal, f, delete_dsn = TRUE)
+  fout <- normalizePath(file.path(rdata.path, "west_boreal.tif"), mustWork = FALSE)
+  west.boreal.raster <- fasterize(west.boreal, raster(west.boreal, res = ._RES_MAPS_.))
+  writeRaster(west.boreal.raster, filename = fout)
+  writeRaster(west.boreal.raster, filename = extension(fout, ".grd"), overwrite = TRUE)
   rm(f, fout)
 
-  # west.empty.raster <- raster(extent(west.boreal), resolution = ._RES_MAPS_.)
-  # west.boreal.raster <- suppressWarnings(
-  #   rasterize(west.boreal, west.empty.raster,
-  #             filename = extension(fout, ".grd"),
-  #             overwrite = TRUE) # TODO: use fasterize (requires sf)
-  # )
-  
   ### Save these new map objects for later use
   objects2save <- c("boreal", "boreal.can", #"boreal.west",
                     "canada1.west", "canada2.west",
@@ -252,7 +244,7 @@ if (isTRUE(._MAPS_USERAW_.) && (._OS_. == "Windows") &&
   layers <- structure( vector("list", length(years)) , names = years)
   i <- 1
   lapply(fc_list, function(x) {
-    fc <- readOGR(dsn = f, layer = x)
+    fc <- st_read(dsn = f, layer = x)
     layers[[i]] <<- fc
     i <<- i + 1
   })
@@ -271,8 +263,8 @@ if (isTRUE(._MAPS_USERAW_.) && (._OS_. == "Windows") &&
   ab_pnts <- ab_pnts[order(names(ab_pnts))]
   ab_poly <- ab_poly[order(names(ab_poly))]
   
-  stopifnot(all(sapply(ab_pnts, is, class2 = "SpatialPointsDataFrame")))
-  stopifnot(all(sapply(ab_poly, is, class2 = "SpatialPolygonsDataFrame")))
+  stopifnot(all(sapply(ab_pnts, function(x) is(x$Shape, class2 = "sfc_POINT"))))
+  stopifnot(all(sapply(ab_poly, function(x) is(x$Shape, class2 = "sfc_MULTIPOLYGON"))))
   rm(layers)
   
   ## save to shapefiles
@@ -282,12 +274,12 @@ if (isTRUE(._MAPS_USERAW_.) && (._OS_. == "Windows") &&
   lapply(ab_pnts, function(x) {
     year <- max(unique(c(x$BEETLE_YR, x$SURVYEAR, x$SURV_YEAR, x$survyear)), na.rm = TRUE)
     f <- file.path(output.dir, paste0("ab_mpb_", year, "spot.shp"))
-    shapefile(x, filename = f, overwrite = TRUE)
+    write_sf(x, dsn = f)
   })
   lapply(ab_poly, function(x) {
     year <- max(unique(c(x$SURVYEAR, x$Survyear)), na.rm = TRUE)
     f <- file.path(output.dir, paste0("ab_mpb_", year, "poly.shp"))
-    shapefile(x, filename = f, overwrite = TRUE) ## throws warnings about field widths
+    write_sf(x, dsn = f)
   })
 }
 ```
@@ -300,7 +292,7 @@ if (isTRUE(._MAPS_USERAW_.) && (._OS_. == "Windows") &&
 if (isTRUE(._MAPS_USERAW_.)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
-    crs.boreal <- CRS(proj4string(boreal))
+    crs.boreal <- st_crs(boreal)
     rm(boreal)
   }
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
@@ -313,34 +305,28 @@ if (isTRUE(._MAPS_USERAW_.)) {
   ## parallel processing of data
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
     sfLibrary(amc)
-    #sfLibrary(gdalUtils)
     sfLibrary(magrittr)
     sfLibrary(raster)
-    sfLibrary(rgdal)
-    sfLibrary(rgeos)
-    sfLibrary(sp)
+    sfLibrary(sf)
     sfExport("crs.boreal", "maps.dir", "output.dir", "rdata.path", "west.boreal.raster")
     
     ## TODO: implement caching
     ab.pnts.boreal.raster.stack <- sfClusterApplyLB(ab.pnts.dir.shp, function(shp) {
       yr <- strsplit(shp, "_")[[1]][3] %>% substr(1, 4)
-      pnts <- getOGR(shp, output.dir)
-      names(pnts) <- toupper(names(pnts))
+      pnts <- st_read(file.path(output.dir, extension(shp, ".shp")))
+      names(pnts) <- c(toupper(names(pnts)[-length(names(pnts))]), "geometry")
       
       ## reproject
       ## TODO: is this necessary?
-      pnts.boreal <- spTransform(pnts, crs.boreal)
-      stopifnot(gIsValid(pnts.boreal))
-      if (is.null(pnts.boreal@data$NUM_TREES)) {
+      pnts.boreal <- st_transform(pnts, crs.boreal)
+      if (is.null(pnts.boreal$NUM_TREES)) {
         warning("AB points data: missing 'NUM_TREES' for year ", yr, ".")
       }
       
-      ## rasterize
+      ## rasterize (fasterize can't use points; gdal_rasterize isn't working either)
       fout <- file.path(rdata.path, paste0("MPB_AB_pnts_", yr, ".tif"))
-      
-      # TODO: use fasterize (requires sf)
       out <- rasterize(pnts.boreal, west.boreal.raster,
-                       field = as.numeric(pnts.boreal@data$NUM_TREES), fun = "sum",
+                       field = as.numeric(pnts.boreal$NUM_TREES), fun = "sum",
                        filename = extension(fout, ".grd"), overwrite = TRUE)
       writeRaster(out, filename = fout, overwrite = TRUE)
       return(out)
@@ -485,7 +471,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       file.rename(extension(f, ".SHP"), extension(f, ".shp"))
       file.rename(extension(f, ".SHX"), extension(f, ".shx"))
     })
-    tmp <- shapefile(extension(f, ".shp"))
+    tmp <- st_read(extension(f, ".shp"))
     year.id <- which(strsplit(f, "/")[[1]] == basename(output.dir)) + 2
     year <- strsplit(f, "/")[[1]][year.id]
     ids <- which(tmp$FHF == "IBM")
@@ -494,8 +480,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
     }
   
-    shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_spot_", year)),
-              overwrite = TRUE)
+    write_sf(tmp[ids, ], dsn = file.path(output.dir, paste0("ibm_spot_", year, ".shp")))
   })
   
   ## polygons data
@@ -506,7 +491,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       file.rename(extension(f, ".SHP"), extension(f, ".shp"))
       file.rename(extension(f, ".SHX"), extension(f, ".shx"))
     })
-    tmp <- shapefile(extension(f, ".shp"))
+    tmp <- st_read(extension(f, ".shp"))
     year.id <- which(strsplit(f, "/")[[1]] == basename(output.dir)) + 2
     year <- strsplit(f, "/")[[1]][year.id]
     ids <- which(tmp$FHF == "IBM")
@@ -515,8 +500,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
       warning("YEAR ", year, ":\n", paste(names(tmp), collapse = " "))
     }
   
-    shapefile(tmp[ids, ], filename = file.path(output.dir, paste0("ibm_poly_", year)),
-              overwrite = TRUE)
+    write_sf(tmp[ids, ], dsn = file.path(output.dir, paste0("ibm_poly_", year, ".shp")))
   })
   
   ## ensure all shapefiles have projections
@@ -547,11 +531,13 @@ if (isTRUE(._MAPS_USERAW_.)) {
     if (isTRUE(allPrjEqual)) {
       lapply(missing.prj, function(f) {
         message("Creating missing projection file:\n  ", f)
-        file.copy(pnts.prj[1], f)
+        file.copy(prj[1], f)
       })
     } else {
       warning("Not all points shapefiles use same projection!")
     }
+    
+    return(invisible(NULL))
   }
   
   checkProjections("pnts")
@@ -567,7 +553,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
 if (isTRUE(._MAPS_USERAW_.)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
-    crs.boreal <- CRS(proj4string(boreal))
+    crs.boreal <- st_crs(boreal)
     rm(boreal)
   }
   suppressWarnings(loadObjects("west.boreal.raster", rdata.path))
@@ -576,7 +562,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
   output.dir <- file.path(maps.dir, "MPB", "bc_mpb_2016")
   bc.poly.files <- dir(path = output.dir, pattern = "poly")
   bc.poly.dir.shp <- unique(sapply(strsplit(bc.poly.files, "\\."), function(x) x[[1]]))
-    
+
   sfInit(cpus = ._NUM_CPUS_., parallel = TRUE) 
     sfLibrary(amc)
     sfLibrary(magrittr)
@@ -586,13 +572,13 @@ if (isTRUE(._MAPS_USERAW_.)) {
     sfLibrary(sp)
     sfExport("._RES_MAPS_.", "crs.boreal", "maps.dir", "output.dir", "rdata.path", "west.boreal.raster")
     
-    ## in parallel: load, reproject, and rasterize each of the bc polygons
+    ## in parallel: load, reproject, and rasterize each of the BC polygons
     #  do as much as possible in a single step (don't save intermediate objects) to minimize RAM use.
-    #  total RAM used can be controlled by adjusting the num.cpus used for processing.
+    #  total RAM used can be controlled by adjusting the number of CPUs used for processing.
     bc.poly.boreal.raster.stack <- sfClusterApplyLB(bc.poly.dir.shp, function(shp) {
       poly.boreal <- getOGR(shp, output.dir) %>% 
         ## reproject to boreal projection
-        spTransform(., crs.boreal) %>%
+        spTransform(., CRS(crs.boreal$proj4string)) %>%
         gBuffer(., byid = TRUE, width = 0)
       
       stopifnot(gIsValid(poly.boreal))
@@ -600,10 +586,13 @@ if (isTRUE(._MAPS_USERAW_.)) {
       ## rasterize
       #  we use 1125 trees/ha, per Whitehead & Russo (2005), Cooke & Carroll (2017)
       #  we assign values to the raster based on the proportion of pixel area covered by the polygon
+      #
+      # TODO: use fasterize (requires sf) -- NOTE: can't do this yet as fasterize can't do 'getCover'
+      #
       yr <- strsplit(shp, "_")[[1]][3]
       out <- rasterize(poly.boreal, west.boreal.raster, getCover = TRUE,
                        filename = file.path(rdata.path, paste0("MPB_BC_poly_", yr, ".grd")),
-                       overwrite = TRUE) # TODO: use fasterize (requires sf)
+                       overwrite = TRUE)
       
       out <- out / 100 * 1125 * (._RES_MAPS_. / 100) ^ 2
       f <- filename(out) ## keep track of this tmp file for deletion later
@@ -636,7 +625,7 @@ if (isTRUE(._MAPS_USERAW_.)) {
 if (isTRUE(._MAPS_MKRSTR_.)) {
   if (!exists("crs.boreal")) {
     loadObjects("boreal", rdata.path)
-    crs.boreal <- CRS(proj4string(boreal))
+    crs.boreal <- st_crs(boreal)
     rm(boreal)
   }
 
