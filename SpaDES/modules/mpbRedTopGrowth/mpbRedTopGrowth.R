@@ -183,7 +183,7 @@ mpbRedTopGrowthInit <- function(sim) {
          }
 
          # use 2004 data as baseline for unweakened hosts (i.e., a good year for trees)
-         m <- lm(amc::logit(PropKilled) ~ log(Attacked), data = subset(BooneData, Year == "2004"))
+         m <- lm(amc::logit(PropKilled) ~ log(Attacked), data = subset(sim$growthData, Year == "2004"))
          a <- 0.9              # scale parameter; TODO: explain this
          d <- 3                # d: slope parameter [1,Inf)
          r <- 0.2              # r: relative stocking value (0,1)
@@ -233,7 +233,7 @@ mpbRedTopGrowthPlotInit <- function(sim) {
            x = "X[t-1] (log trees/ha/yr)",
            y = "R[t] = log x[t]/x[t-1]") +
       geom_hline(aes(yintercept = 0)) +
-      stat_function(fun = sim$growthFunction, colour = "purple")
+      stat_function(fun = sim$growthFunction, args = list(s = 0.9), colour = "purple")
   }
 
   ### save the object to the simList
