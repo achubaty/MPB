@@ -123,7 +123,7 @@ mpbRedTopSpreadPlot <- function(sim) {
 mpbRedTopSpreadDispersal <- function(sim) {
   ## check that MPB and pine rasters are the same resolution and ncells
 
-  stopifnot(identical(res(sim$massAttacksMap), res(sim$pineMap)))
+  stopifnot(all.equal(res(sim$massAttacksMap), res(sim$pineMap)))
 
   ## X and Y map resolutions should be equal (square pixels)
   MAPRES <- unique(res(sim$massAttacksMap))
