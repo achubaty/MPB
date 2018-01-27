@@ -32,6 +32,10 @@
 #'
 #' @param Ncpus  Maximum number of processor cores to use.
 #'
+#' @param maxIterations The maximum number of iterations, regardless of all other drivers
+#'
+#' @param ... Any other arguments passed to spread2
+#'
 #' @param debug  Logical indicating whether debugging/status information should be
 #'               printed to the console. Default \code{FALSE}.
 #'
@@ -70,7 +74,7 @@
 insect_spread <- function(r, loci, asymmetry, asymmetryAngle, lambda,
                           saturationDensity, total,
                           Ncpus = getOption("Ncpus", parallel::detectCores() / 2),
-                          debug = FALSE) {
+                          debug = FALSE, maxIterations = 1e6, ...) {
 
   ## TODO: implement other dispersal kernels
   dispKern <- function(disFar, disNear, lambda) {
@@ -97,7 +101,7 @@ insect_spread <- function(r, loci, asymmetry, asymmetryAngle, lambda,
     out <- spread2(r, start = out, spreadProb = 1, asRaster = FALSE, iterations = 1,
                    asymmetry = asymmetry, asymmetryAngle = asymmetryAngle,
                    circle = TRUE, allowOverlap = NA,
-                   returnDistances = TRUE, returnFrom = TRUE)
+                   returnDistances = TRUE, returnFrom = TRUE, ...)
     if (nrowOut != NROW(out)) {
       # might spread and have none that are <1 unit. Just go back to while loop
       set(out, , "order", seq_len(NROW(out)))
@@ -164,6 +168,10 @@ insect_spread <- function(r, loci, asymmetry, asymmetryAngle, lambda,
       }
 
       if (all(out[, sum(abundanceSettled, na.rm = TRUE) >= unique(Total), by = "initialPixels"])) {
+        done <- TRUE
+      }
+
+      if (attr(out, "spreadState")$totalIterations > maxIterations) {
         done <- TRUE
       }
 
