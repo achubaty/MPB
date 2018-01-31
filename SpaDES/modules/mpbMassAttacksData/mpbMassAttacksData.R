@@ -94,9 +94,9 @@ mpbMassAttacksDataInit <- function(sim) {
   ## TODO: incorporate code from MPB_maps.R to create the raster layers
 
   # load each of the annual rasters and stack them
-  layerNames <- paste0("X", 2008:2016)
+  layerNames <- paste0("X", c(1998, 2001:2016))
   files <- file.path(modulePath(sim), "mpbMassAttacksData", "data",
-                     paste0("MPB_BCAB_", substr(layerNames, 2, 5), ".tif"))
+                     "mpb_bcab_boreal_1998-2016.tif")
   allMaps <- stack(files) %>% set_names(layerNames)
 
   ## crop and reproject for the study area
