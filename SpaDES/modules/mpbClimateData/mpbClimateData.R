@@ -1,6 +1,3 @@
-
-# Everything in this file gets sourced during simInit, and all functions and objects
-# are put into the simList. To use objects and functions, use sim$xxx.
 defineModule(sim, list(
   name = "mpbClimateData",
   description = "insert module description here",
@@ -127,15 +124,13 @@ mpbClimateDataImportMaps <- function(sim) {
   fn1 <- function(files, studyArea) {
     layerNames <- c("X1981.2010", "X2011.2040", "X2041.2070", "X2071.2100")
     out <- stack(files) %>%
-      amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif")) %>%
-      stack()
+      amc::cropReproj(., studyArea, layerNames = layerNames, filename = amc::tf(".tif"))
 
     # ensure all cell values between 0 and 1
-    out[out < 0.0] <- 0
-    out[out > 1.0] <- 1
-    out <- setMinMax(out)
-
-    return(out)
+    out[out[] < 0.0] <- 0
+    out[out[] > 1.0] <- 1
+    out <- setMinMax(out) %>% stack(.) %>% set_names(., layerNames)
+    out
   }
   sim$mpbClimateDataMaps <- Cache(fn1, files, sim$studyArea)
 

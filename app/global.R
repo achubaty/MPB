@@ -1,9 +1,9 @@
 ## load packages and set various options ---------------------------------------
-if (tryCatch(packageVersion("amc") < "0.1.1.9000", error = function(x) TRUE)) {
-  devtools::install_github("achubaty/amc")
+if (tryCatch(packageVersion("amc") < "0.1.1.9003", error = function(x) TRUE)) {
+  devtools::install_github("achubaty/amc@development")
 }
 
-if (tryCatch(packageVersion("SpaDES.core") < "0.1.0", error = function(x) TRUE)) {
+if (tryCatch(packageVersion("SpaDES.core") < "0.1.1", error = function(x) TRUE)) {
   install.packages("SpaDES.core")
 }
 
@@ -42,18 +42,7 @@ raster::rasterOptions(chunksize = 1e9, maxmemory = 4e10)
 ._OS_. <- tolower(Sys.info()[["sysname"]])
 ._USER_. <- Sys.info()[["user"]]
 
-._POLYNUM_. <- 618  ## ecodistrict polygon number to use for demoArea
-
-## check that symlinked directories exist; if not, create them
-links <- file.path("~/GitHub/MPB/app", c("cache", "modules"))
-targets <- file.path("~/SpaDES", basename(links))
-stopifnot(length(links) == length(targets))
-
-for (i in 1:length(links)) {
-  if (Sys.readlink(links[i]) != normalizePath(targets[i])) {
-    file.symlink(links[i], targets[i])
-  }
-}
+._POLYNUM_. <- 609  ## ecodistrict polygon number to use for demoArea
 
 ## set simulation paths
 paths <- list(
@@ -68,6 +57,29 @@ setPaths(
   inputPath = paths$inputPath,
   outputPath = paths$outputPath
 )
+
+## check that symlinked directories exist; if not, create them
+appDir <- file.path("~/GitHub/MPB/app")
+
+links <- c(
+  file.path(appDir, "cache"),
+  file.path(appDir, "modules"),
+  file.path(paths$inputPath, "studyArea")
+)
+targets <- c(
+  file.path("~/SpaDES/cache"),
+  file.path("~/GitHub/MPB/SpaDES/modules"),
+  file.path("~/GitHub/MPB/SpaDES/studyArea")
+)
+stopifnot(length(links) == length(targets))
+
+for (i in 1:length(links)) {
+  if (normalizePath(Sys.readlink(links[i])) != normalizePath(targets[i])) {
+    file.symlink(links[i], dirname(targets[i]))
+  }
+}
+
+rm(links, targets)
 
 ## source additional app functions / modules -----------------------------------
 brk <- function() {
@@ -134,9 +146,8 @@ if (._MAXCLUSTERS_. > 0) {
 ## initialize simulation -------------------------------------------------------
 
 ## load CRS for the boreal raster
-load(file.path(getOption("spades.modulePath"), "mpbMassAttacksData", "data",
-               "west.boreal.RData")) ## loads `studyArea` object (spdf)
-crs.boreal <- CRS(proj4string(studyArea))
+crs.boreal <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113 +x_0=0 +y_0=0",
+                    "+datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
 times <- list(start = 2011, end = 2020)
 parameters <- list(
@@ -187,3 +198,4 @@ mySim <- simInit(times = times, params = parameters, modules = modules,
 
 ## -----------------------------------------------------------------------------
 message(brk(), "finished running global.R [", Sys.time(), "]", "\n", brk())
+

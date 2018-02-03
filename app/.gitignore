@@ -5,6 +5,7 @@ inputs/Ecoregions/
 inputs/Ecozones/
 inputs/*.checksum
 inputs/demoArea_*.rds
+inputs/studyArea
 inputs/*.zip
 outputs/
 packrat/lib*/

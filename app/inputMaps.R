@@ -4,12 +4,12 @@ message(brk(), "start running inputMaps.R [", Sys.time(), "]", "\n")
 stopifnot(exists(c("paths")))
 
 ## -----------------------------------------------------------------------------
-# load studyArea object (SpatialPointsDataFrame) and validate it using gBuffer
-f <- file.path(paths$inputPath, "west.boreal.RData")
+# load studyArea (SpatialPointsDataFrame)
+f <- file.path(paths$inputPath, "studyArea", "studyArea.kml")
 stopifnot(file.exists(f))
-load(f)
-studyArea <- Cache(rgeos::gBuffer, spgeom = studyArea, byid = TRUE, width = 0,
-                   cacheRepo = paths$cachePath)
+prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113 +x_0=0 +y_0=0",
+             "+datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+studyArea <- readOGR(f, "studyArea.kml") %>% spTransform(., prj)
 rm(f)
 
 ## ecodistricts etc. for leaflet maps ------------------------------------------
