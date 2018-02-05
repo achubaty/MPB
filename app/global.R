@@ -75,6 +75,9 @@ stopifnot(length(links) == length(targets))
 
 for (i in 1:length(links)) {
   if (normalizePath(Sys.readlink(links[i])) != normalizePath(targets[i])) {
+    ## ln -s ~/SpaDES/cache ~/GitHub/MPB/app/cache
+    ## ln -s ~/GitHub/MPB/SpaDES/modules ~/GitHub/MPB/app/modules
+    ## ln -s ~/GitHub/MPB/SpaDES/studyArea ~/GitHub/MPB/app/inputs/studyArea
     file.symlink(links[i], dirname(targets[i]))
   }
 }

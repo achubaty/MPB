@@ -72,6 +72,8 @@ doEvent.mpbPine <- function(sim, eventTime, eventType, debug = FALSE) {
   ## percent pine layers
   message("Checking for kNN-Species data layers...")
   destDir <- file.path(dataDir, "kNN-Species")
+
+  # create dir if doesn't already exist (as dir or as symlink)
   if (!dir.exists(destDir)) dir.create(destDir)
 
   f <- c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip",
