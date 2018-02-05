@@ -4,7 +4,7 @@ author:
   - "Alex M. Chubaty"
   - "Barry J. Cooke"
   - "Eliot J. B. McIntire"
-date: "December 1, 2017"
+date: "February 5, 2018"
 output:
   html_document:
     toc: true
@@ -16,11 +16,13 @@ bibliography:
 
 ### `mpbMassAttacksData`
 
-This module imports the raw MPB red top attack data from AB and BC over several years.
-@Cooke:2017fem describes the methodology by which MPB attack data for AB (derived from spatial points) and BC (derived from polygons) have been rasterized and merged into a single `RasterLayer`.
+This module imports the raw MPB red-top attack data from AB and BC over several years (2001-2016), following the methodology of @Cooke:2017fem.
+MPB attack data for AB (derived from spatial points) and BC (derived from spatial polygons) were reprojected to use an Albers equal-area conic projection and rasterized using a common resolution of 250 m x 250 m (matching the pine raster data) and merged into a single raster layer for each year.
+BC raster cell were calculated from the proportion of a polygon within that cell, again assuming an average stem density of 1125 stems/ha [per @Whitehead:2004rz].
+Raster cells for AB were calculated by summing the point values within each 6.25 ha raster cell.
+Where possible, all data downloads and preprocessing were scripted for reproducibility from raw, original sources.
 
-> To provide an unbiased perspective on MPB damage in the two provinces, the two data sets were rasterized to a common resolution, allowing impact to be expressed in common units (hectares attacked per 4 km2 cell).
-> For BC data, raster cells were weighted according to polygon-wide average infestation rates and areas calculated from the proportion of a polygon infested within each raster cell, assuming an average stem density of 1125 mature stems per hectare, which is typical for beetle-prone lodgepole pine stands (Whitehead and Russo, 2005).
-> Data were weighted and calculated for each year in the sequence, and then summed. For Alberta data, the number of attacked trees per point attack cluster was determined from provincial government records, based on a ground survey, and summed across years within each 4 km2 raster cell.
+Because of the long processing time and high memory requirements of the GIS operations performed during data preprocessing, with use a combination of caching approaches – implemented in the `reproducible` R package [@McIntire:2018reproducible] – to speed up subsequent loading and use of these data.
+All preprocessed data are made available in a private Google Drive folder, and subsequently downloaded from there when used by a `SpaDES` module.
 
-**NOTE:** We produced finer-resolution rasters (250m x 250m) to match the resolution of the kNN pine maps.
+#### References

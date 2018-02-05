@@ -201,4 +201,3 @@ mySim <- simInit(times = times, params = parameters, modules = modules,
 
 ## -----------------------------------------------------------------------------
 message(brk(), "finished running global.R [", Sys.time(), "]", "\n", brk())
-

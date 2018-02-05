@@ -3,8 +3,7 @@ title: "mpbManagement"
 author:
   - "Alex M. Chubaty"
   - "Barry J. Cooke"
-  - "Eliot J. B. McIntire"
-date: "April 24, 2017"
+date: "February 5, 2018"
 output:
   html_document:
     toc: true
@@ -16,8 +15,9 @@ bibliography:
 
 ### `mpbManagement`
 
-Implement several management scenarios and evaluate their efficacy.
+We employ a simple module of MPB management based on the detection probability of newly infested pixels.
+Our initial explorations (currently in progress) assume new attacks are detected with 60% probability, and infested trees removed with 100% efficacy.
+This closely matches the current AB management policy implementation.
+We are evaluating the impacts of these two management parameters on MPB spread using several metrics, including changes in spread rates.
 
-Not yet implemented. Currently a stub.
-
-**NOTE:** Steve Cumming's harvest scheduler can be modified to harvest MPB-infested pixels.
+Future simulations may examine more direct economic impacts such as volume loss of merchantable timber, and thus be integrated with economic models (modules).
