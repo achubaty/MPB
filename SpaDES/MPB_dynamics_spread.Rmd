@@ -4,7 +4,7 @@ author:
   - "Alex M. Chubaty"
   - "Barry J. Cooke"
   - "Eliot J. B. McIntire"
-date: "January 15, 2018"
+date: "February 05, 2018"
 output:
   html_document:
     toc: true
@@ -20,6 +20,49 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache = TRUE, echo = TRUE, eval = TRUE, message = FALSE,
                       warning = FALSE)
+
+## make sure CRAN mirror is set
+if (is.null(getOption("repos"))) {
+  options(repos = c(CRAN = "https://cran.rstudio.com/"))
+}
+
+## install/load packages
+if (!require(data.table)) {
+  install.packages("data.table")
+}
+if (!require(devtools)) {
+  install.packages("devtools")
+}
+if (!require(ggplot2)) {
+  install.packages("ggplot2")
+}
+if (!require(igraph)) {
+  install.packages("igraph")
+}
+if (!require(magrittr)) {
+  install.packages("magrittr")
+}
+if (!require(plyr)) {
+  install.packages("plyr")
+}
+if (!require(scales)) {
+  install.packages("scales")
+}
+if (!require(sp)) {
+  install.packages("sp")
+}
+if (!require(rgdal)) {
+  install.packages("rgdal")
+}
+if (!require(raster)) {
+  install.packages("raster")
+}
+if (!require(amc) || packageVersion("amc") < "0.1.3.9002") {
+  devtools::install_github("achubaty/amc", dependencies = TRUE)
+}
+if (!require(SpaDES) || packageVersion("SpaDES") < "2.0.0") {
+  install.package("SpaDES")
+}
 ```
 
 # Introduction
@@ -28,7 +71,50 @@ The goal of this model is to simulate the spread of mountain pine beetle outbrea
 
 ## Study area
 
-Lorem ipsum...
+Our study area spans a region of north-central Alberta (AB) and into Saskatchewan (SK), Canada (114.9704°W – 108.4075°W; 54.42415°N – 56.35593°N).
+This area was selected because it coincides closely with the Cold Lake Air Weapons Range, which represents the east-most extension of MPB in boreal jack pine.
+The west end extends to Lesser Slave Lake, so there are light populations persistently established since 2010, which yields enough data to test model growth and spread predictions.
+
+**NOTE:** major GIS operations such as reprojecting and cropping are cached, to speed up subsequent running of the model.
+
+```{r define-study-area}
+## Canadian adminstrative boundaries
+load("~/Documents/Data/shared/CAN_adm/CAN_adm1.Rdata") # CAN_adm1
+load("~/Documents/Data/shared/CAN_adm/CAN_adm3.Rdata") # CAN_adm3
+
+ab <- CAN_adm1[CAN_adm1$NAME_1 == "Alberta", ]
+ab3 <- CAN_adm3[CAN_adm3$NAME_1 == "Alberta", ]
+ab_cities <- ab3[ab3$ENGTYPE_3 == "City", ]
+bc <- CAN_adm1[CAN_adm1$NAME_1 == "British Columbia", ]
+west <- CAN_adm1[(CAN_adm1$NAME_1 == "British Columbia" |
+                  CAN_adm1$NAME_1 == "Alberta" |
+                  CAN_adm1$NAME_1 == "Saskatchewan"), ]
+
+## load studyArea
+prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+             "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+f <- normalizePath("~/GitHub/MPB/SpaDES/studyArea/studyArea.kml")
+studyArea <- readOGR(f, "studyArea.kml") %>%
+  spTransform(., prj)
+west2 <- spTransform(west, proj4string(studyArea))
+
+studyArea@data$id <- rownames(studyArea@data)
+studyArea_pnts <- fortify(studyArea, region = "id")
+studyArea_df <- join(studyArea_pnts, studyArea@data, by = "id")
+
+west2@data$id <- rownames(west2@data)
+west2_pnts <- fortify(west2, region = "id")
+west2_df <- join(west2_pnts, west2@data, by = "id")
+
+ggplot(west2_df) +
+  aes(long, lat, group = group) +
+  geom_polygon() +
+  geom_path(color = "white") +
+  coord_equal() +
+  geom_polygon(data = studyArea_df, color = "white", fill = hue_pal()(16)[11]) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.text.x = element_blank(), axis.text.y = element_blank())
+```
 
 ## Module descriptions
 
@@ -53,83 +139,24 @@ Lorem ipsum...
 ```{r child = 'modules/mpbManagement/mpbManagement.Rmd'}
 ```
 
-# Installation and setup
+# Initialize and run the simulation
 
-Install the most recent version of the `SpaDES` package from the development branch (packages version `2.0.0` or higher is required.)
+## Simulation setup
 
-```{r install-packages}
-if (is.null(getOption("repos"))) {
-  options(repos = c(CRAN = "https://cran.rstudio.com/"))
-}
-
-if (!require(data.table)) {
-  install.packages("data.table")
-}
-if (!require(devtools)) {
-  install.packages("devtools")
-}
-if (!require(igraph)) {
-  install.packages("igraph")
-}
-if (!require(sp)) {
-  install.packages("sp")
-}
-if (!require(rgdal)) {
-  install.packages("rgdal")
-}
-if (!require(raster)) {
-  install.packages("raster")
-}
-if (!require(amc) || packageVersion("amc") < "0.1.3.9002") {
-  devtools::install_github("achubaty/amc@development", dependencies = TRUE)
-}
-if (!require(SpaDES) || packageVersion("SpaDES") < "2.0.0") {
-  devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
-}
-```
-
-Load required packages and set some default options for data loading etc.
-
-```{r additional-setup}
+```{r sim-setup}
 setPaths(
   cachePath = "~/SpaDES/cache",
   modulePath = "~/GitHub/MPB/SpaDES/modules"
 )
 if (interactive()) dev.useRSGD(FALSE)
-```
-
-# Initialize and run the simulation
-
-## Define study area
-
-The study area straddles the Alberta (AB) and Saskatchewan (SK) border between Lesser Slave Lake to the west and Cold Lake to the east, per discussions with Barry.
-This area includes the Martin Hills in AB.
-
-**NOTE:** major GIS operations such as reprojecting and cropping are cached, to speed up subsequent running of the model.
-
-```{r define-study-area, eval=FALSE}
-## load studyArea
-prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
-                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
-
-f <- normalizePath("studyArea/studyArea.kml")
-
-#ogrInfo(f)
-#ogrListLayers(f)
-studyArea <- readOGR(f, "studyArea.kml") %>% 
-  spTransform(., prj)
-
-if (!file.exists(extension(f, ".shp"))) {
-  writeOGR(studyArea, dsn = extension(f, ".shp"), layer = "studyArea.kml", driver = "ESRI Shapefile")
-}
 
 times <- list(start = 2011, end = 2020)
 params <- list(
   mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
   mpbPine = list(lowMemory = TRUE), ## set to TRUE on laptop
-  mpbRedTopGrowth = list(dataset = "Berryman1979_forced")
+  mpbRedTopGrowth = list(dataset = "Boone_2011")
 )
-objects <- list(studyArea = demoArea)
+#objects <- list(studyArea = studyArea)
 
 ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData (not all three)
 modules <- list(
@@ -140,13 +167,13 @@ modules <- list(
   "mpbRedTopSpread",
   "mpbManagement"
 )
+
+MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
 ```
 
 ## Run the model
 
 ```{r simulation, fig.keep="last", eval=FALSE}
-MPB <- simInit(times = times, params = params, modules = modules, objects = objects)
-
 ## the first time you run this, esp. w/ large study area, it will be slow because
 ## of the GIS operations taking place. However, because these slow steps are cached,
 ## subsequent runs will be much faster (plotting will became slowest step).

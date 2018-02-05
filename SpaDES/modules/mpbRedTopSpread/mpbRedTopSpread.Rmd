@@ -23,6 +23,6 @@ The POM-fit parameterization is then used for projecting MPB spread into the fut
 
 Currently, the module implements a negative exponential dispersal kernel (others will be implemented) and we use the `spread2` function from the `SpaDES.tools` package [@Chubaty:2018st] to disperse propagules.
 
-![](sample_spread.png)
+![](modules/mpbRedTopSpread/sample_spread.png)
 
 #### References

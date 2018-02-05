@@ -26,7 +26,7 @@ There is only one Canadian field data set that captures the rising phase of recr
 Meanwhile, @Cooke:2017fem showed how this cooperation curve could be "hybridized"" with the down-sloping "competition curve" of @MacQuarrie:2011fr which was also derived from Rocky Mountain region field data.
 If the two curves are wholly orthogonal, the parameterized up-sloping co-operation curve can be multiplied by the parameterized down-sloping competition curve, to yield a generation recruitment curve.
 
-![](growthCurves_Box1_Cooke2013.png)
+![](modules/mpbRedTopGrowth/growthCurves_Box1_Cooke2013.png)
 
 Box 1 is drawn from Cooke (2013) and depicts the derivation of the generation recruitment curve used as the default population growth function in our simulation model.
 The base case for a well-defended pine tree is shown in panel (a).
@@ -54,7 +54,7 @@ The purple dashed parabola in Box 1 panel (a) is the generation recruitment curv
 The effect of climate warming in the cool climate of Alberta and Saskatchewan is to raise recruitment rates in a manner that is independent of attack density.
 This results in a vertical shift of the generation recruitment curve (panel a):
 
-![](growthCurve_Fig6_Cooke&Carroll_inprep.png)
+![](modules/mpbRedTopGrowth/growthCurve_Fig6_Cooke&Carroll_inprep.png)
 
 The amount of vertical shift in MPB recruitment response to climate change is given by models of MPB climatic suitability, such that lower climatic suitability results in a downward shift of the curve, and thus a decrease in eruptive potential.
 

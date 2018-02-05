@@ -1,6 +1,6 @@
 defineModule(sim, list(
   name = "mpbManagement",
-  description = "insert module description here",
+  description = "Mountain Pine Beetle Management Model: Short-run Potential for Establishment, Eruption, and Spread",
   keywords = c("insert key words here"),
   authors = c(
     person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca", role = c("aut", "cre")),
@@ -96,23 +96,15 @@ doEvent.mpbManagement = function(sim, eventTime, eventType, debug = FALSE) {
 }
 
 .inputObjects <- function(sim) {
-  # Any code written here will be run during the simInit for the purpose of creating
-  # any objects required by this module and identified in the inputObjects element of defineModule.
-  # This is useful if there is something required before simulation to produce the module
-  # object dependencies, including such things as downloading default datasets, e.g.,
-  # downloadData("LCC2005", modulePath(sim)).
-  # Nothing should be created here that does not create an named object in inputObjects.
-  # Any other initiation procedures should be put in "init" eventType of the doEvent function.
-  # Note: the module developer can use 'sim$.userSuppliedObjNames' in their function below to
-  # selectively skip unnecessary steps because the user has provided those inputObjects in the
-  # simInit call. e.g.,
-  # if (!('defaultColor' %in% sim$.userSuppliedObjNames)) {
-  #  sim$defaultColor <- 'red'
-  # }
   # ! ----- EDIT BELOW ----- ! #
   if (!('studyArea' %in% sim$.userSuppliedObjNames)) {
-    load(file.path(modulePath(sim), "mpbManagement", "data", "west.boreal.RData"), envir = envir(sim))
+    f <- file.path(modulePath(sim), "mpbManagement", "data", "studyArea.kml")
+    prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    sim$studyArea <- readOGR(f, "studyArea.kml") %>%
+      sp::spTransform(., prj)
   }
+
   # ! ----- STOP EDITING ----- ! #
   return(invisible(sim))
 }

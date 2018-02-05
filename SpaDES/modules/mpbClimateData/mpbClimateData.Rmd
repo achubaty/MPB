@@ -25,7 +25,7 @@ Once the MPB had come into Alberta in large numbers in 2006 the Régnière index
 The North America-wide outputs of these models under standard climate change scenarios were first presented in @Nealis:2008gc, and later received peer-review validation through @Bentz:2010bs and @Safranyik:2010ce.
 A composite SLR index (G, the default) takes the geometric mean of these three models. These are described in further detail in @Nealis:2008gc and @Nealis:2014re.
 
-![](fig4_Cooke&Carroll_climate_indices.png)
+![](modules/mpbClimateData/fig4_Cooke&Carroll_climate_indices.png)
 
 Our simulation models explore 7 MPB climate scenarios (using each of the four indices: S, L, R, G) used as model drivers.
 BioSim version 10 [@Regniere:1995BioSim] was used to generate the climate suitability maps [see @Bentz:2010bs; @Logan:2003fr; @Safranyik:2010ce).
