@@ -8,7 +8,7 @@ if (tryCatch(packageVersion("SpaDES.core") < "0.1.1", error = function(x) TRUE))
 }
 
 if (tryCatch(packageVersion("SpaDES.shiny") < "0.1.0", error = function(x) TRUE)) {
-  devtools::install_github("PredictiveEcology/SpaDES.shiny@development")
+  devtools::install_github("PredictiveEcology/SpaDES.shiny@develop")
 }
 
 library(shiny)

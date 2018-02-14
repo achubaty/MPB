@@ -29,7 +29,7 @@ function(input, output, session) {
   callModule(initialMap, "pineMap", initialRun, "pineMap")
   callModule(initialMap, "climateMap", initialRun, "climateSuitabilityMap")
   callModule(simOutputs, "simFigs", initialRun)
-  callModule(dataInfo, "modDataInfo")
+  callModule(dataInfo, "modDataInfo", initialRun)
   callModule(simInfo, "simInfoTabs", initialRun)
   callModule(moduleInfo, "modInfoBoxes", initialRun)
   #callModule(moduleParams, "modParams", initialRun)
