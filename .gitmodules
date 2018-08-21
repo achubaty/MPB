@@ -1,0 +1,21 @@
+[submodule "modules/mpbRedTopSpread"]
+	path = modules/mpbRedTopSpread
+	url = https://github.com/achubaty/mpbRedTopSpread
+[submodule "modules/mpbRedTopGrowth"]
+	path = modules/mpbRedTopGrowth
+	url = https://github.com/achubaty/mpbRedTopGrowth
+[submodule "modules/mpbPine"]
+	path = modules/mpbPine
+	url = https://github.com/achubaty/mpbPine
+[submodule "modules/mpbMassAttacksData"]
+	path = modules/mpbMassAttacksData
+	url = https://github.com/achubaty/mpbMassAttacksData
+[submodule "modules/mpbClimateData"]
+	path = modules/mpbClimateData
+	url = https://github.com/achubaty/mpbClimateData
+[submodule "modules/mpbRandomLandscapes"]
+	path = modules/mpbRandomLandscapes
+	url = https://github.com/achubaty/mpbRandomLandscapes
+[submodule "modules/mpbManagement"]
+	path = modules/mpbManagement
+	url = https://github.com/achubaty/mpbManagement
