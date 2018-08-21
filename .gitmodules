@@ -19,3 +19,6 @@
 [submodule "modules/mpbManagement"]
 	path = modules/mpbManagement
 	url = https://github.com/achubaty/mpbManagement
+[submodule "mpb-maps"]
+	path = mpb-maps
+	url = https://github.com/achubaty/mpb-maps.git
