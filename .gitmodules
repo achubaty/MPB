@@ -22,3 +22,6 @@
 [submodule "mpb-maps"]
 	path = mpb-maps
 	url = https://github.com/achubaty/mpb-maps.git
+[submodule "BioSim"]
+	path = BioSim
+	url = https://github.com/achubaty/mpb-biosim
