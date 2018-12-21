@@ -58,10 +58,15 @@ if (!require(raster)) {
   install.packages("raster")
 }
 if (!require(amc) || packageVersion("amc") < "0.1.3.9002") {
-  devtools::install_github("achubaty/amc", dependencies = TRUE)
+  devtools::install_github("achubaty/amc@development", dependencies = TRUE)
+}
+if (!require(reproducible)) {
+  #install.packages("reproducible")
+  devtools::install_github("PredictiveEcology/reproducible@development", dependencies = TRUE)
 }
 if (!require(SpaDES) || packageVersion("SpaDES") < "2.0.0") {
-  install.package("SpaDES")
+  #install.package("SpaDES")
+  devtools::install_github("PredictiveEcology/SpaDES@development", dependencies = TRUE)
 }
 ```
 
@@ -78,9 +83,10 @@ The west end extends to Lesser Slave Lake, so there are light populations persis
 **NOTE:** major GIS operations such as reprojecting and cropping are cached, to speed up subsequent running of the model.
 
 ```{r define-study-area}
-## Canadian adminstrative boundaries
-load("~/Documents/Data/shared/CAN_adm/CAN_adm1.Rdata") # CAN_adm1
-load("~/Documents/Data/shared/CAN_adm/CAN_adm3.Rdata") # CAN_adm3
+## Canadian administrative boundaries
+admPath <- checkPath("~/data/CAN_adm", create = TRUE)
+CAN_adm1 <- getData("GADM", country = "CAN", level = 1, path = admPath)
+CAN_adm3 <- getData("GADM", country = "CAN", level = 3, path = admPath)
 
 ab <- CAN_adm1[CAN_adm1$NAME_1 == "Alberta", ]
 ab3 <- CAN_adm3[CAN_adm3$NAME_1 == "Alberta", ]
@@ -93,7 +99,7 @@ west <- CAN_adm1[(CAN_adm1$NAME_1 == "British Columbia" |
 ## load studyArea
 prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
              "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
-f <- normalizePath("~/GitHub/MPB/SpaDES/studyArea/studyArea.kml")
+f <- normalizePath("~/GitHub/MPB/studyArea/studyArea.kml", mustWork = TRUE)
 studyArea <- readOGR(f, "studyArea.kml") %>%
   spTransform(., prj)
 west2 <- spTransform(west, proj4string(studyArea))
@@ -145,8 +151,8 @@ ggplot(west2_df) +
 
 ```{r sim-setup}
 setPaths(
-  cachePath = "~/SpaDES/cache",
-  modulePath = "~/GitHub/MPB/SpaDES/modules"
+  cachePath = "~/GitHub/MPB/cache",
+  modulePath = "~/GitHub/MPB/modules"
 )
 if (interactive()) dev.useRSGD(FALSE)
 
