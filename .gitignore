@@ -1,3 +1,4 @@
+.httr-oauth
 .Rapp.history
 .RData
 .Rhistory
@@ -9,4 +10,5 @@ app/cache
 cache/
 figure/
 figures/
+outputs/
 packrat/lib*/
