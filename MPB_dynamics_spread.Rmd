@@ -133,26 +133,46 @@ if (interactive()) dev.useRSGD(FALSE)
 
 ## set to TRUE on laptop
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
+maxMemory <- 5e+12
+scratchDir <- file.path("/tmp/scratch/MPB")
+
+rasterOptions(default = TRUE)
+options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
 
 times <- list(start = 2011, end = 2020)
 params <- list(
-  mpbClimateData = list(suitabilityIndex = "G"),    ## Can be "G", "S", "L", "R"
-  mpbPine = list(lowMemory = lowMemory),
-  mpbRedTopGrowth = list(dataset = "Boone_2011")
+  mpbClimateData = list(
+    suitabilityIndex = "G",    ## Can be "G", "S", "L", "R"
+    .maxMemory = maxMemory,
+    .tempdir = scratchDir
+  ),
+  mpbMassAttacksData = list(
+    .maxMemory = maxMemory,
+    .tempdir = scratchDir
+  ),
+  mpbPine = list(
+    lowMemory = lowMemory,
+    .maxMemory = maxMemory,
+    .tempdir = scratchDir
+  ),
+  mpbRedTopGrowth = list(
+    dataset = "Boone_2011"
+  )
 )
 #objects <- list(studyArea = studyArea)
 
 ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData (not all three)
 modules <- list(
   #"mpbRandomLandscapes",
-  "mpbPine", "mpbClimateData",
+  "mpbClimateData","mpbPine",
   "mpbMassAttacksData",
   "mpbRedTopGrowth",
   "mpbRedTopSpread",
   "mpbManagement"
 )
 
-MPB <- simInit(times = times, params = params, modules = modules)#, objects = objects)
+MPB <- simInit(times = times, params = params, modules = modules, #objects = objects,
+               loadOrder = unlist(modules))
 ```
 
 ## Run the model
