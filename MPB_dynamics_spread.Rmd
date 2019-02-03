@@ -131,7 +131,6 @@ setPaths(
 
 if (interactive()) dev.useRSGD(FALSE)
 
-## set to TRUE on laptop
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
 scratchDir <- file.path("/tmp/scratch/MPB")
