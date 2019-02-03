@@ -12,7 +12,7 @@ activeDir <- if (pemisc::user("rstudio")) "~/MPB" else "~/GitHub/MPB"
 reproducible::checkPath(activeDir, create = TRUE)
 setwd(activeDir)
 
-sppEquivCol <- "LandWeb" ## TODO: use kNN??
+sppEquivCol <- "LandWeb_MPB"
 
 eventCaching <- c(".inputObjects", "init")
 maxAge <- 400
@@ -117,23 +117,28 @@ httr::set_config(httr::config(http_version = 0))
 # Set up sppEquiv
 #################################################
 data("sppEquivalencies_CA", package = "LandR")
-sppEquivalencies_CA[grep("Pin", LandR), `:=`(EN_generic_short = "Pine",
-                                             EN_generic_full = "Pine",
-                                             Leading = "Pine leading")]
+sppEquivalencies_CA[grep("Pinu_Ban", KNN), `:=`(EN_generic_short = "J Pine",
+                                                EN_generic_full = "Jack.Pine",
+                                                Leading = "Jack Pine leading")]
+sppEquivalencies_CA[grep("Pinu_Con_Lat", KNN), `:=`(EN_generic_short = "L Pine",
+                                                    EN_generic_full = "Lodgepole.Pine",
+                                                    Leading = "Lodgepole Pine leading")]
 
 # Make LandWeb spp equivalencies
-sppEquivalencies_CA[, LandWeb := c(Pice_mar = "Pice_mar", Pice_gla = "Pice_gla",
-                                   Pinu_con = "Pinu_sp", Pinu_ban = "Pinu_sp",
-                                   Popu_tre = "Popu_sp", Betu_pap = "Popu_sp",
-                                   Abie_bal = "Abie_sp", Abie_las = "Abie_sp", Abie_sp = "Abie_sp")[LandR]]
+sppEquivalencies_CA[, LandWeb_MPB := c(Pice_Mar = "Pice_mar", Pice_Gla = "Pice_gla",
+                                       Pinu_Ban = "Pinu_ban", Pinu_Con_Lat = "Pinu_con",
+                                       Popu_Tre = "Popu_sp", Betu_Pap = "Popu_sp",
+                                       Abie_Bal = "Abie_sp", Abie_Las = "Abie_Sp", Abie_Spp = "Abie_sp")[KNN]]
 
-sppEquivalencies_CA[LandWeb == "Abie_sp", EN_generic_full := "Fir"]
-sppEquivalencies_CA[LandWeb == "Abie_sp", EN_generic_short := "Fir"]
-sppEquivalencies_CA[LandWeb == "Abie_sp", Leading := "Fir leading"]
+sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", EN_generic_full := "Fir"]
+sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", EN_generic_short := "Fir"]
+sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", Leading := "Fir leading"]
 
-sppEquivalencies_CA[LandWeb == "Popu_sp", EN_generic_full := "Deciduous"]
-sppEquivalencies_CA[LandWeb == "Popu_sp", EN_generic_short := "Decid"]
-sppEquivalencies_CA[LandWeb == "Popu_sp", Leading := "Deciduous leading"]
+sppEquivalencies_CA[LandWeb_MPB == "Popu_sp", EN_generic_full := "Deciduous"]
+sppEquivalencies_CA[LandWeb_MPB == "Popu_sp", EN_generic_short := "Decid"]
+sppEquivalencies_CA[LandWeb_MPB == "Popu_sp", Leading := "Deciduous leading"]
+
+sppEquivalencies_CA <- sppEquivalencies_CA[!is.na(LandWeb_MPB),]
 
 #################################################
 ## create color palette for species used in model
