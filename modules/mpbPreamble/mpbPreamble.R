@@ -91,7 +91,7 @@ Init <- function(sim) {
                    filename2 = NULL,
                    userTags = c("stable", currentModule(sim))) %>%
     spTransform(mod$prj) %>%
-    gBuffer(., byid = TRUE, width = 0)
+    fixErrors(objectName = "landweb")
 
   ## TODO: use sf
   # studyAreaLarge <- Cache(sf::st_intersection,
@@ -103,7 +103,7 @@ Init <- function(sim) {
   studyAreaLarge <- Cache(raster::intersect,
                           x = landweb,
                           y = sim$studyAreaLarge) %>%
-    rgeos::gBuffer(byid = TRUE, width = 0)
+    fixErrors(objectName = "studyAreaLarge")
 
   ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,
