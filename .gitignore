@@ -10,5 +10,6 @@ app/cache
 cache/
 figure/
 figures/
+inputs/
 outputs/
 packrat/lib*/
