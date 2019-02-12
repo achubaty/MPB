@@ -28,6 +28,7 @@ if (is.null(getOption("repos"))) {
 
 ## install/load packages
 install_github("PredictiveEcology/reproducible@development")
+library(reproducible)
 
 pkgs <- c("data.table", "devtools", "ggplot2", "igraph", "magrittr", "plyr",
           "scales", "sp", "rgdal", "raster",
@@ -68,12 +69,11 @@ west <- CAN_adm1[(CAN_adm1$NAME_1 == "British Columbia" |
                   CAN_adm1$NAME_1 == "Alberta" |
                   CAN_adm1$NAME_1 == "Saskatchewan"), ]
 
-## load studyArea
+## load studyArea for plotting
 prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
-             "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+             "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0") ## NOTE: aea not lcc
 f <- normalizePath("~/GitHub/MPB/studyArea/studyArea.kml", mustWork = TRUE)
-studyArea <- readOGR(f, "studyArea.kml") %>%
-  spTransform(., prj)
+studyArea <- readOGR(f, "studyArea.kml") %>% spTransform(., prj)
 west2 <- spTransform(west, proj4string(studyArea))
 
 studyArea@data$id <- rownames(studyArea@data)
@@ -159,7 +159,8 @@ params <- list(
     dataset = "Boone_2011"
   )
 )
-#objects <- list(studyArea = studyArea)
+
+#objects <- list(studyArea = studyArea) ## studyArea loaded by modules
 
 ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData (not all three)
 modules <- list(
