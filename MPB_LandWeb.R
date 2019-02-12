@@ -27,7 +27,7 @@ fireTimestep <- 1
 ## set run name and parameters
 ##############################################################
 
-runName <- "aspenDispersal_logROS"
+runName <- "MPB_aspenDispersal_logROS"
 
 message(crayon::red(runName))
 
@@ -162,7 +162,7 @@ parameters1 <- list(
 simOutPreamble <- cloudCache(simInitAndSpades,
                              times = list(start = 0, end = 1),
                              params = parameters1,
-                             modules = c("LandWeb_preamble"),
+                             modules = c("mpbPreamble"),
                              objects = objects1,
                              paths = paths,
                              debug = 1,
@@ -197,7 +197,7 @@ objects2 <- list(
 
 parameters2 <- list(
   BiomassSpeciesData = list(
-    "types" = c("KNN", "CASFRI", "Pickell", "ForestInventory"),
+    "types" = c("KNN", "CASFRI", "Pickell"), # don't use ForestInventory
     "sppEquivCol" = sppEquivCol,
     "omitNonVegPixels" = TRUE
   )
