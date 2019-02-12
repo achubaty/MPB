@@ -280,6 +280,9 @@ browser()
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
+  targetCRS <- CRS(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+                         "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+
   if (!suppliedElsewhere("canProvs", sim))
     sim$canProvs <- getData("GADM", country = "CAN", level = 1, path = dPath)
 
@@ -299,7 +302,7 @@ browser()
           filename2 = NULL,
           userTags = c("stable", currentModule(sim)))
 
-    boreal <- sf::read_sf(fname) %>% sf::st_transform(prj)
+    boreal <- sf::read_sf(fname) %>% sf::st_transform(targetCRS)
     sim$borealMap <- boreal[boreal$COUNTRY == "CANADA", ]
   }
 
