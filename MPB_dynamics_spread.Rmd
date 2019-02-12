@@ -27,13 +27,15 @@ if (is.null(getOption("repos"))) {
 }
 
 ## install/load packages
+install_github("PredictiveEcology/reproducible@development")
+library(reproducible)
+
 pkgs <- c("data.table", "devtools", "ggplot2", "igraph", "magrittr", "plyr",
           "scales", "sp", "rgdal", "raster",
           "achubaty/amc@development",
           "PredictiveEcology/LandR@development",
           #"PredictiveEcology/map@development",
           #"PredictiveEcology/pemisc@development",
-          "PredictiveEcology/reproducible@development",
           "PredictiveEcology/SpaDES.core@development",
           "PredictiveEcology/SpaDES.tools@development"
 )
