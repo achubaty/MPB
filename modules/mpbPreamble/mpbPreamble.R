@@ -107,11 +107,6 @@ Init <- function(sim) {
                targetCRS = mod$prj, overwrite = TRUE,
                columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
 
-  ## Provincial Boundaries
-  ml <- mapAdd(sim$canProvs, map = ml, layerName = "Provincial Boundaries",
-               useSAcrs = TRUE, poly = TRUE, overwrite = TRUE,
-               columnNameForLabels = "Name", isStudyArea = FALSE, filename2 = NULL)
-
   ################################################################################
   ## COMPANY-SPECIFIC STUDY AREAS
   dataDir <- file.path("inputs", "FMA_Boundaries")
