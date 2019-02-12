@@ -73,27 +73,38 @@ Init <- function(sim) {
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
-  targetCRS <- CRS(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                         "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+  # targetCRS <- CRS(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+  #                        "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+  targetCRS <- mod$prj
 
   ## LandWeb study area -- LTHFC (aka "fire return interval") map
   fname <- file.path(dPath, "landweb_ltfc_v6.shp")
   fexts <- c(".dbf", ".prj", ".sbn", ".sbx", ".shx")
-browser()
-  LandWebStudyArea <- Cache(prepInputs,
-                            targetFile = basename(fname),
-                            alsoExtract = vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
-                            archive = asPath(extension(fname, "zip")),
-                            destinationPath = dPath,
-                            url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
-                            fun = "raster::shapefile",
-                            filename2 = NULL,
-                            userTags = c("stable", currentModule(sim)))
 
-  studyAreaLarge <- intersect(LandWebStudyArea, sim$studyAreaLarge)
+  landweb <- Cache(prepInputs,
+                   targetFile = basename(fname),
+                   alsoExtract = vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
+                   archive = asPath(extension(fname, "zip")),
+                   destinationPath = dPath,
+                   url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
+                   fun = "raster::shapefile",
+                   filename2 = NULL,
+                   userTags = c("stable", currentModule(sim))) %>%
+    spTransform(mod$prj) %>%
+    gBuffer(., byid = TRUE, width = 0)
 
-  ml <- mapAdd(layerName = "MPB Study Area",
-               targetCRS = targetCRS, overwrite = TRUE,
+  ## TODO: use sf
+  # studyAreaLarge <- Cache(sf::st_intersection,
+  #                         x = sf::sp_as_sf(landweb),
+  #                         y = sf::sp_as_sf(sim$studyAreaLarge)) %>%
+  #   as("Spatial")
+
+  studyAreaLarge <- Cache(raster::intersect,
+                          x = landweb,
+                          y = sim$studyAreaLarge)
+
+  ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
+               targetCRS = mod$prj, overwrite = TRUE,
                columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
 
   ## Provincial Boundaries
@@ -280,8 +291,8 @@ browser()
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
-  prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-               "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  mod$prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+                   "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
   if (!suppliedElsewhere("canProvs", sim))
     sim$canProvs <- getData("GADM", country = "CAN", level = 1, path = dPath)
@@ -302,7 +313,7 @@ browser()
           filename2 = NULL,
           userTags = c("stable", currentModule(sim)))
 
-    boreal <- sf::read_sf(fname) %>% sf::st_transform(prj)
+    boreal <- sf::read_sf(fname) %>% sf::st_transform(mod$prj)
     sim$borealMap <- boreal[boreal$COUNTRY == "CANADA", ]
   }
 
@@ -311,9 +322,10 @@ browser()
     west <- sim$canProvs[(sim$canProvs$NAME_1 == "Alberta" |
                             sim$canProvs$NAME_1 == "Saskatchewan"), ]
 
-    sim$studyAreaLarge <- spTransform(west, prj) %>%
+    sim$studyAreaLarge <- spTransform(west, mod$prj) %>%
       sf::st_as_sf() %>%
       sf::st_intersection(sim$borealMap) %>%
+      sf::st_buffer(0) %>%
       as(., "Spatial") ## TODO: temporary conversion back to sp (we will need it sf later)
   }
 
