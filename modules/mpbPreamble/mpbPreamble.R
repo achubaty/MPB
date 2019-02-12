@@ -288,9 +288,13 @@ browser()
                    "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
   if (!suppliedElsewhere("canProvs", sim)) {
-    sim$canProvs <- getData("GADM", country = "CAN", level = 1, path = dPath) %>%
-      spTransform(mod$prj) %>%
-      rgeos::gBuffer(byid = TRUE, width = 0)
+    prepCanProvs <- function(prj) {
+      getData("GADM", country = "CAN", level = 1, path = dPath) %>%
+        spTransform(mod$prj) %>%
+        fixErrors(objectName = "sim$canProvs")
+    }
+
+    sim$canProvs <- Cache(prepCanProvs, prj = mod$prj)
   }
 
   ## boreal map
@@ -327,3 +331,4 @@ browser()
 
   return(sim)
 }
+
