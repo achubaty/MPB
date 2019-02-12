@@ -46,6 +46,3 @@
 [submodule "modules/LandR_BiomassGMOrig"]
 	path = modules/LandR_BiomassGMOrig
 	url = git@github.com:eliotmcintire/LandR_BiomassGMOrig
-[submodule "modules/LandWeb_preamble"]
-	path = modules/LandWeb_preamble
-	url = https://github.com/fRI-Research/LandWeb_preamble
