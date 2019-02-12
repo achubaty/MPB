@@ -1,8 +1,8 @@
 studyAreaMPB <- function(ml, runName, dataDir, canProvs) {
   if (!dir.exists(dataDir)) dir.create(dataDir)
 
-  prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
-               "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+               "+x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
   mpb <- amc::loadStudyArea(dataDir, "studyArea.kml", prj)
 
   shapefile(mpb, filename = file.path(dataDir, "studyArea.shp"), overwrite = TRUE)
