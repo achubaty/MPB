@@ -27,7 +27,7 @@ fireTimestep <- 1
 ## set run name and parameters
 ##############################################################
 
-runName <- "aspenDispersal_logROS"
+runName <- "MPB_aspenDispersal_logROS"
 
 message(crayon::red(runName))
 
@@ -197,7 +197,7 @@ objects2 <- list(
 
 parameters2 <- list(
   BiomassSpeciesData = list(
-    "types" = c("KNN", "CASFRI", "Pickell", "ForestInventory"),
+    "types" = c("KNN", "CASFRI", "Pickell"), # don't use ForestInventory
     "sppEquivCol" = sppEquivCol,
     "omitNonVegPixels" = TRUE
   )
