@@ -97,21 +97,19 @@ Init <- function(sim) {
   # studyAreaLarge <- Cache(sf::st_intersection,
   #                         x = sf::sp_as_sf(landweb),
   #                         y = sf::sp_as_sf(sim$studyAreaLarge)) %>%
-  #   as("Spatial")
+  #   as("Spatial") %>%
+  #   sf::st_buffer(0)
 
   studyAreaLarge <- Cache(raster::intersect,
                           x = landweb,
-                          y = sim$studyAreaLarge)
+                          y = sim$studyAreaLarge) %>%
+    rgeos::gBuffer(byid = TRUE, width = 0)
 
   ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,
                columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
-
-  ################################################################################
-  ## COMPANY-SPECIFIC STUDY AREAS
-  dataDir <- file.path("inputs", "FMA_Boundaries")
-
-  ml <- studyAreaMPB(ml, P(sim)$runName, dataDir, sim$canProvs)
+browser()
+  ml <- studyAreaMPB(ml, P(sim)$runName, dPath, sim$canProvs)
 
   ##########################################################
   # LCC2005
@@ -289,8 +287,11 @@ Init <- function(sim) {
   mod$prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                    "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
-  if (!suppliedElsewhere("canProvs", sim))
-    sim$canProvs <- getData("GADM", country = "CAN", level = 1, path = dPath)
+  if (!suppliedElsewhere("canProvs", sim)) {
+    sim$canProvs <- getData("GADM", country = "CAN", level = 1, path = dPath) %>%
+      spTransform(mod$prj) %>%
+      rgeos::gBuffer(byid = TRUE, width = 0)
+  }
 
   ## boreal map
   if (!suppliedElsewhere("borealMap")) {
