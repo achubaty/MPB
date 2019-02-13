@@ -129,7 +129,7 @@ sppEquivalencies_CA[grep("Pinu_Con_Lat", KNN), `:=`(EN_generic_short = "L Pine",
 sppEquivalencies_CA[, LandWeb_MPB := c(Pice_Mar = "Pice_mar", Pice_Gla = "Pice_gla",
                                        Pinu_Ban = "Pinu_ban", Pinu_Con_Lat = "Pinu_con",
                                        Popu_Tre = "Popu_sp", Betu_Pap = "Popu_sp",
-                                       Abie_Bal = "Abie_sp", Abie_Las = "Abie_Sp", Abie_Spp = "Abie_sp")[KNN]]
+                                       Abie_Bal = "Abie_sp", Abie_Las = "Abie_sp", Abie_Spp = "Abie_sp")[KNN]]
 
 sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", EN_generic_full := "Fir"]
 sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", EN_generic_short := "Fir"]
