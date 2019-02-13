@@ -110,7 +110,7 @@ Init <- function(sim) {
   ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,
                columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
-browser()
+
   ml <- studyAreaMPB(ml, P(sim)$runName, dPath, sim$canProvs)
 
   ##########################################################
