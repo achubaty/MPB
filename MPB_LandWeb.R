@@ -227,6 +227,11 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
 times <- list(start = 0, end = endTime)
 modules <- list("Boreal_LBMRDataPrep", "LandR_BiomassGMOrig", "LBMR",
                 "LandMine", "Biomass_regeneration",
+                "mpbClimateData","mpbPine",
+                "mpbMassAttacksData",
+                "mpbRedTopGrowth",
+                "mpbRedTopSpread",
+                "mpbManagement",
                 "LandWeb_output",
                 "timeSinceFire")
 
