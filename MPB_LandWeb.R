@@ -31,10 +31,11 @@ runName <- "MPB_aspenDispersal_logROS"
 
 message(crayon::red(runName))
 
-endTime <- 900
+startTime <- 2011
+endTime <- 2020
 successionTimestep <- 10
-summaryPeriod <- c(700, endTime)
-summaryInterval <- 100
+summaryPeriod <- c(startTime, endTime) ## TODO: tweak this
+summaryInterval <- 1 ## TODO: tweak this
 cacheId <- list()
 
 ##########################################################
@@ -224,7 +225,7 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
 ######################################################
 # Dynamic Simulation
 ######################################################
-times <- list(start = 0, end = endTime)
+times <- list(start = startTime, end = endTime) ## 2011-2020
 modules <- list("Boreal_LBMRDataPrep", "LandR_BiomassGMOrig", "LBMR",
                 "LandMine", "Biomass_regeneration",
                 "mpbClimateData","mpbPine",
@@ -308,6 +309,23 @@ parameters <- list(
   timeSinceFire = list(
     "startTime" = fireTimestep,
     ".useCache" = eventCaching[1] # way faster without caching for "init"
+  ),
+  mpbClimateData = list(
+    suitabilityIndex = "G",    ## Can be "G", "S", "L", "R"
+    .maxMemory = maxMemory,
+    .tempdir = scratchDir
+  ),
+  mpbMassAttacksData = list(
+    .maxMemory = maxMemory,
+    .tempdir = scratchDir
+  ),
+  mpbPine = list(
+    lowMemory = lowMemory,
+    .maxMemory = maxMemory,
+    .tempdir = scratchDir
+  ),
+  mpbRedTopGrowth = list(
+    dataset = "Boone_2011"
   )
 )
 
