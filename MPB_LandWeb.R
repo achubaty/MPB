@@ -51,6 +51,7 @@ library(LandR)
 library(amc)
 
 packageLoadStartTime <- Sys.time()
+devtools::install_github("PredictiveEcology/reproducible@sfClassAgain")
 SpaDESPkgs <- c(
   "PredictiveEcology/quickPlot@development",
   "PredictiveEcology/SpaDES.core@development",
