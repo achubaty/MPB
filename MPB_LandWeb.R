@@ -233,8 +233,9 @@ modules <- list("Boreal_LBMRDataPrep", "LandR_BiomassGMOrig", "LBMR",
                 "mpbRedTopGrowth",
                 "mpbRedTopSpread",
                 "mpbManagement",
-                "LandWeb_output",
-                "timeSinceFire")
+                "LandWeb_output"#,
+                #"timeSinceFire"
+)
 
 speciesTable <- getSpeciesTable(dPath = Paths$inputPath) ## uses default URL
 if (getOption("LandR.verbose") > 0) {
