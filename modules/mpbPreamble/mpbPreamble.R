@@ -81,17 +81,19 @@ Init <- function(sim) {
   fname <- file.path(dPath, "landweb_ltfc_v6.shp")
   fexts <- c(".dbf", ".prj", ".sbn", ".sbx", ".shx")
 
-  landweb <- Cache(prepInputs,
+  studyAreaLarge <- Cache(prepInputs,
                    targetFile = basename(fname),
-                   alsoExtract = vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
+                   alsoExtract = "similar", #vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
                    archive = asPath(extension(fname, "zip")),
                    destinationPath = dPath,
                    url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
                    fun = "raster::shapefile",
                    filename2 = NULL,
-                   userTags = c("stable", currentModule(sim))) %>%
-    spTransform(mod$prj) %>%
-    fixErrors(objectName = "landweb")
+                   studyArea = sim$studyAreaLarge,
+                   targetCRS = mod$prj,
+                   userTags = c("stable", currentModule(sim), "LandWebFRI")) #%>%
+    #spTransform(mod$prj) %>%
+    #fixErrors(objectName = "landweb")
 
   ## TODO: use sf
   # studyAreaLarge <- Cache(sf::st_intersection,
@@ -100,10 +102,10 @@ Init <- function(sim) {
   #   as("Spatial") %>%
   #   sf::st_buffer(0)
 
-  studyAreaLarge <- Cache(raster::intersect,
-                          x = landweb,
-                          y = sim$studyAreaLarge) %>%
-    fixErrors(objectName = "studyAreaLarge")
+  #studyAreaLarge <- Cache(raster::intersect,
+  #                        x = landweb,
+  #                        y = sim$studyAreaLarge) %>%
+  #  fixErrors(objectName = "studyAreaLarge")
 
   ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,
@@ -287,8 +289,13 @@ browser()
   mod$prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                    "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
+  ## studyAreaLarge
   if (!suppliedElsewhere("canProvs", sim)) {
-    sim$canProvs <- Cache(prepGADM, country = "CAN", level = 1, proj = mod$prj, dPath = dPath)
+    sim$canProvs <- Cache(prepInputs, dlFun = "getData", "GADM", country = "CAN", level = 1, path = dPath,
+                           targetFile = "gadm36_CAN_1_sp.rds", fun = "base::readRDS")
+    west <- sim$canProvs[sim$canProvs$NAME_1 %in% c("Alberta", "Saskatchewan"), ]
+    west <- Cache(postProcess, west, targetCRS = mod$prj, filename2 = NULL)
+    sim$studyAreaLarge <- as(west, "Spatial") ## TODO: temporary conversion back to sp (we will need it sf later)
   }
 
   ## boreal map
@@ -296,31 +303,19 @@ browser()
     fname <- file.path(dPath, "NABoreal.shp")
     fexts <- c(".dbf", ".prj", ".sbn", ".sbx", ".shp.xml", ".shx")
 
-    Cache(preProcess,
+    sim$borealMap <- Cache(prepInputs,
           targetFile = basename("NABoreal.shp"),
-          alsoExtract = vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
+          #alsoExtract = vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
+          alsoExtract = "similar",
           archive = asPath("boreal.zip"),
           destinationPath = dPath,
           url = extractURL("borealMap"),
-          #fun = "sf::read_sf",
-          #studyArea = sim$studyArea,
+          fun = "sf::read_sf",
+          useSAcrs = TRUE,
+          studyArea = west,
           filename2 = NULL,
-          userTags = c("stable", currentModule(sim)))
+          userTags = c("stable", currentModule(sim), "NorthAmericanBoreal"))
 
-    boreal <- sf::read_sf(fname) %>% sf::st_transform(mod$prj)
-    sim$borealMap <- boreal[boreal$COUNTRY == "CANADA", ]
-  }
-
-  ## studyAreaLarge
-  if (!suppliedElsewhere("studyAreaLarge")) {
-    west <- sim$canProvs[(sim$canProvs$NAME_1 == "Alberta" |
-                            sim$canProvs$NAME_1 == "Saskatchewan"), ]
-
-    sim$studyAreaLarge <- spTransform(west, mod$prj) %>%
-      sf::st_as_sf() %>%
-      sf::st_intersection(sim$borealMap) %>%
-      sf::st_buffer(0) %>%
-      as(., "Spatial") ## TODO: temporary conversion back to sp (we will need it sf later)
   }
 
   return(sim)
