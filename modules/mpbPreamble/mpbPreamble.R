@@ -289,10 +289,21 @@ browser()
   mod$prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                    "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
-  ## studyAreaLarge
+  ## load study area
+  if (!suppliedElsewhere("studyArea")) {
+    sim$studyArea <- amc::loadStudyArea(dataPath(sim), "studyArea.kml", mod$prj)
+  }
+
+  ## provincial boundaries
   if (!suppliedElsewhere("canProvs", sim)) {
-    sim$canProvs <- Cache(prepInputs, dlFun = "getData", "GADM", country = "CAN", level = 1, path = dPath,
-                           targetFile = "gadm36_CAN_1_sp.rds", fun = "base::readRDS")
+    sim$canProvs <- Cache(prepInputs, dlFun = "getData", "GADM", country = "CAN",
+                          level = 1, path = dPath,
+                          targetFile = "gadm36_CAN_1_sp.rds", ## TODO: this will change as GADM data update
+                          fun = "base::readRDS")
+  }
+
+  ## studyAreaLarge
+  if (!suppliedElsewhere("studyAreaLarge")) {
     west <- sim$canProvs[sim$canProvs$NAME_1 %in% c("Alberta", "Saskatchewan"), ]
     west <- Cache(postProcess, west, targetCRS = mod$prj, filename2 = NULL)
     sim$studyAreaLarge <- as(west, "Spatial") ## TODO: temporary conversion back to sp (we will need it sf later)
@@ -315,7 +326,6 @@ browser()
           studyArea = west,
           filename2 = NULL,
           userTags = c("stable", currentModule(sim), "NorthAmericanBoreal"))
-
   }
 
   return(sim)
