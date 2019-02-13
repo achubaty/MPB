@@ -311,21 +311,17 @@ browser()
 
   ## boreal map
   if (!suppliedElsewhere("borealMap")) {
-    fname <- file.path(dPath, "NABoreal.shp")
-    fexts <- c(".dbf", ".prj", ".sbn", ".sbx", ".shp.xml", ".shx")
-
     sim$borealMap <- Cache(prepInputs,
-          targetFile = basename("NABoreal.shp"),
-          #alsoExtract = vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
-          alsoExtract = "similar",
-          archive = asPath("boreal.zip"),
-          destinationPath = dPath,
-          url = extractURL("borealMap"),
-          fun = "sf::read_sf",
-          useSAcrs = TRUE,
-          studyArea = west,
-          filename2 = NULL,
-          userTags = c("stable", currentModule(sim), "NorthAmericanBoreal"))
+                           targetFile = "NABoreal.shp",
+                           alsoExtract = "similar",
+                           archive = asPath("boreal.zip"),
+                           destinationPath = dPath,
+                           url = extractURL("borealMap"),
+                           fun = "sf::read_sf",
+                           useSAcrs = TRUE,
+                           studyArea = west,
+                           filename2 = NULL,
+                           userTags = c("stable", currentModule(sim), "NorthAmericanBoreal"))
   }
 
   return(sim)
