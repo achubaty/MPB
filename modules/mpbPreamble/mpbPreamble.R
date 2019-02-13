@@ -91,7 +91,7 @@ Init <- function(sim) {
                    filename2 = NULL,
                    userTags = c("stable", currentModule(sim))) %>%
     spTransform(mod$prj) %>%
-    gBuffer(., byid = TRUE, width = 0)
+    fixErrors(objectName = "landweb")
 
   ## TODO: use sf
   # studyAreaLarge <- Cache(sf::st_intersection,
@@ -103,7 +103,7 @@ Init <- function(sim) {
   studyAreaLarge <- Cache(raster::intersect,
                           x = landweb,
                           y = sim$studyAreaLarge) %>%
-    rgeos::gBuffer(byid = TRUE, width = 0)
+    fixErrors(objectName = "studyAreaLarge")
 
   ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,
@@ -288,13 +288,7 @@ browser()
                    "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
 
   if (!suppliedElsewhere("canProvs", sim)) {
-    prepCanProvs <- function(prj) {
-      getData("GADM", country = "CAN", level = 1, path = dPath) %>%
-        spTransform(mod$prj) %>%
-        fixErrors(objectName = "sim$canProvs")
-    }
-
-    sim$canProvs <- Cache(prepCanProvs, prj = mod$prj)
+    sim$canProvs <- Cache(prepGADM, country = "CAN", level = 1, proj = mod$prj, dPath = dPath)
   }
 
   ## boreal map
