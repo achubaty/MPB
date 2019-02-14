@@ -75,7 +75,7 @@ moduleRqdPkgs <- c("crayon", "data.table", "dplyr", "fasterize", "fpCompare",
 ##########################################################
 paths <- list(
   cachePath = file.path("cache", runName),
-  modulePath = c("modules", "scfm"),
+  modulePath = c("modules", "scfm/modules"),
   inputPath = "inputs",
   outputPath = file.path("outputs", runName)
 )
