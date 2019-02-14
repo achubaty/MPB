@@ -12,7 +12,7 @@ activeDir <- if (pemisc::user("rstudio")) "~/MPB" else "~/GitHub/MPB"
 reproducible::checkPath(activeDir, create = TRUE)
 setwd(activeDir)
 
-sppEquivCol <- "LandWeb_MPB"
+sppEquivCol <- "scfm_MPB"
 
 eventCaching <- c(".inputObjects", "init")
 maxAge <- 400
@@ -27,7 +27,7 @@ fireTimestep <- 1
 ## set run name and parameters
 ##############################################################
 
-runName <- "MPB_aspenDispersal_logROS"
+runName <- "MPB_scfm"
 
 message(crayon::red(runName))
 
@@ -75,7 +75,7 @@ moduleRqdPkgs <- c("crayon", "data.table", "dplyr", "fasterize", "fpCompare",
 ##########################################################
 paths <- list(
   cachePath = file.path("cache", runName),
-  modulePath = "modules",
+  modulePath = c("modules", "scfm"),
   inputPath = "inputs",
   outputPath = file.path("outputs", runName)
 )
@@ -127,25 +127,14 @@ sppEquivalencies_CA[grep("Pinu_Con_Lat", KNN), `:=`(EN_generic_short = "L Pine",
                                                     Leading = "Lodgepole Pine leading")]
 
 # Make LandWeb spp equivalencies
-sppEquivalencies_CA[, LandWeb_MPB := c(Pice_Mar = "Pice_mar", Pice_Gla = "Pice_gla",
-                                       Pinu_Ban = "Pinu_ban", Pinu_Con_Lat = "Pinu_con",
-                                       Popu_Tre = "Popu_sp", Betu_Pap = "Popu_sp",
-                                       Abie_Bal = "Abie_sp", Abie_Las = "Abie_sp", Abie_Spp = "Abie_sp")[KNN]]
+sppEquivalencies_CA[, scfm_MPB := c(Pinu_Ban = "Pinu_ban", Pinu_Con_Lat = "Pinu_con")[KNN]]
 
-sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", EN_generic_full := "Fir"]
-sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", EN_generic_short := "Fir"]
-sppEquivalencies_CA[LandWeb_MPB == "Abie_sp", Leading := "Fir leading"]
-
-sppEquivalencies_CA[LandWeb_MPB == "Popu_sp", EN_generic_full := "Deciduous"]
-sppEquivalencies_CA[LandWeb_MPB == "Popu_sp", EN_generic_short := "Decid"]
-sppEquivalencies_CA[LandWeb_MPB == "Popu_sp", Leading := "Deciduous leading"]
-
-sppEquivalencies_CA <- sppEquivalencies_CA[!is.na(LandWeb_MPB),]
+sppEquivalencies_CA <- sppEquivalencies_CA[!is.na(scfm_MPB),]
 
 #################################################
 ## create color palette for species used in model
 #################################################
-sppColors <- sppColors(sppEquivalencies_CA, sppEquivCol, newVals = "Mixed", palette = "Accent")
+sppColors <- sppColors(sppEquivalencies_CA, sppEquivCol, newVals = NULL, palette = "Accent")
 
 #################################################
 # Set up spades call for preamble -- studyArea stuff goes there
@@ -226,16 +215,12 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
 # Dynamic Simulation
 ######################################################
 times <- list(start = startTime, end = endTime) ## 2011-2020
-modules <- list("Boreal_LBMRDataPrep", "LandR_BiomassGMOrig", "LBMR",
-                "LandMine", "Biomass_regeneration",
-                "mpbClimateData","mpbPine",
+modules <- list("mpbClimateData","mpbPine",
                 "mpbMassAttacksData",
                 "mpbRedTopGrowth",
                 "mpbRedTopSpread",
                 "mpbManagement",
-                "LandWeb_output"#,
-                #"timeSinceFire"
-)
+                "scfm")
 
 speciesTable <- getSpeciesTable(dPath = Paths$inputPath) ## uses default URL
 if (getOption("LandR.verbose") > 0) {
