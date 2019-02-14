@@ -1,3 +1,4 @@
+#install_github("achubaty/amc@development")
 library(amc)
 
 ## Boone et al. 2011 (Fig 2)
@@ -7,7 +8,7 @@ BooneData <- read.csv("growth-curves/BooneCurveData2.csv")
 ## - had to do with weather/stand conditions?
 ## - it is the only statistically significant fit.
 Yr2004 <- subset(BooneData, Year == "2004")
-lm04 <- lm(logit(PropKilled) ~ log(Attacked), data = Yr2004)
+lm04 <- lm(amc::logit(PropKilled) ~ log(Attacked), data = Yr2004)
 summary(lm04)
 
 a <- 0.9               ## slope? - how quickly the curve drops off
