@@ -12,5 +12,6 @@ figure/
 figures/
 inputs/*
 !inputs/CHECKSUMS.txt
+!inputs/studyArea*
 outputs/
 packrat/lib*/
