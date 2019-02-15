@@ -299,7 +299,8 @@ Init <- function(sim) {
     sim$canProvs <- Cache(prepInputs, dlFun = "getData", "GADM", country = "CAN",
                           level = 1, path = dPath,
                           targetFile = "gadm36_CAN_1_sp.rds", ## TODO: this will change as GADM data update
-                          fun = "base::readRDS")
+                          fun = "base::readRDS") %>%
+      spTransform(mod$prj)
   }
 
   ## studyAreaLarge
