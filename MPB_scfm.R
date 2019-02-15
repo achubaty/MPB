@@ -327,9 +327,8 @@ objectNamesToSave <- c("rstCurrentBurn", "rstTimeSinceFire", "vegTypeMap")
 
 outputs <- data.frame(stringsAsFactors = FALSE,
                       expand.grid(
-                        objectName = objectNamesToSave,#, "oldBigPatch"),
-                        saveTime = seq(objects$summaryPeriod[1], objects$summaryPeriod[2],
-                                       by = parameters$LandWeb_output$summaryInterval)
+                        objectName = objectNamesToSave,
+                        saveTime = seq(objects$summaryPeriod[1], objects$summaryPeriod[2], by = 1)
                       ),
                       fun = "writeRaster", package = "raster",
                       file = paste0(objectNamesToSave, c(".tif", ".grd")))
