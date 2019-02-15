@@ -220,7 +220,7 @@ modules <- list("mpbClimateData","mpbPine",
                 "mpbRedTopGrowth",
                 "mpbRedTopSpread",
                 "mpbManagement",
-                "scfm")
+                "scfmDriver", "scfmEscape", "scfmIgnition", "scfmRegime", "scfmSpread")
 
 speciesTable <- getSpeciesTable(dPath = Paths$inputPath) ## uses default URL
 if (getOption("LandR.verbose") > 0) {
