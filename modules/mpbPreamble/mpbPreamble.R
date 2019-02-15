@@ -82,30 +82,17 @@ Init <- function(sim) {
   fexts <- c(".dbf", ".prj", ".sbn", ".sbx", ".shx")
 
   studyAreaLarge <- Cache(prepInputs,
-                   targetFile = basename(fname),
-                   alsoExtract = "similar", #vapply(fexts, extension, character(1), filename = basename(fname)), #"similar",
-                   archive = asPath(extension(fname, "zip")),
-                   destinationPath = dPath,
-                   url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
-                   fun = "raster::shapefile",
-                   filename2 = NULL,
-                   studyArea = sim$studyAreaLarge,
-                   targetCRS = mod$prj,
-                   userTags = c("stable", currentModule(sim), "LandWebFRI")) #%>%
-    #spTransform(mod$prj) %>%
-    #fixErrors(objectName = "landweb")
-
-  ## TODO: use sf
-  # studyAreaLarge <- Cache(sf::st_intersection,
-  #                         x = sf::sp_as_sf(landweb),
-  #                         y = sf::sp_as_sf(sim$studyAreaLarge)) %>%
-  #   as("Spatial") %>%
-  #   sf::st_buffer(0)
-
-  #studyAreaLarge <- Cache(raster::intersect,
-  #                        x = landweb,
-  #                        y = sim$studyAreaLarge) %>%
-  #  fixErrors(objectName = "studyAreaLarge")
+                          targetFile = basename(fname),
+                          alsoExtract = "similar",
+                          archive = asPath(extension(fname, "zip")),
+                          destinationPath = dPath,
+                          url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
+                          fun = "raster::shapefile",
+                          filename2 = NULL,
+                          studyArea = sim$studyAreaLarge,
+                          targetCRS = mod$prj,
+                          userTags = c("stable", currentModule(sim), "LandWebFRI")) %>%
+    spTransform(mod$prj)
 
   ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,

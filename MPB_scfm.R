@@ -7,7 +7,7 @@ useCloudCache <- FALSE # only for simInitAndSpades
 
 cloudCacheFolderID <- "/folders/1ry2ukXeVwj5CKEmBW1SZVS_W8d-KtmIj"
 useSpades <- if (pemisc::user("emcintir")) FALSE else TRUE
-minFRI <- 25
+minFRI <- 0 ## doesn't really matter here, as it's not used!
 activeDir <- if (pemisc::user("rstudio")) "~/MPB" else "~/GitHub/MPB"
 reproducible::checkPath(activeDir, create = TRUE)
 setwd(activeDir)
@@ -119,28 +119,54 @@ httr::set_config(httr::config(http_version = 0))
 # Set up sppEquiv
 #################################################
 data("sppEquivalencies_CA", package = "LandR")
-sppEquivalencies_CA[grep("Pinu_Ban", KNN), `:=`(EN_generic_short = "J Pine",
-                                                EN_generic_full = "Jack.Pine",
-                                                Leading = "Jack Pine leading")]
-sppEquivalencies_CA[grep("Pinu_Con_Lat", KNN), `:=`(EN_generic_short = "L Pine",
-                                                    EN_generic_full = "Lodgepole.Pine",
-                                                    Leading = "Lodgepole Pine leading")]
+
+sppEquiv_LandWeb <- sppEquivalencies_CA
+
+sppEquiv_LandWeb[grep("Pin", LandR), ':='(EN_generic_short = "Pine",
+                                          EN_generic_full = "Pine",
+                                          Leading = "Pine leading")]
 
 # Make LandWeb spp equivalencies
-sppEquivalencies_CA[, scfm_MPB := c(Pinu_Ban = "Pinu_ban", Pinu_Con_Lat = "Pinu_con")[KNN]]
+sppEquiv_LandWeb[, LandWeb := c(Pice_mar = "Pice_mar", Pice_gla = "Pice_gla",
+                                Pinu_con = "Pinu_sp", Pinu_ban = "Pinu_sp",
+                                Popu_tre = "Popu_sp", Betu_pap = "Popu_sp",
+                                Abie_bal = "Abie_sp", Abie_las = "Abie_sp", Abie_sp = "Abie_sp")[LandR]]
 
-sppEquivalencies_CA <- sppEquivalencies_CA[!is.na(scfm_MPB),]
+sppEquiv_LandWeb[LandWeb == "Abie_sp", ':='(EN_generic_full = "Fir",
+                                            EN_generic_short = "Fir",
+                                            Leading = "Fir leading")]
+
+sppEquiv_LandWeb[LandWeb == "Popu_sp", ':='(EN_generic_full = "Deciduous",
+                                            EN_generic_short = "Decid",
+                                            Leading = "Deciduous leading")]
+
+sppEquiv_LandWeb <- sppEquiv_LandWeb[!is.na(LandWeb),]
+
+# Make MPB spp equivalencies
+sppEquiv_MPB <- sppEquiv_LandWeb[, scfm_MPB := c(Pinu_sp = "Pinu_sp")[LandWeb]]
+sppEquiv_MPB[KNN == "Pinu_Ban", ':='(EN_generic_short = "J Pine",
+                                     EN_generic_full = "Jack.Pine",
+                                     Leading = "Jack Pine leading")]
+sppEquiv_MPB[KNN == "Pinu_Con_Lat", ':='(EN_generic_short = "L Pine",
+                                         EN_generic_full = "Lodgepole.Pine",
+                                         Leading = "Lodgepole Pine leading")]
+sppEquiv_MPB[KNN == "Pinu_Con", ':='(EN_generic_short = "Sh Pine",
+                                     EN_generic_full = "Shore.Pine",
+                                     Leading = "Shore Pine leading")]
+sppEquiv_MPB <- sppEquiv_MPB[!is.na(scfm_MPB),]
 
 #################################################
 ## create color palette for species used in model
 #################################################
-sppColors <- sppColors(sppEquivalencies_CA, sppEquivCol, newVals = NULL, palette = "Accent")
+sppColors_LandWeb <- sppColors(sppEquiv_LandWeb, "LandWeb", newVals = NULL, palette = "Accent")
+sppColors_MPB <- sppColors_LandWeb[["Pinu_sp"]]
+names(sppColors_MPB) <- "Pinu_sp"
 
 #################################################
 # Set up spades call for preamble -- studyArea stuff goes there
 #################################################
 objects1 <- list(
-  #"sppEquiv" = sppEquivalencies_CA
+  # nothing to pass
 )
 
 parameters1 <- list(
@@ -157,7 +183,7 @@ simOutPreamble <- cloudCache(simInitAndSpades,
                              objects = objects1,
                              paths = paths,
                              debug = 1,
-                             useCloud = useCloudCache, #!isFALSE(getOption("reproducible.futurePlan")),
+                             useCloud = useCloudCache,
                              cloudFolderID = cloudCacheFolderID)
 
 if (!is.na(.plotInitialTime)) {
@@ -179,8 +205,8 @@ objects2 <- list(
   "nonTreePixels" = simOutPreamble$nonTreePixels,
   "rasterToMatch" = simOutPreamble$rasterToMatch,
   "rasterToMatchReporting" = simOutPreamble$rasterToMatchReporting,
-  "sppColors" = sppColors,
-  "sppEquiv" = sppEquivalencies_CA,
+  "sppColors" = sppColors_LandWeb,
+  "sppEquiv" = sppEquiv_LandWeb,
   "studyArea" = simOutPreamble$studyArea,
   "studyAreaLarge" = simOutPreamble$studyAreaLarge,
   "studyAreaReporting" = simOutPreamble$studyAreaReporting
@@ -188,8 +214,8 @@ objects2 <- list(
 
 parameters2 <- list(
   BiomassSpeciesData = list(
-    "types" = c("KNN"), # don't use CASFRI, Pickell, ForestInventory
-    "sppEquivCol" = sppEquivCol,
+    "types" = c("KNN", "CASFRI", "Pickell"), # don't use ForestInventory
+    "sppEquivCol" = "LandWeb", ## use LandWeb species here but we ignore non-pine later
     "omitNonVegPixels" = TRUE
   )
 )
@@ -210,6 +236,8 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
                                   debug = 1,
                                   useCloud = useCloudCache,
                                   cloudFolderID = cloudCacheFolderID)
+nonPine <- which(!names(simOutSpeciesLayers$speciesLayers) %in% "Pinu_sp")
+simOutSpeciesLayers$speciesLayers <- dropLayer(simOutSpeciesLayers$speciesLayers, nonPine)
 
 ######################################################
 # Dynamic Simulation
