@@ -31,8 +31,8 @@ runName <- "MPB_scfm"
 
 message(crayon::red(runName))
 
-startTime <- 2011
-endTime <- 2020
+startTime <- 2010
+endTime <- 2030
 successionTimestep <- 10
 summaryPeriod <- c(startTime, endTime) ## TODO: tweak this
 summaryInterval <- 1 ## TODO: tweak this
@@ -75,7 +75,7 @@ moduleRqdPkgs <- c("crayon", "data.table", "dplyr", "fasterize", "fpCompare",
 ##########################################################
 paths <- list(
   cachePath = file.path("cache", runName),
-  modulePath = c("modules", "scfm/modules"),
+  modulePath = c("modules", "modules/scfm/modules"),
   inputPath = "inputs",
   outputPath = file.path("outputs", runName)
 )
@@ -83,7 +83,7 @@ do.call(SpaDES.core::setPaths, paths) # Set them here so that we don't have to s
 tilePath <- file.path(Paths$outputPath, "tiles")
 
 ## Options
-.plotInitialTime <- if (user("emcintir")) NA else if (user("achubaty")) 0 else 0
+.plotInitialTime <- if (user("emcintir")) NA else if (user("achubaty")) 2010 else 2010
 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
@@ -214,13 +214,15 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
 ######################################################
 # Dynamic Simulation
 ######################################################
-times <- list(start = startTime, end = endTime) ## 2011-2020
+returnInterval <- 1
+times <- list(start = startTime, end = endTime) ## 2010-2030
 modules <- list("mpbClimateData","mpbPine",
                 "mpbMassAttacksData",
                 "mpbRedTopGrowth",
                 "mpbRedTopSpread",
                 "mpbManagement",
-                "scfmDriver", "scfmEscape", "scfmIgnition", "scfmRegime", "scfmSpread")
+                "scfmLandcoverInit", "scfmRegime", "scfmDriver",
+                "scfmIgnition", "scfmEscape", "scfmSpread")
 
 speciesTable <- getSpeciesTable(dPath = Paths$inputPath) ## uses default URL
 if (getOption("LandR.verbose") > 0) {
@@ -230,12 +232,12 @@ if (getOption("LandR.verbose") > 0) {
 objects <- list(
   "fireReturnInterval" = simOutPreamble$fireReturnInterval,
   "LCC2005" = simOutPreamble$LCC2005,
+  "pineMap" = simOutSpeciesLayers$speciesLayers,
   "rasterToMatch" = simOutPreamble$rasterToMatch,
   "rstFlammable" = simOutPreamble$rstFlammable,
   "rstTimeSinceFire" = simOutPreamble$`CC TSF`,
   "sppColors" = sppColors,
   "sppEquiv" = sppEquivalencies_CA,
-  "speciesLayers" = simOutSpeciesLayers$speciesLayers,
   "speciesTable" = speciesTable,
   "standAgeMap" = simOutPreamble$`CC TSF`, ## same as rstTimeSinceFire; TODO: use synonym?
   "rasterToMatchReporting" = simOutPreamble$rasterToMatchReporting,
@@ -243,86 +245,57 @@ objects <- list(
   "studyAreaLarge" = simOutPreamble$studyAreaLarge,
   "studyAreaReporting" = simOutPreamble$studyAreaReporting,
   "summaryPeriod" = summaryPeriod,
-  "useParallel" = 2
+  "useParallel" = 2,
+  "vegMap" = simOutPreamble$LCC2005
 )
 
 parameters <- list(
-  Boreal_LBMRDataPrep = list(
-    "sppEquivCol" = sppEquivCol,
-    "cloudFolderID" = cloudCacheFolderID,
-    # next two are used when assigning pixelGroup membership; what resolution for
-    #   age and biomass
-    "pixelGroupAgeClass" = successionTimestep,
-    "pixelGroupBiomassClass" = 100,
-    "establishProbAdjFacResprout" = if (grepl("noDispersal|aspenDispersal", runName)) 1e4 else 0.5,
-    "establishProbAdjFacNonResprout" = if (grepl("noDispersal|aspenDispersal", runName)) 1e4 else 2,
-    "runName" = runName,
-    "useCloudCacheForStats" = TRUE,
-    ".useCache" = eventCaching
-  ),
-  LandMine = list(
-    "biggestPossibleFireSizeHa" = 5e5,
-    "burnInitialTime" = fireTimestep,
-    "fireTimestep" = fireTimestep,
-    "minPropBurn" = 0.90,
-    "ROStype" = if (grepl("equalROS", runName)) "equal" else if (grepl("logROS", runName)) "log" else "original",
-    ".useCache" = eventCaching,
-    ".useParallel" = useParallel
-  ),
-  LandWeb_output = list(
-    "sppEquivCol" = sppEquivCol,
-    "summaryInterval" = summaryInterval,
-    "vegLeadingProportion" = vegLeadingProportion,
-    #".plotInitialTime" = .plotInitialTime,
-    ".plotInterval" = 1
-  ),
-  LBMR = list(
-    "initialBiomassSource" = "cohortData", # can be 'biomassMap' or "spinup" too
-    "seedingAlgorithm" = if (grepl("noDispersal", runName)) "noDispersal" else "wardDispersal",
-    "sppEquivCol" = sppEquivCol,
-    "successionTimestep" = successionTimestep,
-    ".useCache" = eventCaching[1], # seems slower to use Cache for both
-    ".useParallel" = useParallel
-  ),
-  LandR_BiomassGMOrig = list(
-    ".useParallel" = useParallel
-  ),
-  Biomass_regeneration = list(
-    "fireInitialTime" = fireTimestep,
-    "fireTimestep" = fireTimestep,
-    "successionTimestep" = successionTimestep
-  ),
-  timeSinceFire = list(
-    "startTime" = fireTimestep,
-    ".useCache" = eventCaching[1] # way faster without caching for "init"
-  ),
   mpbClimateData = list(
-    suitabilityIndex = "G",    ## Can be "G", "S", "L", "R"
-    .maxMemory = maxMemory,
-    .tempdir = scratchDir
+    "suitabilityIndex" = "G",    ## Can be "G", "S", "L", "R"
+    ".maxMemory" = maxMemory,
+    ".tempdir" = scratchDir
   ),
   mpbMassAttacksData = list(
-    .maxMemory = maxMemory,
-    .tempdir = scratchDir
+    ".maxMemory" = maxMemory,
+    ".tempdir" = scratchDir
   ),
   mpbPine = list(
-    lowMemory = lowMemory,
-    .maxMemory = maxMemory,
-    .tempdir = scratchDir
+    "lowMemory" = lowMemory,
+    ".maxMemory" = maxMemory,
+    ".tempdir" = scratchDir
   ),
   mpbRedTopGrowth = list(
-    dataset = "Boone_2011"
-  )
+    "dataset" = "Boone_2011"
+  ),
+  scfmIgnition = list(
+    "pIgnition" = 0.0001,
+    "returnInterval" = returnInterval,
+    "startTime" = times$start,
+    ".plotInitialTime" = NA,
+    ".plotInterval" = NA,
+    ".saveInitialTime" = NA,
+    ".saveInterval" = NA
+  ),
+  scfmEscape = list(
+    "p0" = 0.05,
+    "returnInterval" = returnInterval,
+    "startTime" = times$start,
+    ".plotInitialTime" = NA,
+    ".plotInterval" = NA,
+    ".saveInitialTime" = NA,
+    ".saveInterval" = NA
+  ),
+  scfmSpread = list(
+    "pSpread" = 0.235,
+    "returnInterval" = returnInterval,
+    "startTime" = times$start,
+    ".plotInitialTime" = times$start,
+    ".plotInterval" = 1,
+    ".saveInitialTime" = NA,
+    ".saveInterval" = NA)
 )
 
-if (grepl("scfm", runName)) {
-  source(file.path("params", "scfm_params.R"))
-  modules <- append(modules[-which(modules == "LandMine")], scfmModules)
-  objects <- append(objects, scfmObjects)
-  parameters <- append(parameters, scfmParams)
-}
-
-objectNamesToSave <- c("rstTimeSinceFire", "vegTypeMap")
+objectNamesToSave <- c("rstCurrentBurn", "rstTimeSinceFire", "vegTypeMap")
 
 outputs <- data.frame(stringsAsFactors = FALSE,
                       expand.grid(
@@ -339,6 +312,8 @@ outputs2 <- data.frame(stringsAsFactors = FALSE,
                        package = "base")
 
 outputs$arguments <- I(rep(list(list(overwrite = TRUE, progress = FALSE,
+                                     datatype = "INT2U", format = "GTiff"),
+                                list(overwrite = TRUE, progress = FALSE,
                                      datatype = "INT2U", format = "GTiff"),
                                 list(overwrite = TRUE, progress = FALSE,
                                      datatype = "INT1U", format = "raster")),
