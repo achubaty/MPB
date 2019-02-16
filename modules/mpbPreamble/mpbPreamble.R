@@ -234,24 +234,22 @@ Init <- function(sim) {
   #ml$fireReturnInterval[] <- fireReturnInterval
   # ml@metadata[layerName == "LCC2005", rasterToMatch := NA]
 
-  sim$studyArea <- studyArea(ml, 3)
-  sim$studyAreaLarge <- studyArea(ml, 1)
-  sim$studyAreaReporting <- studyArea(ml, 2)
+  sim$studyArea <- studyArea(ml, 3) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
+  sim$studyAreaLarge <- studyArea(ml, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
+  sim$studyAreaReporting <- studyArea(ml, 2) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
   sim$rasterToMatch <- rasterToMatch(ml)
-  #sim$rasterToMatch[sim$nonTreePixels] <- NA
+  crs(sim$rasterToMatch) <- crs(mod$prj) ## TODO: why need to force this?
 
   sim$fireReturnInterval <- ml$fireReturnInterval # no NAing here because this needs only
 
   sim$LCC2005 <- ml$LCC2005
-  #sim$LCC2005[sim$nonTreePixels] <- NA
-  #LCC2005 <- sim$LCC2005
-  #LCC2005[sim$nonTreePixels] <- NA
 
   sim[[TSFLayerName]] <- ml[[TSFLayerName]]
 
   sim$rasterToMatchReporting <- postProcess(rasterToMatch(ml),
                                             studyArea = studyArea(ml, 2),
                                             filename2 = NULL) # this is the small one
+  crs(sim$rasterToMatchReporting) <- crs(mod$prj) ## TODO: why need to force this?
 
   sim$ml <- ml
 
@@ -278,7 +276,9 @@ Init <- function(sim) {
 
   ## load study area
   if (!suppliedElsewhere("studyArea")) {
-    sim$studyArea <- amc::loadStudyArea(dataPath(sim), "studyArea.kml", mod$prj)
+    sim$studyArea <- amc::loadStudyArea(dataPath(sim), "studyArea.kml", mod$prj) %>%
+      spTransform(mod$prj)
+    ## TODO: need to re-enforce the projection (even though it's done internally above)
   }
 
   ## provincial boundaries
