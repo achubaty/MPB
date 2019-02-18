@@ -11,9 +11,8 @@ cache/
 figure/
 figures/
 inputs/*
+inputs/studyArea\.dbf
 !inputs/CHECKSUMS.txt
 !inputs/studyArea*
 outputs/
 packrat/lib*/
-
-inputs/studyArea\.dbf
