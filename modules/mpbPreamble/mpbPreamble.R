@@ -95,16 +95,16 @@ Init <- function(sim) {
     spTransform(mod$prj)
 
   mlLarge <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
-               targetCRS = mod$prj, overwrite = TRUE,
-               columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
+                    targetCRS = mod$prj, overwrite = TRUE,
+                    columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
 
   ##########################################################
   # LCC2005
   ##########################################################
   #  With full studyAreaLarge
   LCC2005 <- prepInputsLCC(studyArea = studyArea(mlLarge), destinationPath = Paths$inputPath)
-  mlLarge <- mapAdd(LCC2005, layerName = "LCC2005", map = mlLarge, filename2 = NULL, leaflet = FALSE,
-               isRasterToMatch = TRUE, method = "ngb")
+  mlLarge <- mapAdd(LCC2005, layerName = "LCC2005", map = mlLarge, filename2 = NULL,
+                    leaflet = FALSE, isRasterToMatch = TRUE, method = "ngb")
 
   # Put in smaller studyArea
   ml <- mapAdd(sim$studyArea, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,

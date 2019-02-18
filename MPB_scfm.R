@@ -205,7 +205,7 @@ if (!is.na(.plotInitialTime)) {
 
 objects2 <- list(
   "nonTreePixels" = simOutPreamble$nonTreePixels,
-  "rasterToMatch" = simOutPreamble$rasterToMatch,
+  "rasterToMatch" = simOutPreamble$rasterToMatchLarge,
   "rasterToMatchReporting" = simOutPreamble$rasterToMatchReporting,
   "sppColors" = sppColors_LandWeb,
   "sppEquiv" = sppEquiv_LandWeb,
