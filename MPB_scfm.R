@@ -3,7 +3,7 @@ quickPlot::dev.useRSGD(useRSGD = FALSE) ## TODO: temporary for Alex's testing
 usePOM <- if (pemisc::user("achubaty")) FALSE else FALSE ## NOTE: TO and FROM indices must be defined
 useDEoptim <- FALSE
 useParallel <- if (isTRUE(usePOM)) 2 else 4
-useCloudCache <- FALSE # only for simInitAndSpades
+useCloudCache <- TRUE # only for simInitAndSpades
 
 cloudCacheFolderID <- "/folders/1ry2ukXeVwj5CKEmBW1SZVS_W8d-KtmIj"
 useSpades <- if (pemisc::user("emcintir")) FALSE else TRUE
@@ -304,6 +304,10 @@ parameters <- list(
     ".saveInitialTime" = NA,
     ".saveInterval" = NA
   ),
+  scfmDriver = list(
+    "cloudFolderID" = cloudCacheFolderID,
+    "useCloudCache" = useCloudCache
+  ),
   scfmEscape = list(
     "p0" = 0.05,
     "returnInterval" = returnInterval,
@@ -320,7 +324,8 @@ parameters <- list(
     ".plotInitialTime" = times$start,
     ".plotInterval" = 1,
     ".saveInitialTime" = NA,
-    ".saveInterval" = NA)
+    ".saveInterval" = NA
+  )
 )
 
 objectNamesToSave <- c("rstCurrentBurn", "rstTimeSinceFire", "vegTypeMap")
@@ -374,17 +379,19 @@ if (!is.na(.plotInitialTime)) {
   grid::grid.text(label = runName, x = 0.93, y = 0.03)
 }
 
-mySimOut <- simInitAndSpades(times = times, #cl = cl,
-                             params = parameters,
-                             modules = modules,
-                             outputs = outputs,
-                             objects = objects,
-                             paths = paths,
-                             loadOrder = unlist(modules),
-                             debug = 1,
-                             #debug = 'message(paste(unname(current(sim)), collapse = " "), try(print(sim$cohortData[pixelGroup %in% sim$pixelGroupMap[418136]])))',
-                             .plotInitialTime = .plotInitialTime
-)
+mySimOut <- cloudCache(simInitAndSpades,
+                       times = times, #cl = cl,
+                       params = parameters,
+                       modules = modules,
+                       outputs = outputs,
+                       objects = objects,
+                       paths = paths,
+                       loadOrder = unlist(modules),
+                       debug = 1,
+                       .plotInitialTime = .plotInitialTime,
+                       useCloud = useCloudCache,
+                       cloudFolderID = cloudCacheFolderID)
+
 #mySimOut <- spades(mySim, debug = 1)
 
 saveRDS(mySimOut, file.path(Paths$outputPath, "mySimOut.rds"))
