@@ -239,6 +239,10 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
 nonPine <- which(!names(simOutSpeciesLayers$speciesLayers) %in% "Pinu_sp")
 simOutSpeciesLayers$speciesLayers <- dropLayer(simOutSpeciesLayers$speciesLayers, nonPine)
 
+if (!is.na(.plotInitialTime)) {
+  Plot(simOutSpeciesLayers$speciesLayers)
+}
+
 ######################################################
 # Dynamic Simulation
 ######################################################
