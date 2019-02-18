@@ -163,11 +163,6 @@ Init <- function(sim) {
   ml[[TSFLayerName]][sim$nonTreePixels] <- NA
 
   ##########################################################
-  # Clean up the study area
-  ##########################################################
-  studyArea(mlLarge) <- polygonClean(studyArea(mlLarge), type = P(sim)$runName, minFRI = P(sim)$minFRI)
-
-  ##########################################################
   # Flammability and Fire Return Interval maps
   ##########################################################
 
@@ -220,8 +215,8 @@ Init <- function(sim) {
 
   ## some assertions:
   testObjs <- c("studyArea", "studyAreaLarge", "studyAreaReporting",
-                "rasterToMatch", "rasterToMatchReporting",
-                "fireReturnInterval", TSFLayerName)
+                "rasterToMatch", "rasterToMatchReporting", "rasterToMatchLarge",
+                TSFLayerName)
   lapply(testObjs, function(x) {
     if (is.null(sim[[x]]))
       stop("mpbPreamble: ", paste0("sim$", x, " returned NULL."), call. = FALSE)
