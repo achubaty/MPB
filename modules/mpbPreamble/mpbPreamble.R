@@ -110,7 +110,6 @@ Init <- function(sim) {
   ml <- mapAdd(sim$studyArea, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
                analysisGroupReportingPolygon = "MPB", isStudyArea = TRUE,
                columnNameForLabels = "Name", filename2 = NULL)
-  #ml <- studyAreaMPB(ml = NULL, P(sim)$runName, dPath, sim$canProvs)
 
   ##########################################################
   # LCC2005
@@ -329,4 +328,3 @@ Init <- function(sim) {
 
   return(sim)
 }
-
