@@ -328,7 +328,7 @@ parameters <- list(
   )
 )
 
-objectNamesToSave <- c("rstCurrentBurn", "rstTimeSinceFire", "vegTypeMap")
+objectNamesToSave <- c("rstCurrentBurn", "rstTimeSinceFire")
 
 outputs <- data.frame(stringsAsFactors = FALSE,
                       expand.grid(
