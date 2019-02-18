@@ -15,3 +15,5 @@ inputs/*
 !inputs/studyArea*
 outputs/
 packrat/lib*/
+
+inputs/studyArea\.dbf
