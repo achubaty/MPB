@@ -207,7 +207,7 @@ objects2 <- list(
   "rasterToMatchReporting" = simOutPreamble$rasterToMatchReporting,
   "sppColors" = sppColors_LandWeb,
   "sppEquiv" = sppEquiv_LandWeb,
-  "studyArea" = simOutPreamble$studyArea,
+  "studyArea" = simOutPreamble$studyAreaLarge,
   "studyAreaLarge" = simOutPreamble$studyAreaLarge,
   "studyAreaReporting" = simOutPreamble$studyAreaReporting
 )
