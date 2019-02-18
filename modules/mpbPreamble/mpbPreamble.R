@@ -94,17 +94,29 @@ Init <- function(sim) {
                           userTags = c("stable", currentModule(sim), "LandWebFRI")) %>%
     spTransform(mod$prj)
 
-  ml <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
+  mlLarge <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
                targetCRS = mod$prj, overwrite = TRUE,
                columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
-
-  ml <- studyAreaMPB(ml, P(sim)$runName, dPath, sim$canProvs)
 
   ##########################################################
   # LCC2005
   ##########################################################
-  LCC2005 <- prepInputsLCC(studyArea = studyArea(ml), destinationPath = Paths$inputPath)
-  ml <- mapAdd(LCC2005, layerName = "LCC2005", map = ml, filename2 = NULL, leaflet = FALSE,
+  #  With full studyAreaLarge
+  LCC2005 <- prepInputsLCC(studyArea = studyArea(mlLarge), destinationPath = Paths$inputPath)
+  mlLarge <- mapAdd(LCC2005, layerName = "LCC2005", map = mlLarge, filename2 = NULL, leaflet = FALSE,
+               isRasterToMatch = TRUE, method = "ngb")
+
+  # Put in smaller studyArea
+  ml <- mapAdd(sim$studyArea, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
+               analysisGroupReportingPolygon = "MPB", isStudyArea = TRUE,
+               columnNameForLabels = "Name", filename2 = NULL)
+  #ml <- studyAreaMPB(ml = NULL, P(sim)$runName, dPath, sim$canProvs)
+
+  ##########################################################
+  # LCC2005
+  ##########################################################
+  ml <- mapAdd(LCC2005, layerName = "LCC2005", map = ml,
+               filename2 = NULL, leaflet = FALSE,
                isRasterToMatch = TRUE, method = "ngb")
 
   ##########################################################
@@ -182,7 +194,8 @@ Init <- function(sim) {
   ##########################################################
   # Clean up the study area
   ##########################################################
-  studyArea(ml) <- polygonClean(studyArea(ml), type = P(sim)$runName, minFRI = P(sim)$minFRI)
+  studyArea(mlLarge) <- polygonClean(studyArea(mlLarge), type = P(sim)$runName, minFRI = P(sim)$minFRI)
+  # studyArea(ml) <- polygonClean(studyArea(ml), type = P(sim)$runName, minFRI = P(sim)$minFRI)
 
   ##########################################################
   # Flammability and Fire Return Interval maps
@@ -215,32 +228,34 @@ Init <- function(sim) {
   sim$rstFlammable[] <- as.integer(sim$rstFlammable[])
 
   ## fireReturnInterval needs to be masked by rstFlammable
-  rstFireReturnInterval <- fasterize::fasterize(sf::st_as_sf(studyArea(ml)),
-                                                raster = rasterToMatch(ml),
+  rstFireReturnInterval <- fasterize::fasterize(sf::st_as_sf(studyArea(mlLarge)),
+                                                raster = rasterToMatch(mlLarge),
                                                 field = "fireReturnInterval")
   #rtm <- rasterToMatch(studyArea(ml), rasterToMatch = rasterToMatch(ml))
   #rstFireReturnInterval <- Cache(postProcess, rtm, maskvalue = 0L, filename2 = NULL)
-  ml <- mapAdd(rstFireReturnInterval, layerName = "fireReturnInterval", filename2 = NULL,
-               map = ml, leaflet = FALSE, maskWithRTM = FALSE)
+  mlLarge <- mapAdd(rstFireReturnInterval, layerName = "fireReturnInterval", filename2 = NULL,
+               map = mlLarge, leaflet = FALSE, maskWithRTM = FALSE)
 
   #fireReturnInterval <- factorValues2(ml$fireReturnInterval,
   #                                    ml$fireReturnInterval[],
   #                                    att = "fireReturnInterval")
 
   if (grepl("doubleFRI", P(sim)$runName))
-    ml$fireReturnInterval <- 2 * ml$fireReturnInterval
+    mlLarge$fireReturnInterval <- 2 * mlLarge$fireReturnInterval
 
   #ml$fireReturnInterval <- raster(ml$fireReturnInterval) # blank out values for new, non-factor version
   #ml$fireReturnInterval[] <- fireReturnInterval
   # ml@metadata[layerName == "LCC2005", rasterToMatch := NA]
 
-  sim$studyArea <- studyArea(ml, 3) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
-  sim$studyAreaLarge <- studyArea(ml, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
-  sim$studyAreaReporting <- studyArea(ml, 2) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
+  sim$studyArea <- studyArea(ml, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
+  sim$studyAreaLarge <- studyArea(mlLarge, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
+  sim$studyAreaReporting <- studyArea(ml, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
   sim$rasterToMatch <- rasterToMatch(ml)
+  sim$rasterToMatchLarge <- rasterToMatch(mlLarge)
   crs(sim$rasterToMatch) <- crs(mod$prj) ## TODO: why need to force this?
+  crs(sim$rasterToMatchLarge) <- crs(mod$prj) ## TODO: why need to force this?
 
-  sim$fireReturnInterval <- ml$fireReturnInterval # no NAing here because this needs only
+  sim$fireReturnInterval <- mlLarge$fireReturnInterval # no NAing here because this needs only
 
   sim$LCC2005 <- ml$LCC2005
 
