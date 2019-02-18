@@ -20,7 +20,6 @@ defineModule(sim, list(
                   "raster", "RColorBrewer", "reproducible", "rgeos",
                   "sf", "sp", "SpaDES.tools"),
   parameters = rbind(
-    defineParameter("minFRI", "numeric", 40, 0, 200, "The value of fire return interval below which, pixels will be changed to NA, i.e., ignored"),
     defineParameter("runName", "character", NA, NA, NA, "A description for run; this will form the basis of cache path and output path"),
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
@@ -29,10 +28,6 @@ defineModule(sim, list(
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
   inputObjects = bind_rows(
-    ## TODO: uses CC and fire return interval maps from URL in init
-    expectsInput("borealMap", "sf",
-                 desc = "Shapefile of the boreal forest.",
-                 sourceURL = "http://cfs.nrcan.gc.ca/common/boreal.zip"),
     expectsInput("canProvs", "SpatialPolygonsDataFrame",
                  desc = "Canadian provincial boundaries shapefile",
                  sourceURL = NA),
@@ -42,7 +37,6 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     createsOutput("CC TSF", "RasterLayer", desc = NA), ## TODO: need descriptions for all outputs
-    createsOutput("fireReturnInterval", "RasterLayer", desc = NA),
     createsOutput("LandTypeCC", "RasterLayer", desc = NA),
     createsOutput("LCC2005", "RasterLayer", desc = NA),
     createsOutput("ml", "map", desc = NA),
@@ -72,28 +66,7 @@ Init <- function(sim) {
   cacheTags <- c(currentModule(sim), "function:.inputObjects")
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
-
-  targetCRS <- mod$prj
-
-  ## LandWeb study area -- LTHFC (aka "fire return interval") map
-  fname <- file.path(dPath, "landweb_ltfc_v6.shp")
-  fexts <- c(".dbf", ".prj", ".sbn", ".sbx", ".shx")
-
-  studyAreaLarge <- Cache(prepInputs,
-                          targetFile = basename(fname),
-                          alsoExtract = "similar",
-                          archive = asPath(extension(fname, "zip")),
-                          destinationPath = dPath,
-                          url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
-                          fun = "raster::shapefile",
-                          filename2 = NULL,
-                          studyArea = sim$studyAreaLarge,
-                          targetCRS = mod$prj,
-                          userTags = c("stable", currentModule(sim), "LandWebFRI")) %>%
-    raster::intersect(sim$studyAreaLarge) %>%
-    spTransform(mod$prj)
-
-  mlLarge <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
+  mlLarge <- mapAdd(sim$studyAreaLarge, layerName = "MPB Study Area Large",
                     targetCRS = mod$prj, overwrite = TRUE,
                     columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
 
@@ -193,7 +166,6 @@ Init <- function(sim) {
   # Clean up the study area
   ##########################################################
   studyArea(mlLarge) <- polygonClean(studyArea(mlLarge), type = P(sim)$runName, minFRI = P(sim)$minFRI)
-  # studyArea(ml) <- polygonClean(studyArea(ml), type = P(sim)$runName, minFRI = P(sim)$minFRI)
 
   ##########################################################
   # Flammability and Fire Return Interval maps
@@ -224,26 +196,6 @@ Init <- function(sim) {
   sim$rstFlammable <- rstFlammableCC
   sim$rstFlammable[LandTypeCCNA] <- rstFlammableLCC[LandTypeCCNA]
   sim$rstFlammable[] <- as.integer(sim$rstFlammable[])
-
-  ## fireReturnInterval needs to be masked by rstFlammable
-  rstFireReturnInterval <- fasterize::fasterize(sf::st_as_sf(studyArea(mlLarge)),
-                                                raster = rasterToMatch(mlLarge),
-                                                field = "fireReturnInterval")
-  #rtm <- rasterToMatch(studyArea(ml), rasterToMatch = rasterToMatch(ml))
-  #rstFireReturnInterval <- Cache(postProcess, rtm, maskvalue = 0L, filename2 = NULL)
-  mlLarge <- mapAdd(rstFireReturnInterval, layerName = "fireReturnInterval", filename2 = NULL,
-               map = mlLarge, leaflet = FALSE, maskWithRTM = FALSE)
-
-  #fireReturnInterval <- factorValues2(ml$fireReturnInterval,
-  #                                    ml$fireReturnInterval[],
-  #                                    att = "fireReturnInterval")
-
-  if (grepl("doubleFRI", P(sim)$runName))
-    mlLarge$fireReturnInterval <- 2 * mlLarge$fireReturnInterval
-
-  #ml$fireReturnInterval <- raster(ml$fireReturnInterval) # blank out values for new, non-factor version
-  #ml$fireReturnInterval[] <- fireReturnInterval
-  # ml@metadata[layerName == "LCC2005", rasterToMatch := NA]
 
   sim$studyArea <- studyArea(ml, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
   sim$studyAreaLarge <- studyArea(mlLarge, 1) %>% spTransform(crs(mod$prj)) ## TODO: why need to force this?
@@ -307,22 +259,19 @@ Init <- function(sim) {
   if (!suppliedElsewhere("studyAreaLarge")) {
     west <- sim$canProvs[sim$canProvs$NAME_1 %in% c("Alberta", "Saskatchewan"), ]
     west <- Cache(postProcess, west, targetCRS = mod$prj, filename2 = NULL)
-    sim$studyAreaLarge <- as(west, "Spatial") ## TODO: temporary conversion back to sp (we will need it sf later)
-  }
 
-  ## boreal map
-  if (!suppliedElsewhere("borealMap")) {
-    sim$borealMap <- Cache(prepInputs,
-                           targetFile = "NABoreal.shp",
-                           alsoExtract = "similar",
-                           archive = asPath("boreal.zip"),
-                           destinationPath = dPath,
-                           url = extractURL("borealMap"),
-                           fun = "sf::read_sf",
-                           useSAcrs = TRUE,
-                           studyArea = west,
-                           filename2 = NULL,
-                           userTags = c("stable", currentModule(sim), "NorthAmericanBoreal"))
+    sim$studyAreaLarge <- Cache(prepInputs,
+                                targetFile = "NABoreal.shp",
+                                alsoExtract = "similar",
+                                archive = asPath("boreal.zip"),
+                                destinationPath = dPath,
+                                url = "http://cfs.nrcan.gc.ca/common/boreal.zip",
+                                fun = "sf::read_sf",
+                                useSAcrs = TRUE,
+                                studyArea = west,
+                                filename2 = NULL,
+                                userTags = c("stable", currentModule(sim), "NorthAmericanBoreal")) %>%
+      as("Spatial")
   }
 
   return(sim)

@@ -171,7 +171,6 @@ objects1 <- list(
 
 parameters1 <- list(
   mpbPreamble = list(
-    "minFRI" = minFRI,
     "runName" = runName
   )
 )
