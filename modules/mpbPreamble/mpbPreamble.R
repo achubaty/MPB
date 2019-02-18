@@ -73,8 +73,6 @@ Init <- function(sim) {
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
-  # targetCRS <- CRS(paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-  #                        "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"))
   targetCRS <- mod$prj
 
   ## LandWeb study area -- LTHFC (aka "fire return interval") map
@@ -92,6 +90,7 @@ Init <- function(sim) {
                           studyArea = sim$studyAreaLarge,
                           targetCRS = mod$prj,
                           userTags = c("stable", currentModule(sim), "LandWebFRI")) %>%
+    raster::intersect(sim$studyAreaLarge) %>%
     spTransform(mod$prj)
 
   mlLarge <- mapAdd(studyAreaLarge, layerName = "MPB Study Area Large",
