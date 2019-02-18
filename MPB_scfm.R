@@ -195,6 +195,8 @@ if (!is.na(.plotInitialTime)) {
   Plot(simOutPreamble$studyAreaReporting, simOutPreamble$studyArea, simOutPreamble$studyAreaLarge)
   Plot(simOutPreamble$rasterToMatchReporting)
   Plot(simOutPreamble$rasterToMatch) # some bug in quickPlot that makes these 2 not plot together
+  Plot(simOutPreamble$rasterToMatchLarge)
+  Plot(simOutPreamble$canProvs, addTo = "simOutPreamble$rasterToMatchLarge", gp = gpar(fill = 0))
 }
 
 #################################################
