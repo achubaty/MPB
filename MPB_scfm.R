@@ -52,7 +52,7 @@ library(LandR)
 library(amc)
 
 packageLoadStartTime <- Sys.time()
-devtools::install_github("PredictiveEcology/reproducible@development")
+#devtools::install_github("PredictiveEcology/reproducible@development")
 SpaDESPkgs <- c(
   "PredictiveEcology/quickPlot@development",
   "PredictiveEcology/SpaDES.core@development",
@@ -108,7 +108,7 @@ opts <- options(
   "reproducible.overwrite" = TRUE,
   "reproducible.useMemoise" = TRUE,
   "reproducible.useNewDigestAlgorithm" = TRUE,
-  "reproducible.useCache" = if (pemisc::user("emcintir")) "devMode" else TRUE,
+  "reproducible.useCache" = TRUE,
   "spades.moduleCodeChecks" = FALSE,
   "spades.useRequire" = FALSE # Don't use Require... meaning assume all pkgs installed
 )
