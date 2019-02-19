@@ -383,6 +383,7 @@ if (!is.na(.plotInitialTime)) {
   grid::grid.text(label = runName, x = 0.93, y = 0.03)
 }
 
+
 mySimOut <- cloudCache(simInitAndSpades,
                        times = times, #cl = cl,
                        params = parameters,
@@ -393,8 +394,9 @@ mySimOut <- cloudCache(simInitAndSpades,
                        loadOrder = unlist(modules),
                        debug = 1,
                        .plotInitialTime = .plotInitialTime,
-                       useCloud = useCloudCache,
-                       cloudFolderID = cloudCacheFolderID)
+                       useCloud = FALSE, # TODO This fn relies on output objects, which are not captured by cloudCache
+                       cloudFolderID = cloudCacheFolderID,
+                       omitArgs = c(".plotInitialTime", "debug", "paths"))
 
 #mySimOut <- spades(mySim, debug = 1)
 
