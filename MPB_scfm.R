@@ -83,7 +83,7 @@ do.call(SpaDES.core::setPaths, paths) # Set them here so that we don't have to s
 tilePath <- file.path(Paths$outputPath, "tiles")
 
 ## Options
-.plotInitialTime <- if (user("emcintir")) NA else if (user("achubaty")) 2010 else 2010
+.plotInitialTime <- 2010#if (user("emcintir")) NA else if (user("achubaty")) 2010 else 2010
 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
@@ -185,6 +185,7 @@ simOutPreamble <- cloudCache(simInitAndSpades,
                              paths = paths,
                              debug = 1,
                              useCloud = useCloudCache,
+                             omitArgs = c("debug", "paths"),
                              cloudFolderID = cloudCacheFolderID)
 
 if (!is.na(.plotInitialTime)) {
@@ -238,7 +239,8 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
                                   paths = paths,
                                   debug = 1,
                                   useCloud = useCloudCache,
-                                  cloudFolderID = cloudCacheFolderID)
+                                  cloudFolderID = cloudCacheFolderID,
+                                  omitArgs = c(".plotInitialTime", "debug"))
 nonPine <- which(!names(simOutSpeciesLayers$speciesLayers) %in% "Pinu_sp")
 simOutSpeciesLayers$speciesLayers <- dropLayer(simOutSpeciesLayers$speciesLayers, nonPine)
 
