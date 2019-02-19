@@ -80,8 +80,8 @@ Init <- function(sim) {
                    filename2 = NULL,
                    studyArea = fixErrors(spTransform(sim$studyAreaLarge, mod$prj)), ## TODO: why extra steps to fix?
                    targetCRS = mod$prj,
-                   userTags = c("stable", currentModule(sim), "LandWebFRI")) %>%
-    raster::intersect(., spTransform(sim$studyAreaLarge, mod$prj))
+                   userTags = c("stable", currentModule(sim), "LandWebFRI"))
+  SAlarge <- raster::intersect(landweb, spTransform(sim$studyAreaLarge, mod$prj))
 
   mlLarge <- mapAdd(landweb, layerName = "MPB Study Area Large",
                     targetCRS = mod$prj, overwrite = TRUE,
@@ -96,7 +96,8 @@ Init <- function(sim) {
                     leaflet = FALSE, isRasterToMatch = TRUE, method = "ngb")
 
   # Put in smaller studyArea
-  ml <- mapAdd(sim$studyArea, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
+  SA <- raster::intersect(landweb, spTransform(sim$studyArea, mod$prj))
+  ml <- mapAdd(SA, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
                analysisGroupReportingPolygon = "MPB", isStudyArea = TRUE,
                columnNameForLabels = "Name", filename2 = NULL)
 
