@@ -20,6 +20,7 @@ defineModule(sim, list(
                   "raster", "RColorBrewer", "reproducible", "rgeos",
                   "sf", "sp", "SpaDES.tools"),
   parameters = rbind(
+    defineParameter("minFRI", "numeric", 0, 0, 200, "The walue of fire return interval below which, pixels will be changed to NA, i.e., ignored"),
     defineParameter("runName", "character", NA, NA, NA, "A description for run; this will form the basis of cache path and output path"),
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".plotInterval", "numeric", NA, NA, NA, "This describes the simulation time interval between plot events"),
@@ -66,7 +67,23 @@ Init <- function(sim) {
   cacheTags <- c(currentModule(sim), "function:.inputObjects")
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
-  mlLarge <- mapAdd(sim$studyAreaLarge, layerName = "MPB Study Area Large",
+
+  ## LandWeb study area (we don't care about the LTHFCs; we need the polygons)
+  fname <- file.path(dPath, "landweb_ltfc_v6.shp")
+  landweb <- Cache(prepInputs,
+                   targetFile = basename(fname),
+                   alsoExtract = "similar",
+                   archive = asPath(extension(fname, "zip")),
+                   destinationPath = dPath,
+                   url = "https://drive.google.com/open?id=1JptU0R7qsHOEAEkxybx5MGg650KC98c6",
+                   fun = "raster::shapefile",
+                   filename2 = NULL,
+                   studyArea = fixErrors(spTransform(sim$studyAreaLarge, mod$prj)), ## TODO: why extra steps to fix?
+                   targetCRS = mod$prj,
+                   userTags = c("stable", currentModule(sim), "LandWebFRI")) %>%
+    raster::intersect(., spTransform(sim$studyAreaLarge, mod$prj))
+
+  mlLarge <- mapAdd(landweb, layerName = "MPB Study Area Large",
                     targetCRS = mod$prj, overwrite = TRUE,
                     columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
 
@@ -266,7 +283,8 @@ Init <- function(sim) {
                                 studyArea = west,
                                 filename2 = NULL,
                                 userTags = c("stable", currentModule(sim), "NorthAmericanBoreal")) %>%
-      as("Spatial")
+      as("Spatial") %>%
+      fixErrors(.)
   }
 
   return(sim)

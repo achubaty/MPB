@@ -172,6 +172,7 @@ objects1 <- list(
 
 parameters1 <- list(
   mpbPreamble = list(
+    "minFRI" = 0, ## we don't actually use FRI, but we need the polygons for scfm
     "runName" = runName
   )
 )
