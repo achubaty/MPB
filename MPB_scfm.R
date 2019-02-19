@@ -351,9 +351,7 @@ outputs2 <- data.frame(stringsAsFactors = FALSE,
 outputs$arguments <- I(rep(list(list(overwrite = TRUE, progress = FALSE,
                                      datatype = "INT2U", format = "GTiff"),
                                 list(overwrite = TRUE, progress = FALSE,
-                                     datatype = "INT2U", format = "GTiff"),
-                                list(overwrite = TRUE, progress = FALSE,
-                                     datatype = "INT1U", format = "raster")),
+                                     datatype = "INT2U", format = "GTiff")),
                            times = NROW(outputs) / length(objectNamesToSave)))
 
 outputs3 <- data.frame(stringsAsFactors = FALSE,
