@@ -215,9 +215,9 @@ objects2 <- list(
 
 parameters2 <- list(
   BiomassSpeciesData = list(
-    "types" = c("KNN", "CASFRI", "Pickell"), # don't use ForestInventory
+    "omitNonVegPixels" = TRUE,
     "sppEquivCol" = "LandWeb", ## use LandWeb species here but we ignore non-pine later
-    "omitNonVegPixels" = TRUE
+    "types" = c("KNN", "CASFRI", "Pickell") # don't use ForestInventory
   )
 )
 
