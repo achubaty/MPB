@@ -267,6 +267,7 @@ if (getOption("LandR.verbose") > 0) {
 }
 
 objects <- list(
+  "cloudFolderID" = cloudCacheFolderID,
   "fireReturnInterval" = simOutPreamble$fireReturnInterval,
   "LCC2005" = simOutPreamble$LCC2005,
   "pineMap" = simOutSpeciesLayers$speciesLayers,
@@ -312,10 +313,6 @@ parameters <- list(
     ".plotInterval" = NA,
     ".saveInitialTime" = NA,
     ".saveInterval" = NA
-  ),
-  scfmDriver = list(
-    "cloudFolderID" = cloudCacheFolderID,
-    "useCloudCache" = useCloudCache
   ),
   scfmEscape = list(
     "p0" = 0.05,
