@@ -83,7 +83,7 @@ Init <- function(sim) {
                    userTags = c("stable", currentModule(sim), "LandWebFRI"))
   SAlarge <- raster::intersect(landweb, spTransform(sim$studyAreaLarge, mod$prj))
 
-  mlLarge <- mapAdd(landweb, layerName = "MPB Study Area Large",
+  mlLarge <- mapAdd(SAlarge, layerName = "MPB Study Area Large",
                     targetCRS = mod$prj, overwrite = TRUE,
                     columnNameForLabels = "NSN", isStudyArea = TRUE, filename2 = NULL)
 
