@@ -95,9 +95,15 @@ Init <- function(sim) {
   mlLarge <- mapAdd(LCC2005, layerName = "LCC2005", map = mlLarge, filename2 = NULL,
                     leaflet = FALSE, isRasterToMatch = TRUE, method = "ngb")
 
-  # Put in smaller studyArea
-  SA <- raster::intersect(landweb, spTransform(sim$studyArea, mod$prj))
-  ml <- mapAdd(SA, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
+  ## Put in smaller studyArea
+
+  ## this intersection results in some ploygons that are too small for scfm!
+  #SA <- raster::intersect(landweb, spTransform(sim$studyArea, mod$prj))
+  # ml <- mapAdd(SA, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
+  #              analysisGroupReportingPolygon = "MPB", isStudyArea = TRUE,
+  #              columnNameForLabels = "Name", filename2 = NULL)
+
+  ml <- mapAdd(sim$studyArea, layerName = "MPB", useSAcrs = TRUE, poly = TRUE,
                analysisGroupReportingPolygon = "MPB", isStudyArea = TRUE,
                columnNameForLabels = "Name", filename2 = NULL)
 
