@@ -11,7 +11,7 @@ Yr2004 <- subset(BooneData, Year == "2004")
 lm04 <- lm(amc::logit(PropKilled) ~ log(Attacked), data = Yr2004)
 summary(lm04)
 
-a <- 0.9               ## slope? - how quickly the curve drops off
+a <- 0.85              ## slope? - how quickly the curve drops off
 b <- 0.03              ##
 yint2 <- 0.9           ## y-intercept/assymptote; from MacQuarrie 2011 (Fig 3d)
 yint1 <- yint2 + 0.3   ## somewhat arbitrary; chosen so that the resulting curve passes 1 when flexed
@@ -38,7 +38,7 @@ comp <- function(x, a, b, d, s, r, yint) {
 }
 
 ################################################################################
-s <- 0.9
+s <- 0.5
 d <- 3
 r <- seq(0.0, 1, 0.2)
 
