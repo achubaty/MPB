@@ -295,9 +295,11 @@ parameters <- list(
   ),
   mpbMassAttacksData = list(
     ".maxMemory" = maxMemory,
+    ".useCache" = c(".inputObjects"),
     ".tempdir" = scratchDir
   ),
   mpbPine = list(
+    ".useCache" = c(".inputObjects", "init"),
     "lowMemory" = lowMemory,
     ".maxMemory" = maxMemory,
     ".tempdir" = scratchDir
@@ -322,6 +324,9 @@ parameters <- list(
     ".plotInterval" = NA,
     ".saveInitialTime" = NA,
     ".saveInterval" = NA
+  ),
+  scfmRegime = list(
+    ".useCache" = ".inputObjects"
   ),
   scfmSpread = list(
     "pSpread" = 0.235,
