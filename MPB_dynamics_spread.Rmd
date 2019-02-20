@@ -27,7 +27,7 @@ if (is.null(getOption("repos"))) {
 }
 
 ## install/load packages
-install_github("PredictiveEcology/reproducible@development")
+#install_github("PredictiveEcology/reproducible@development")
 library(reproducible)
 
 pkgs <- c("data.table", "devtools", "ggplot2", "igraph", "magrittr", "plyr",
@@ -65,7 +65,7 @@ ab <- CAN_adm1[CAN_adm1$NAME_1 == "Alberta", ]
 ab3 <- CAN_adm3[CAN_adm3$NAME_1 == "Alberta", ]
 ab_cities <- ab3[ab3$ENGTYPE_3 == "City", ]
 bc <- CAN_adm1[CAN_adm1$NAME_1 == "British Columbia", ]
-west <- CAN_adm1[(CAN_adm1$NAME_1 == "British Columbia" |
+west <- CAN_adm1[(#CAN_adm1$NAME_1 == "British Columbia" |
                   CAN_adm1$NAME_1 == "Alberta" |
                   CAN_adm1$NAME_1 == "Saskatchewan"), ]
 
