@@ -267,8 +267,9 @@ Init <- function(sim) {
 
   ## provincial boundaries
   if (!suppliedElsewhere("canProvs", sim)) {
-    sim$canProvs <- Cache(prepInputs, dlFun = "getData", "GADM", country = "CAN",
-                          level = 1, path = dPath,
+    sim$canProvs <- Cache(prepInputs, dlFun = "raster::getData", "GADM",
+                          country = "CAN", level = 1, path = dPath,
+                          destinationPath = dPath,
                           targetFile = "gadm36_CAN_1_sp.rds", ## TODO: this will change as GADM data update
                           fun = "base::readRDS") %>%
       spTransform(mod$prj)
