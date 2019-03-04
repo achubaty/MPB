@@ -66,7 +66,7 @@ shinyPkgs <- c("gdalUtils", "leaflet", "leaflet.extras", "parallel", "raster", "
 googleAuthPkgs <- c("googleAuthR", "googledrive", "googleID")
 moduleRqdPkgs <- c("crayon", "data.table", "dplyr", "fasterize", "fpCompare",
                    "gdalUtils", "ggplot2", "grDevices", "grid", "LandR",
-                   "magrittr", "pemisc", "plyr", "pryr", "purrr", "quickPlot",
+                   "magrittr", "parallel", "pemisc", "plyr", "pryr", "purrr", "quickPlot",
                    "R.utils", "raster", "RColorBrewer", "Rcpp", "reproducible", "rgdal", "rgeos",
                    "scales", "sp", "SpaDES.core", "SpaDES.tools", "tidyr", "VGAM")
 
@@ -83,7 +83,7 @@ do.call(SpaDES.core::setPaths, paths) # Set them here so that we don't have to s
 tilePath <- file.path(Paths$outputPath, "tiles")
 
 ## Options
-.plotInitialTime <- if (user("emcintir")) NA else if (user("achubaty")) 2010 else 2010
+.plotInitialTime <- 2010#if (user("emcintir")) NA else if (user("achubaty")) 2010 else 2010
 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
@@ -100,6 +100,7 @@ opts <- options(
   "map.overwrite" = TRUE,
   "map.tilePath" = tilePath,
   "map.useParallel" = TRUE, #!identical("windows", .Platform$OS.type),
+  "pemisc.useParallel" = TRUE,
   "reproducible.destinationPath" = normPath(Paths$inputPath),
   #"reproducible.devMode" = if (user("emcintir")) TRUE else FALSE,
   "reproducible.futurePlan" = if (.Platform$OS.type != "windows" && user("emcintir")) "multiprocess" else FALSE,
@@ -171,7 +172,7 @@ objects1 <- list(
 
 parameters1 <- list(
   mpbPreamble = list(
-    "minFRI" = minFRI,
+    "minFRI" = 0, ## we don't actually use FRI, but we need the polygons for scfm
     "runName" = runName
   )
 )
@@ -184,6 +185,7 @@ simOutPreamble <- cloudCache(simInitAndSpades,
                              paths = paths,
                              debug = 1,
                              useCloud = useCloudCache,
+                             omitArgs = c("debug", "paths"),
                              cloudFolderID = cloudCacheFolderID)
 
 if (!is.na(.plotInitialTime)) {
@@ -195,6 +197,8 @@ if (!is.na(.plotInitialTime)) {
   Plot(simOutPreamble$studyAreaReporting, simOutPreamble$studyArea, simOutPreamble$studyAreaLarge)
   Plot(simOutPreamble$rasterToMatchReporting)
   Plot(simOutPreamble$rasterToMatch) # some bug in quickPlot that makes these 2 not plot together
+  Plot(simOutPreamble$rasterToMatchLarge)
+  Plot(simOutPreamble$studyArea, addTo = "simOutPreamble$rasterToMatchLarge", gp = gpar(fill = 0))
 }
 
 #################################################
@@ -203,7 +207,7 @@ if (!is.na(.plotInitialTime)) {
 
 objects2 <- list(
   "nonTreePixels" = simOutPreamble$nonTreePixels,
-  "rasterToMatch" = simOutPreamble$rasterToMatch,
+  "rasterToMatch" = simOutPreamble$rasterToMatchLarge,
   "rasterToMatchReporting" = simOutPreamble$rasterToMatchReporting,
   "sppColors" = sppColors_LandWeb,
   "sppEquiv" = sppEquiv_LandWeb,
@@ -214,9 +218,9 @@ objects2 <- list(
 
 parameters2 <- list(
   BiomassSpeciesData = list(
-    "types" = c("KNN", "CASFRI", "Pickell"), # don't use ForestInventory
+    "omitNonVegPixels" = TRUE,
     "sppEquivCol" = "LandWeb", ## use LandWeb species here but we ignore non-pine later
-    "omitNonVegPixels" = TRUE
+    "types" = c("KNN", "CASFRI", "Pickell") # don't use ForestInventory
   )
 )
 
@@ -235,9 +239,14 @@ simOutSpeciesLayers <- cloudCache(simInitAndSpades,
                                   paths = paths,
                                   debug = 1,
                                   useCloud = useCloudCache,
-                                  cloudFolderID = cloudCacheFolderID)
+                                  cloudFolderID = cloudCacheFolderID,
+                                  omitArgs = c(".plotInitialTime", "debug"))
 nonPine <- which(!names(simOutSpeciesLayers$speciesLayers) %in% "Pinu_sp")
 simOutSpeciesLayers$speciesLayers <- dropLayer(simOutSpeciesLayers$speciesLayers, nonPine)
+
+if (!is.na(.plotInitialTime)) {
+  Plot(simOutSpeciesLayers$speciesLayers)
+}
 
 ######################################################
 # Dynamic Simulation
@@ -258,6 +267,7 @@ if (getOption("LandR.verbose") > 0) {
 }
 
 objects <- list(
+  "cloudFolderID" = cloudCacheFolderID,
   "fireReturnInterval" = simOutPreamble$fireReturnInterval,
   "LCC2005" = simOutPreamble$LCC2005,
   "pineMap" = simOutSpeciesLayers$speciesLayers,
@@ -285,9 +295,11 @@ parameters <- list(
   ),
   mpbMassAttacksData = list(
     ".maxMemory" = maxMemory,
+    ".useCache" = c(".inputObjects"),
     ".tempdir" = scratchDir
   ),
   mpbPine = list(
+    ".useCache" = c(".inputObjects", "init"),
     "lowMemory" = lowMemory,
     ".maxMemory" = maxMemory,
     ".tempdir" = scratchDir
@@ -304,10 +316,6 @@ parameters <- list(
     ".saveInitialTime" = NA,
     ".saveInterval" = NA
   ),
-  scfmDriver = list(
-    "cloudFolderID" = cloudCacheFolderID,
-    "useCloudCache" = useCloudCache
-  ),
   scfmEscape = list(
     "p0" = 0.05,
     "returnInterval" = returnInterval,
@@ -316,6 +324,9 @@ parameters <- list(
     ".plotInterval" = NA,
     ".saveInitialTime" = NA,
     ".saveInterval" = NA
+  ),
+  scfmRegime = list(
+    ".useCache" = ".inputObjects"
   ),
   scfmSpread = list(
     "pSpread" = 0.235,
@@ -346,9 +357,7 @@ outputs2 <- data.frame(stringsAsFactors = FALSE,
 outputs$arguments <- I(rep(list(list(overwrite = TRUE, progress = FALSE,
                                      datatype = "INT2U", format = "GTiff"),
                                 list(overwrite = TRUE, progress = FALSE,
-                                     datatype = "INT2U", format = "GTiff"),
-                                list(overwrite = TRUE, progress = FALSE,
-                                     datatype = "INT1U", format = "raster")),
+                                     datatype = "INT2U", format = "GTiff")),
                            times = NROW(outputs) / length(objectNamesToSave)))
 
 outputs3 <- data.frame(stringsAsFactors = FALSE,
@@ -379,6 +388,7 @@ if (!is.na(.plotInitialTime)) {
   grid::grid.text(label = runName, x = 0.93, y = 0.03)
 }
 
+
 mySimOut <- cloudCache(simInitAndSpades,
                        times = times, #cl = cl,
                        params = parameters,
@@ -389,8 +399,9 @@ mySimOut <- cloudCache(simInitAndSpades,
                        loadOrder = unlist(modules),
                        debug = 1,
                        .plotInitialTime = .plotInitialTime,
-                       useCloud = useCloudCache,
-                       cloudFolderID = cloudCacheFolderID)
+                       useCloud = FALSE, # TODO This fn relies on output objects, which are not captured by cloudCache
+                       cloudFolderID = cloudCacheFolderID,
+                       omitArgs = c(".plotInitialTime", "debug", "paths"))
 
 #mySimOut <- spades(mySim, debug = 1)
 
