@@ -1,35 +1,35 @@
 [submodule "modules/mpbRedTopSpread"]
 	path = modules/mpbRedTopSpread
 	url = git@github.com:achubaty/mpbRedTopSpread
-    branch = development
+    branch = master
 [submodule "modules/mpbRedTopGrowth"]
 	path = modules/mpbRedTopGrowth
 	url = git@github.com:achubaty/mpbRedTopGrowth
-    branch = development
+    branch = master
 [submodule "modules/mpbPine"]
 	path = modules/mpbPine
 	url = git@github.com:achubaty/mpbPine
-    branch = development
+    branch = master
 [submodule "modules/mpbMassAttacksData"]
 	path = modules/mpbMassAttacksData
 	url = git@github.com:achubaty/mpbMassAttacksData
-    branch = development
+    branch = master
 [submodule "modules/mpbClimateData"]
 	path = modules/mpbClimateData
 	url = git@github.com:achubaty/mpbClimateData
-    branch = development
+    branch = master
 [submodule "modules/mpbRandomLandscapes"]
 	path = modules/mpbRandomLandscapes
 	url = git@github.com:achubaty/mpbRandomLandscapes
-    branch = development
+    branch = master
 [submodule "modules/mpbManagement"]
 	path = modules/mpbManagement
 	url = git@github.com:achubaty/mpbManagement
-    branch = development
+    branch = master
 [submodule "mpb-maps"]
 	path = mpb-maps
 	url = git@github.com:achubaty/mpb-maps
-    branch = development
+    branch = master
 [submodule "BioSim"]
 	path = BioSim
 	url = git@github.com:achubaty/mpb-biosim
