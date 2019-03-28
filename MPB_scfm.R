@@ -32,7 +32,7 @@ runName <- "MPB_scfm"
 message(crayon::red(runName))
 
 startTime <- 2010
-endTime <- 2030
+endTime <- 2020 # 2030
 successionTimestep <- 10
 summaryPeriod <- c(startTime, endTime) ## TODO: tweak this
 summaryInterval <- 1 ## TODO: tweak this
@@ -83,7 +83,7 @@ do.call(SpaDES.core::setPaths, paths) # Set them here so that we don't have to s
 tilePath <- file.path(Paths$outputPath, "tiles")
 
 ## Options
-.plotInitialTime <- 2010#if (user("emcintir")) NA else if (user("achubaty")) 2010 else 2010
+.plotInitialTime <- 2010
 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
@@ -220,7 +220,7 @@ parameters2 <- list(
   BiomassSpeciesData = list(
     "omitNonVegPixels" = TRUE,
     "sppEquivCol" = "LandWeb", ## use LandWeb species here but we ignore non-pine later
-    "types" = c("KNN", "CASFRI", "Pickell") # don't use ForestInventory
+    "types" = c("KNN", "CASFRI", "Pickell") # don't use ForestInventory (nor Pickell, which is for LandWeb!)
   )
 )
 
