@@ -32,7 +32,7 @@ runName <- "MPB_scfm"
 message(crayon::red(runName))
 
 startTime <- 2010
-endTime <- 2020 # 2030
+endTime <- 2030
 successionTimestep <- 10
 summaryPeriod <- c(startTime, endTime) ## TODO: tweak this
 summaryInterval <- 1 ## TODO: tweak this
@@ -122,7 +122,6 @@ httr::set_config(httr::config(http_version = 0))
 data("sppEquivalencies_CA", package = "LandR")
 
 sppEquiv_LandWeb <- sppEquivalencies_CA
-
 sppEquiv_LandWeb[grep("Pin", LandR), ':='(EN_generic_short = "Pine",
                                           EN_generic_full = "Pine",
                                           Leading = "Pine leading")]
@@ -132,15 +131,12 @@ sppEquiv_LandWeb[, LandWeb := c(Pice_mar = "Pice_mar", Pice_gla = "Pice_gla",
                                 Pinu_con = "Pinu_sp", Pinu_ban = "Pinu_sp",
                                 Popu_tre = "Popu_sp", Betu_pap = "Popu_sp",
                                 Abie_bal = "Abie_sp", Abie_las = "Abie_sp", Abie_sp = "Abie_sp")[LandR]]
-
 sppEquiv_LandWeb[LandWeb == "Abie_sp", ':='(EN_generic_full = "Fir",
                                             EN_generic_short = "Fir",
                                             Leading = "Fir leading")]
-
 sppEquiv_LandWeb[LandWeb == "Popu_sp", ':='(EN_generic_full = "Deciduous",
                                             EN_generic_short = "Decid",
                                             Leading = "Deciduous leading")]
-
 sppEquiv_LandWeb <- sppEquiv_LandWeb[!is.na(LandWeb),]
 
 # Make MPB spp equivalencies
@@ -220,7 +216,7 @@ parameters2 <- list(
   BiomassSpeciesData = list(
     "omitNonVegPixels" = TRUE,
     "sppEquivCol" = "LandWeb", ## use LandWeb species here but we ignore non-pine later
-    "types" = c("KNN", "CASFRI", "Pickell") # don't use ForestInventory (nor Pickell, which is for LandWeb!)
+    "types" = c("KNN", "CASFRI") # don't use ForestInventory nor Pickell -- for LandWeb only
   )
 )
 
@@ -245,21 +241,27 @@ nonPine <- which(!names(simOutSpeciesLayers$speciesLayers) %in% "Pinu_sp")
 simOutSpeciesLayers$speciesLayers <- dropLayer(simOutSpeciesLayers$speciesLayers, nonPine)
 
 if (!is.na(.plotInitialTime)) {
-  Plot(simOutSpeciesLayers$speciesLayers)
+  Plot(simOutSpeciesLayers$speciesLayers, title = "Percent pine cover")
+  Plot(simOutPreamble$studyArea, addTo = "simOutSpeciesLayers$speciesLayers", gp = gpar(fill = 0))
 }
 
 ######################################################
 # Dynamic Simulation
 ######################################################
 returnInterval <- 1
-times <- list(start = startTime, end = endTime) ## 2010-2030
-modules <- list("mpbClimateData","mpbPine",
-                "mpbMassAttacksData",
-                "mpbRedTopGrowth",
-                "mpbRedTopSpread",
-                "mpbManagement",
+
+if (EliotTesting) { # EliotTesting <- TRUE
+  year <- 2010
+  times <- list(start = year, end = year)
+  summaryPeriod <- c(year, year)
+} else {
+  times <- list(start = startTime, end = endTime) ## 2010-2030
+}
+
+modules <- list("mpbClimateData","mpbPine", "mpbMassAttacksData",
                 "scfmLandcoverInit", "scfmRegime", "scfmDriver",
-                "scfmIgnition", "scfmEscape", "scfmSpread")
+                "scfmIgnition", "scfmEscape", "scfmSpread",
+                "mpbRedTopGrowth", "mpbRedTopSpread", "mpbManagement")
 
 speciesTable <- getSpeciesTable(dPath = Paths$inputPath) ## uses default URL
 if (getOption("LandR.verbose") > 0) {
@@ -369,15 +371,15 @@ outputs3 <- data.frame(stringsAsFactors = FALSE,
 outputs <- as.data.frame(data.table::rbindlist(list(outputs, outputs2, outputs3), fill = TRUE))
 
 ######## set seed for RNG
-fseed <- file.path(Paths$outputPath, "seed.rds")
-if (file.exists(fseed)) {
-  seed <- readRDS(fseed)
-} else {
-  seed <- sample(1e8, 1)
-  saveRDS(seed, fseed)
-}
-set.seed(seed)
-print(seed)
+# fseed <- file.path(Paths$outputPath, "seed.rds")
+# if (file.exists(fseed)) {
+#   seed <- readRDS(fseed)
+# } else {
+#   seed <- sample(1e8, 1)
+#   saveRDS(seed, fseed)
+# }
+# set.seed(seed)
+# print(seed)
 
 message(crayon::red(runName))
 
@@ -388,24 +390,45 @@ if (!is.na(.plotInitialTime)) {
   grid::grid.text(label = runName, x = 0.93, y = 0.03)
 }
 
+if (EliotTesting) {
+  .plotInitialTime <- NA
+  omitm <- which(modules %in% c("mpbRedTopGrowth", "mpbManagement"))
+  omitm <- which(modules %in% c("mpbRedTopGrowth", "mpbManagement",
+                               "scfmLandcoverInit", "scfmRegime", "scfmDriver",
+                               "scfmIgnition", "scfmEscape", "scfmSpread"))
+  lapply(rev(omitm), function(m) modules[[m]] <<- NULL)
 
-mySimOut <- cloudCache(simInitAndSpades,
-                       times = times, #cl = cl,
-                       params = parameters,
-                       modules = modules,
-                       outputs = outputs,
-                       objects = objects,
-                       paths = paths,
-                       loadOrder = unlist(modules),
-                       debug = 1,
-                       .plotInitialTime = .plotInitialTime,
-                       useCloud = FALSE, # TODO This fn relies on output objects, which are not captured by cloudCache
-                       cloudFolderID = cloudCacheFolderID,
-                       omitArgs = c(".plotInitialTime", "debug", "paths"))
+  omitp <- which(names(parameters) %in% c("mpbRedTopGrowth", "mpbManagement"))
+  omitp <- which(parameters %in% c("mpbRedTopGrowth", "mpbManagement",
+                                   "scfmLandcoverInit", "scfmRegime", "scfmDriver",
+                                   "scfmIgnition", "scfmEscape", "scfmSpread"))
+  lapply(rev(omitp), function(p) parameters[[p]] <<- NULL)
+  parameters$scfmSpread$.plotInitialTime <- .plotInitialTime
+}
+
+#lapply(100 + 0:99, function(run) {
+parallel::mclapply(0:99, function(run) {
+  paths$outputPath <- paste0(paths$outputPath, "_", run)
+  mySimOut <- simInitAndSpades(
+                         times = times, #cl = cl,
+                         params = parameters,
+                         modules = modules,
+                         outputs = outputs,
+                         objects = objects,
+                         paths = paths,
+                         loadOrder = unlist(modules),
+                         debug = 1,
+                         .plotInitialTime = .plotInitialTime#,
+                         #useCloud = FALSE, # TODO This fn relies on output objects, which are not captured by cloudCache
+                         #cloudFolderID = cloudCacheFolderID,
+                         #omitArgs = c(".plotInitialTime", "debug") # paths
+                         )
+  rm(mySimOut)
+}, mc.cores = getOption("mc.cores", 4L)) ## >32 GB per sim !?
+#}) ## >32 GB per sim !?
 
 #mySimOut <- spades(mySim, debug = 1)
-
-saveRDS(mySimOut, file.path(Paths$outputPath, "mySimOut.rds"))
+#saveRDS(mySimOut, file.path(Paths$outputPath, "mySimOut.rds"))
 
 if (FALSE) {
 ##########################################################
