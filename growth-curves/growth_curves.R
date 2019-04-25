@@ -3,6 +3,8 @@ library(amc)
 
 ## Boone et al. 2011 (Fig 2)
 BooneData <- read.csv("growth-curves/BooneCurveData2.csv")
+BooneData$Year <- c(2000:2005, 2000:2005, 2001:2005,
+                    2002:2005, 2002:2005, 2003:2005)
 
 ## use 2004 data; why data from this year only?
 ## - had to do with weather/stand conditions?
@@ -43,45 +45,56 @@ d <- 3
 r <- seq(0.0, 1, 0.2)
 
 ## plot the curves
+png("growth-curves/cooperation-competition-curves.png", width = 1200, height = 800)
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]), xmin, xmax,
-      col = "red", lwd = 3, ylim = c(-4, 2),
-      main = "Allee effect of host defense strong",
+      col = "red", lwd = 3, ylim = c(-4, 2), cex = 3, cex.axis = 1.5, cex.lab = 1.5,
+      #main = "Allee effect of host defense strong",
       xlab = "log attack density(trees/ha/yr)",
       ylab = "log component recruitment")
-abline(h = 0)
-abline(v = 0)
-abline(v = 2, lty = 3)
-
+abline(h = 0, cex = 2)
+abline(v = 0, cex = 2)
+abline(v = 2, lty = 3, cex = 2)
 curve(comp(x, a = a, b = b, d = d, s = s, r = r[1], yint = yint1),
-      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2) ## 100% depletion
+      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2, cex = 3) ## 100% depletion
 curve(comp(x, a = a, b = b, d = d, s = s, r = r[2], yint = yint1),
-      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2) ## 80% depletion
+      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2, cex = 3) ## 80% depletion
 curve(comp(x, a = a, b = b, d = d, s = s, r = r[3], yint = yint1),
-      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2) ## 60% depletion
+      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2, cex = 3) ## 60% depletion
 curve(comp(x, a = a, b = b, d = d, s = s, r = r[4], yint = yint1),
-      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2) ## 40% depletion
+      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2, cex = 3) ## 40% depletion
 curve(comp(x, a = a, b = b, d = d, s = s, r = r[5], yint = yint1),
-      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2) ## 20% depletion
+      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 2, cex = 3) ## 20% depletion
 curve(comp(x, a = a, b = b, d = d, s = s, r = r[6], yint = yint1),
-      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 1) ## 0% depletion
-text(c(-1.75, -1.75), c(1.25, -1.35), c("0% stand depletion", "100% stand depletion"))
+      xmin, xmax, add = TRUE, col = "blue", lwd = 2, lty = 1, cex = 3) ## 0% depletion
+text(c(-1.25, -1.25), c(1.3, -0.4), c("0% stand depletion", "100% stand depletion"), cex = 2)
+dev.off()
 
+png("growth-curves/composite-curves.png", width = 1200, height = 800)
+curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]), xmin, xmax,
+      col = "white", lwd = 3, ylim = c(-4, 2), cex = 3, cex.axis = 1.5, cex.lab = 1.5,
+      #main = "Allee effect of host defense strong",
+      xlab = "log attack density(trees/ha/yr)",
+      ylab = "log component recruitment")
+abline(h = 0, cex = 2)
+abline(v = 0, cex = 2)
+abline(v = 2, lty = 3, cex = 2)
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]) +
         comp(x, a = a, b = b, d = d, s = s, r = r[1], yint = yint1),
-      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2) ## 100% depletion
+      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2, cex = 3) ## 100% depletion
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]) +
         comp(x, a = a, b = b, d = d, s = s, r = r[2], yint = yint1),
-      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2) ## 80% depletion
+      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2, cex = 3) ## 80% depletion
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]) +
         comp(x, a = a, b = b, d = d, s = s, r = r[3], yint = yint1),
-      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2) ## 60% depletion
+      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2, cex = 3) ## 60% depletion
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]) +
         comp(x, a = a, b = b, d = d, s = s, r = r[4], yint = yint1),
-      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2) ## 40% depletion
+      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2, cex = 3) ## 40% depletion
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]) +
         comp(x, a = a, b = b, d = d, s = s, r = r[5], yint = yint1),
-      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2) ## 20% depletion
+      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2, cex = 3) ## 20% depletion
 curve(coop(x, a = a, b0 = lm04$coefficients[[1]], b1 = lm04$coefficients[[2]]) +
         comp(x, a = a, b = b, d = d, s = s, r = r[6], yint = yint1),
-      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2) ## 0% depletion
-text(c(-1.75, 0.75), c(-3.75, -4), c("0% stand depletion", "100% stand depletion"))
+      xmin, xmax, add = TRUE, col = "purple", lwd = 3, lty = 2, cex = 3) ## 0% depletion
+text(c(-1.25, 0.90), c(-2.25, -3.65), c("0% stand depletion", "100% stand depletion"), cex = 2)
+dev.off()
