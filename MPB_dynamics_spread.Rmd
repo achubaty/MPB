@@ -12,7 +12,7 @@ output:
     toc_float: true
 bibliography:
   - bibliography.bib
-  - ../mpb-maps/climate-projections.bib
+  - mpb-maps/climate-projections.bib
 editor_options: 
   chunk_output_type: console
 ---
