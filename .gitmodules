@@ -66,3 +66,6 @@
 	path = modules/scfm
 	url = git@github.com:eliotmcintire/scfm
     branch = development
+[submodule "modules/canWind"]
+	path = modules/canWind
+	url = https://github.com/achubaty/canWind

@@ -134,7 +134,7 @@ if (interactive()) dev.useRSGD(FALSE)
 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
-scratchDir <- file.path("/tmp/scratch/MPB")
+scratchDir <- checkPath(file.path("/mnt/scratch/MPB"), create = TRUE)
 
 rasterOptions(default = TRUE)
 options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
@@ -156,7 +156,7 @@ params <- list(
     .tempdir = scratchDir
   ),
   mpbRedTopGrowth = list(
-    dataset = "Boone_2011"
+    dataset = "Boone2011"
   )
 )
 

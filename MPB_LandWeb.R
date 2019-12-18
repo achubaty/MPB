@@ -87,7 +87,7 @@ tilePath <- file.path(Paths$outputPath, "tiles")
 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
 maxMemory <- 5e+12
-scratchDir <- file.path("/tmp/scratch/MPB")
+scratchDir <- file.path("/mnt/scratch/MPB")
 
 rasterOptions(default = TRUE)
 options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
