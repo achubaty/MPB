@@ -1,71 +1,39 @@
-[submodule "modules/mpbRedTopSpread"]
-	path = modules/mpbRedTopSpread
-	url = git@github.com:achubaty/mpbRedTopSpread
-    branch = master
-[submodule "modules/mpbRedTopGrowth"]
-	path = modules/mpbRedTopGrowth
-	url = git@github.com:achubaty/mpbRedTopGrowth
-    branch = master
-[submodule "modules/mpbPine"]
-	path = modules/mpbPine
-	url = git@github.com:achubaty/mpbPine
-    branch = master
-[submodule "modules/mpbMassAttacksData"]
-	path = modules/mpbMassAttacksData
-	url = git@github.com:achubaty/mpbMassAttacksData
-    branch = master
-[submodule "modules/mpbClimateData"]
-	path = modules/mpbClimateData
-	url = git@github.com:achubaty/mpbClimateData
-    branch = master
-[submodule "modules/mpbRandomLandscapes"]
-	path = modules/mpbRandomLandscapes
-	url = git@github.com:achubaty/mpbRandomLandscapes
-    branch = master
-[submodule "modules/mpbManagement"]
-	path = modules/mpbManagement
-	url = git@github.com:achubaty/mpbManagement
-    branch = master
-[submodule "mpb-maps"]
-	path = mpb-maps
-	url = git@github.com:achubaty/mpb-maps
-    branch = master
 [submodule "BioSim"]
 	path = BioSim
 	url = git@github.com:achubaty/mpb-biosim
-    branch = master
-[submodule "modules/Biomass_regeneration"]
-	path = modules/Biomass_regeneration
-	url = git@github.com:eliotmcintire/Biomass_regeneration
-    branch = development
-[submodule "modules/BiomassSpeciesData"]
-	path = modules/BiomassSpeciesData
-	url = git@github.com:eliotmcintire/BiomassSpeciesData
-    branch = development
-[submodule "modules/LandMine"]
-	path = modules/LandMine
-	url = git@github.com:PredictiveEcology/LandMine
-    branch = development
-[submodule "modules/LBMR"]
-	path = modules/LBMR
-	url = git@github.com:eliotmcintire/LBMR
-    branch = development
-[submodule "modules/Boreal_LBMRDataPrep"]
-	path = modules/Boreal_LBMRDataPrep
-	url = git@github.com:eliotmcintire/Boreal_LBMRDataPrep
-    branch = development
-[submodule "modules/LandWeb_output"]
-	path = modules/LandWeb_output
-	url = git@github.com:fRI-Research/LandWeb_output
-    branch = master
-[submodule "modules/LandR_BiomassGMOrig"]
-	path = modules/LandR_BiomassGMOrig
-	url = git@github.com:eliotmcintire/LandR_BiomassGMOrig
-    branch = development
-[submodule "modules/scfm"]
-	path = modules/scfm
-	url = git@github.com:eliotmcintire/scfm
-    branch = development
+	branch = master
 [submodule "modules/canWind"]
 	path = modules/canWind
 	url = https://github.com/achubaty/canWind
+[submodule "modules/mpbRedTopSpread"]
+	path = modules/mpbRedTopSpread
+	url = git@github.com:achubaty/mpbRedTopSpread
+	branch = master
+[submodule "modules/mpbRedTopGrowth"]
+	path = modules/mpbRedTopGrowth
+	url = git@github.com:achubaty/mpbRedTopGrowth
+	branch = master
+[submodule "modules/mpbPine"]
+	path = modules/mpbPine
+	url = git@github.com:achubaty/mpbPine
+	branch = master
+[submodule "modules/mpbMassAttacksData"]
+	path = modules/mpbMassAttacksData
+	url = git@github.com:achubaty/mpbMassAttacksData
+	branch = master
+[submodule "modules/mpbClimateData"]
+	path = modules/mpbClimateData
+	url = git@github.com:achubaty/mpbClimateData
+	branch = master
+[submodule "modules/mpbRandomLandscapes"]
+	path = modules/mpbRandomLandscapes
+	url = git@github.com:achubaty/mpbRandomLandscapes
+	branch = master
+[submodule "modules/mpbManagement"]
+	path = modules/mpbManagement
+	url = git@github.com:achubaty/mpbManagement
+	branch = master
+[submodule "mpb-maps"]
+	path = mpb-maps
+	url = git@github.com:achubaty/mpb-maps
+	branch = master
