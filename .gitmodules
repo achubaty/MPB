@@ -34,3 +34,6 @@
 	path = mpb-maps
 	url = git@github.com:achubaty/mpb-maps
 	branch = master
+[submodule "modules/canWind"]
+	path = modules/canWind
+	url = https://github.com/achubaty/canWind
