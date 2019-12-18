@@ -2,9 +2,6 @@
 	path = BioSim
 	url = git@github.com:achubaty/mpb-biosim
 	branch = master
-[submodule "modules/canWind"]
-	path = modules/canWind
-	url = https://github.com/achubaty/canWind
 [submodule "modules/mpbRedTopSpread"]
 	path = modules/mpbRedTopSpread
 	url = git@github.com:achubaty/mpbRedTopSpread
