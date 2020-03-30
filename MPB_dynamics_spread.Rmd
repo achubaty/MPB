@@ -123,21 +123,22 @@ ggplot(west2_df) +
 
 ```{r sim-setup}
 projDir <- checkPath("~/GitHub/MPB")
+scratchDir <- checkPath(file.path("/mnt/scratch/MPB"), create = TRUE)
 setPaths(
   cachePath = file.path(projDir, "cache"),
   inputPath = file.path(projDir, "inputs"),
   modulePath = file.path(projDir, "modules"),
-  outputPath = file.path(projDir, "outputs")
+  outputPath = file.path(projDir, "outputs"),
+  rasterPath = file.path(scratchDir, "rasters")
 )
 
 if (interactive()) dev.useRSGD(FALSE)
 
-lowMemory <- ifelse(Sys.info()["nodename"] %in% c("landweb"), FALSE, TRUE)
+lowMemory <- ifelse(Sys.info()["nodename"] %in% c("forcast01"), FALSE, TRUE)
 maxMemory <- 5e+12
-scratchDir <- checkPath(file.path("/mnt/scratch/MPB"), create = TRUE)
 
 rasterOptions(default = TRUE)
-options(rasterMaxMemory = maxMemory, rasterTmpDir = scratchDir)
+options(rasterMaxMemory = maxMemory, rasterTmpDir = Paths$rasterPath)
 
 times <- list(start = 2011, end = 2020)
 params <- list(
@@ -165,7 +166,7 @@ params <- list(
 ## use EITHER mpbRandomLandscapes OR mpbPine/mpbClimateData (not all three)
 modules <- list(
   #"mpbRandomLandscapes",
-  "mpbClimateData","mpbPine",
+  "mpbClimateData", "mpbPine",
   "mpbMassAttacksData",
   "mpbRedTopGrowth",
   "mpbRedTopSpread",

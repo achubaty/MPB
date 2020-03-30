@@ -3,12 +3,11 @@ title: "Modelling MPB spread using Bayesian ecological diffusion forecasts"
 author:
 - name: "Alex M. Chubaty"
   affiliaton: |
-    Canadian Forest Service
-    Pacific Forestry Centre  
-    506 Burnside Road W  
-    Victoria, BC V8Z 1M5
-    +1.250.298.2347
-    alexander.chubaty@canada.ca
+    FOR-CAST Research & Analytics
+    PO BOX 96026 West Springs
+    Calgary, AB  T3H 0L3
+    +1.403.708.5790
+    achubaty@for-cast.ca
 - name: "Eliot J. B. McIntire"
   affiliaton: |
     Canadian Forest Service
@@ -17,7 +16,7 @@ author:
     Victoria, BC V8Z 1M5
     +1.250.298.2374
     eliot.mcintire@canada.ca
-date: "March 31, 2017"
+date: "March 31, 2020"
 output:
   pdf_document:
     toc: yes

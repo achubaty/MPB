@@ -4,9 +4,8 @@ Development of a Mountain Pine Beetle spread model
 
 **Collaborators:**
 
-- Eliot McIntire
-- Barry Cooke
-- Melinda Houle
+- Eliot McIntire <eliot.mcintire@canada.ca>
+- Barry Cooke <barry.cooke@canada.ca>
 
 ## Data sources
 
@@ -18,9 +17,19 @@ Development of a Mountain Pine Beetle spread model
 
 ## Model development
 
-*in progress*
+### Modules
 
-- An early version of a red-top spread model is in [mountainPineBeetleRedTopSpread/](https://github.com/achubaty/MPB/tree/master/mountainPineBeetleRedTopSpread)
+- https://github.com/achubaty/mpbClimateData
+- https://github.com/achubaty/mpbManagement
+- https://github.com/achubaty/mpbMassAttacksData
+- https://github.com/achubaty/mpbPine
+- https://github.com/achubaty/mpbRandomLandscapes
+- https://github.com/achubaty/mpbRedTopGrowth
+- https://github.com/achubaty/mpbRedTopSpread
+
+### Other related components
+
+- Modelling MPB climatic suitabiliy using [BioSim](https://github.com/achubaty/mpb-biosim)
 - Modelling MPB reproductive biology (from data) is in [r-values/](https://github.com/achubaty/MPB/tree/master/r-values)
 - The Safranyik *et al.* (1999) model has been ported to GNU Fortran by Bill Riel and Alex Chubaty in the [safranyik-mpb repository](https://github.com/achubaty/safranyik-mpb); elements of which are of interest to the development of this model.
 
