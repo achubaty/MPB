@@ -28,19 +28,14 @@ if (is.null(getOption("repos"))) {
 
 ## install/load packages
 #install_github("PredictiveEcology/reproducible@development")
+#install_github("PredictiveEcology/SpaDES.core@development")
+#install_github("achubaty@amc@development")
+
+library(raster)
 library(reproducible)
-
-pkgs <- c("data.table", "devtools", "ggplot2", "igraph", "magrittr", "plyr",
-          "scales", "sp", "rgdal", "raster",
-          "achubaty/amc@development",
-          "PredictiveEcology/LandR@development",
-          #"PredictiveEcology/map@development",
-          #"PredictiveEcology/pemisc@development",
-          "PredictiveEcology/SpaDES.core@development",
-          "PredictiveEcology/SpaDES.tools@development"
-)
-
-reproducible::Require(pkgs)
+library(SpaDES.core)
+library(amc)
+library(ggplot2)
 ```
 
 # Introduction
@@ -140,8 +135,8 @@ maxMemory <- 5e+12
 rasterOptions(default = TRUE)
 options(rasterMaxMemory = maxMemory, rasterTmpDir = Paths$rasterPath)
 
-times <- list(start = 2011, end = 2020)
-params <- list(
+timesFit <- list(start = 2010, end = 2011) ## 2010-2016
+paramsFit <- list(
   mpbClimateData = list(
     suitabilityIndex = "R",    ## Can be "G", "S", "L", "R"
     .maxMemory = maxMemory,
@@ -158,6 +153,12 @@ params <- list(
   ),
   mpbRedTopGrowth = list(
     dataset = "Boone2011"
+  ),
+  mpbRedTopSpread = list(
+    advectionDir = 90,
+    advectionMag = 1000,
+    bgSettlingProp = 0.1,
+    meanDist = 1000
   )
 )
 
@@ -174,14 +175,91 @@ modules <- list(
 )
 ```
 
-## Run the model
+## Run the model: fitting spread parameters
+
+```{r fit-with-POM, fig.keep="last", eval=FALSE}
+MPBfit <- simInit(times = timesFit, params = paramsFit, modules = modules,
+                    #objects = objects,
+                    loadOrder = unlist(modules))
+
+data.table::setDTthreads(1L)
+
+objectiveFunction <- function(params, sim) {
+  data.table::setDTthreads(1L)
+  
+  sim2 <- SpaDES.core::Copy(sim)
+  
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["meanDist"]] <- params[4]
+  
+  simOut <- SpaDES.core::spades(sim2, .plotInitialTime = NA)
+  
+  ## simulated attack area
+  atks <- simOut$massAttacksDT
+  nPix <- atks[ATKTREES > 0, .N]
+  atkAreaSim <- nPix * prod(res(simOut$rasterToMatch)) / (100^2) ## area in ha
+  
+  ## attacked area from data
+  atksRas <- simOut$massAttacksMap[[paste0("X", timesFit$end)]]
+  atks <- data.table(ID = 1L:ncell(atksRas), ATKTREES = atksRas[])
+  nPix <- atks[ATKTREES > 0, .N] ## total number of pixels
+  atkAreaData <- nPix * prod(res(simOut$rasterToMatch)) / (100^2) ## area in ha
+  
+  metric <- (atkAreaData - atkAreaSim)^2 ## TODO: something other than simple sum of squares?
+  return(metric)
+}
+
+params4POM <- data.frame(
+  name = c("advectionDir", "advectionMag", "bgSettlingProp", "meanDist"),
+  lower = c(  0.000,   10, 0.01,   100),
+  upper = c(359.999, 1000, 0.20, 10000), ## TODO: refine these upper and lower limits
+  stringsAsFactors = FALSE
+)
+
+packages4POM <- lapply(unlist(modules), function(m) reqdPkgs(MPBfit, m)) %>%
+  unlist() %>%
+  unique() %>% 
+  grep("@", ., invert = TRUE, value = TRUE) %>% 
+  c("amc", "LandR", "pemisc")
+
+N <- 10 * nrow(params4POM) ## need 10 populations per parameter
+#cl <- parallel::makeCluster(N / 2, type = "SOCK") ## forking doesn't work with data.table
+outPOM <- DEoptim::DEoptim(fn = objectiveFunction,
+                           sim = MPBfit,
+                           control = DEoptim::DEoptim.control(
+                             #cluster = cl, ## see ArdiaD/DEoptim#3
+                             initialpop = NULL,
+                             itermax = 30,
+                             packages = packages4POM,
+                             parallelType = 1,
+                             parVar = list("objectiveFunction", "MPBfit"),
+                             VTR = 0
+                           ),
+                           lower = params4POM$lower,
+                           upper = params4POM$upper
+)
+
+#saveSimList(MPBfit, file.path(Paths$outputPath, "test.qs"))
+#MPBfit <- loadSimList(file.path(Paths$outputPath, "test.qs"))
+```
+
+## Run the model: prediction
 
 ```{r simulation, fig.keep="last", eval=FALSE}
-## the first time you run this, esp. w/ large study area, it will be slow because
-## of the GIS operations taking place. However, because these slow steps are cached,
-## subsequent runs will be much faster (plotting will became slowest step).
-MPB <- simInitAndSpades(times = times, params = params, modules = modules, #objects = objects,
-                        loadOrder = unlist(modules))
+timesPredict <- list(start = 2017, end = 2020)
+
+paramsPredict <- paramsFit
+paramsPredict[["mpbRedTopSpread"]][["advectionDir"]] <- 90    ## TODO: value from fit
+paramsPredict[["mpbRedTopSpread"]][["advectionMag"]] <- 1000  ## TODO: value from fit
+paramsPredict[["mpbRedTopSpread"]][["bgSettlingProp"]] <- 0.1 ## TODO: value from fit
+
+MPBpred <- simInitAndSpades(times = timesPredict, params = paramsPredict, modules = modules,
+                            #objects = objects,
+                            loadOrder = unlist(modules))
+#saveSimList(MPBpred, file.path(Paths$outputPath, "MPBpred.qs"))
+#MPBpred <- loadSimList(file.path(Paths$outputPath, "MPBpred.qs"))
 ```
 
 ## Simulation diagrams
