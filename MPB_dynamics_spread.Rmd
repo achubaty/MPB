@@ -179,20 +179,20 @@ modules <- list(
 
 ```{r fit-with-POM, fig.keep="last", eval=FALSE}
 MPBfit <- simInit(times = timesFit, params = paramsFit, modules = modules,
-                    #objects = objects,
-                    loadOrder = unlist(modules))
+                  #objects = objects,
+                  loadOrder = unlist(modules))
 
 data.table::setDTthreads(1L)
 
-objectiveFunction <- function(params, sim) {
+objectiveFunction <- function(MPBfit, paramsFit) {
   data.table::setDTthreads(1L)
   
-  sim2 <- SpaDES.core::Copy(sim)
+  sim2 <- SpaDES.core::Copy(MPBfit)
   
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["meanDist"]] <- params[4]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionDir"]] <- paramsFit[1]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionMag"]] <- paramsFit[2]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- paramsFit[3]
+  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["meanDist"]] <- paramsFit[4]
   
   simOut <- SpaDES.core::spades(sim2, .plotInitialTime = NA)
   
@@ -234,7 +234,7 @@ outPOM <- DEoptim::DEoptim(fn = objectiveFunction,
                              itermax = 30,
                              packages = packages4POM,
                              parallelType = 1,
-                             parVar = list("objectiveFunction", "MPBfit"),
+                             parVar = list("objectiveFunction", "MPBfit", "paramsFit", "timesFit"),
                              VTR = 0
                            ),
                            lower = params4POM$lower,
