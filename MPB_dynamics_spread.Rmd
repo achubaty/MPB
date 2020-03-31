@@ -172,9 +172,6 @@ modules <- list(
   "mpbRedTopSpread",
   "mpbManagement"
 )
-
-MPB <- simInit(times = times, params = params, modules = modules, #objects = objects,
-               loadOrder = unlist(modules))
 ```
 
 ## Run the model
@@ -183,7 +180,8 @@ MPB <- simInit(times = times, params = params, modules = modules, #objects = obj
 ## the first time you run this, esp. w/ large study area, it will be slow because
 ## of the GIS operations taking place. However, because these slow steps are cached,
 ## subsequent runs will be much faster (plotting will became slowest step).
-MPB2 <- spades(Copy(MPB), debug = TRUE)
+MPB <- simInitAndSpades(times = times, params = params, modules = modules, #objects = objects,
+                        loadOrder = unlist(modules))
 ```
 
 ## Simulation diagrams

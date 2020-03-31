@@ -255,8 +255,10 @@ Init <- function(sim) {
   dPath <- asPath(getOption("reproducible.destinationPath", dataPath(sim)), 1)
   message(currentModule(sim), ": using dataPath '", dPath, "'.")
 
+  #mod$prj <- paste("+proj=aea +lat_1=47.5 +lat_2=54.5 +lat_0=0 +lon_0=-113",
+  #                 "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
   mod$prj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
-                   "+x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
+                   "+x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
   ## load study area
   if (!suppliedElsewhere("studyArea")) {
@@ -277,7 +279,7 @@ Init <- function(sim) {
 
   ## studyAreaLarge
   if (!suppliedElsewhere("studyAreaLarge")) {
-    west <- sim$canProvs[sim$canProvs$NAME_1 %in% c("Alberta", "Saskatchewan"), ]
+    west <- canProvs[canProvs$NAME_1 %in% c("Alberta", "Saskatchewan"), ]
     west <- Cache(postProcess, west, targetCRS = mod$prj, filename2 = NULL)
 
     sim$studyAreaLarge <- Cache(prepInputs,
@@ -292,7 +294,8 @@ Init <- function(sim) {
                                 filename2 = NULL,
                                 userTags = c("stable", currentModule(sim), "NorthAmericanBoreal")) %>%
       as("Spatial") %>%
-      fixErrors(.)
+      aggregate() %>%
+      spatialEco::remove.holes()
   }
 
   return(sim)
