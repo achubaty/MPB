@@ -129,8 +129,25 @@ setPaths(
 
 if (interactive()) dev.useRSGD(FALSE)
 
+RenvironFile <- file.path(projDir, ".Renviron")
+if (file.exists(RenvironFile)) readRenviron(RenvironFile)
+
+cacheDBconn <- DBI::dbConnect(drv = RPostgres::Postgres(),
+               host = Sys.getenv("PGHOST"),
+               port = Sys.getenv("PGPORT"),
+               dbname = Sys.getenv("PGDATABASE"),
+               user = Sys.getenv("PGUSER"),
+               password = Sys.getenv("PGPASSWORD")) 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("forcast01"), FALSE, TRUE)
 maxMemory <- 5e+12
+
+raster::rasterOptions(default = TRUE)
+options(
+  "rasterMaxMemory" = maxMemory,
+  "rasterTmpDir" = Paths$rasterPath,
+  "reproducible.cacheSaveFormat" = "rds", ## can be "qs" or "rds"
+  "reproducible.conn" = cacheDBconn
+)
 
 rasterOptions(default = TRUE)
 options(rasterMaxMemory = maxMemory, rasterTmpDir = Paths$rasterPath)
@@ -178,18 +195,55 @@ modules <- list(
 ## Run the model: fitting spread parameters
 
 ```{r fit-with-POM, fig.keep="last", eval=FALSE}
-MPBfit <- SpaDES.core::simInit(times = timesFit, params = paramsFit, modules = modules,
-                               #objects = objects,
-                               loadOrder = unlist(modules))
+MPBfit <- Cache(simInit,
+                times = timesFit,
+                params = paramsFit,
+                modules = modules,
+                #objects = objects,
+                loadOrder = unlist(modules)#,
+                #useCache = "overwrite"
+)
 
 objectiveFunction <- function(params) {
   data.table::setDTthreads(1L)
   
-  sim <- SpaDES.core::simInit(times = timesFit, params = paramsFit, modules = modules,
-                              #objects = objects,
-                              loadOrder = unlist(modules))
-
+  Sys.sleep(runif(1, 5, 1800)) ## random delay to mitigate database locked errors
   
+  projDir <- reproducible::checkPath("~/GitHub/MPB")
+  scratchDir <- reproducible::checkPath(file.path("/mnt/scratch/MPB"))
+  SpaDES.core::setPaths(
+    cachePath = file.path(projDir, "cache"),
+    inputPath = file.path(projDir, "inputs"),
+    modulePath = file.path(projDir, "modules"),
+    outputPath = file.path(projDir, "outputs"),
+    rasterPath = file.path(scratchDir, "rasters")
+  )
+  
+  RenvironFile <- file.path(projDir, ".Renviron")
+  if (file.exists(RenvironFile)) readRenviron(RenvironFile)
+  
+  cacheDBconn <- DBI::dbConnect(drv = RPostgres::Postgres(),
+                 host = Sys.getenv("PGHOST"),
+                 port = Sys.getenv("PGPORT"),
+                 dbname = Sys.getenv("PGDATABASE"),
+                 user = Sys.getenv("PGUSER"),
+                 password = Sys.getenv("PGPASSWORD")) 
+  lowMemory <- TRUE
+  maxMemory <- 5e+9
+  
+  raster::rasterOptions(default = TRUE)
+  options(
+    "rasterMaxMemory" = maxMemory,
+    "rasterTmpDir" = Paths$rasterPath,
+    "reproducible.cacheSaveFormat" = "rds", ## can be "qs" or "rds"
+    "reproducible.conn" = cacheDBconn
+  )
+
+  sim <- SpaDES.core::simInitAndSpades(times = timesFit, params = paramsFit, modules = modules,
+                                       #objects = objects,
+                                       #useCache = "overwrite",
+                                       loadOrder = unlist(modules))
+
   SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
   SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
   SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
@@ -234,7 +288,7 @@ outPOM <- DEoptim::DEoptim(fn = objectiveFunction,
                              itermax = 30,
                              packages = as.list(packages4POM),
                              parallelType = 1,
-                             parVar = list("objectiveFunction", "modules", "paramsFit", "timesFit"),
+                             parVar = list("modules", "paramsFit", "timesFit", "Paths"),
                              VTR = 0
                            ),
                            lower = params4POM$lower,

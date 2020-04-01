@@ -1,6 +1,7 @@
 .httr-oauth
 .Rapp.history
 .RData
+.Renviron
 .Rhistory
 .Rproj.user
 .log
