@@ -37,6 +37,7 @@ library(reproducible)
 library(SpaDES.core)
 library(amc)
 library(ggplot2)
+library(DEoptim)
 ```
 
 # Introduction
@@ -208,7 +209,7 @@ MPBfit <- Cache(simInit,
 objectiveFunction <- function(params) {
   data.table::setDTthreads(1L)
   
-  Sys.sleep(runif(1, 5, 1800)) ## random delay to mitigate database locked errors
+  Sys.sleep(runif(1, 1, 300)) ## random delay to mitigate database locked errors
   
   projDir <- reproducible::checkPath("~/GitHub/MPB")
   scratchDir <- reproducible::checkPath(file.path("/mnt/scratch/MPB"))
@@ -281,20 +282,23 @@ packages4POM <- lapply(unlist(modules), function(m) reqdPkgs(MPBfit, m)) %>%
   c("amc", "LandR", "pemisc")
 
 N <- 10 * nrow(params4POM) ## need 10 populations per parameter
-#cl <- parallel::makeCluster(N / 2, type = "SOCK") ## forking doesn't work with data.table
-outPOM <- DEoptim::DEoptim(fn = objectiveFunction,
-                           control = DEoptim::DEoptim.control(
-                             #cluster = cl, ## see ArdiaD/DEoptim#3
-                             initialpop = NULL,
-                             itermax = 30,
-                             packages = as.list(packages4POM),
-                             parallelType = 1,
-                             parVar = list("modules", "paramsFit", "timesFit", "Paths"),
-                             VTR = 0
-                           ),
-                           lower = params4POM$lower,
-                           upper = params4POM$upper
+cl <- parallel::makeCluster(min(N / 2, 32), ## approx 15 GB each for 2010-2011, so max 32 threads
+                            type = "SOCK")  ## forking doesn't work with data.table
+outPOM <- DEoptim(fn = objectiveFunction,
+                 control = DEoptim::DEoptim.control(
+                   cluster = cl, ## see ArdiaD/DEoptim#3
+                   #foreachArgs = c(.packages = packages4POM), ## only when parallelType = 2
+                   initialpop = NULL,
+                   itermax = 30,
+                   packages = as.list(packages4POM),
+                   parallelType = 1, ## 0 = single thread; 1 = parallel; 2 = foreach
+                   parVar = list("modules", "paramsFit", "timesFit", "Paths"),
+                   VTR = 0
+                 ),
+                 lower = params4POM$lower,
+                 upper = params4POM$upper
 )
+parallel::stopCluster(cl)
 
 #saveSimList(MPBfit, file.path(Paths$outputPath, "test.qs"))
 #MPBfit <- loadSimList(file.path(Paths$outputPath, "test.qs"))
