@@ -178,18 +178,16 @@ modules <- list(
 ## Run the model: fitting spread parameters
 
 ```{r fit-with-POM, fig.keep="last", eval=FALSE}
-MPBfit <- simInit(times = timesFit, params = paramsFit, modules = modules,
-                  #objects = objects,
-                  loadOrder = unlist(modules))
-
-data.table::setDTthreads(1L)
+MPBfit <- SpaDES.core::simInit(times = timesFit, params = paramsFit, modules = modules,
+                               #objects = objects,
+                               loadOrder = unlist(modules))
 
 objectiveFunction <- function(params) {
   data.table::setDTthreads(1L)
   
-  sim <- simInit(times = timesFit, params = paramsFit, modules = modules,
-                 #objects = objects,
-                 loadOrder = unlist(modules))
+  sim <- SpaDES.core::simInit(times = timesFit, params = paramsFit, modules = modules,
+                              #objects = objects,
+                              loadOrder = unlist(modules))
 
   
   SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
@@ -234,7 +232,7 @@ outPOM <- DEoptim::DEoptim(fn = objectiveFunction,
                              #cluster = cl, ## see ArdiaD/DEoptim#3
                              initialpop = NULL,
                              itermax = 30,
-                             packages = packages4POM,
+                             packages = as.list(packages4POM),
                              parallelType = 1,
                              parVar = list("objectiveFunction", "modules", "paramsFit", "timesFit"),
                              VTR = 0
