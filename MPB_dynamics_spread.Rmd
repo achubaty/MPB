@@ -209,7 +209,7 @@ MPBfit <- Cache(simInit,
 objectiveFunction <- function(params) {
   data.table::setDTthreads(1L)
   
-  Sys.sleep(runif(1, 1, 300)) ## random delay to mitigate database locked errors
+  Sys.sleep(runif(1, 1, 100)) ## random delay to mitigate database locked errors
   
   projDir <- reproducible::checkPath("~/GitHub/MPB")
   scratchDir <- reproducible::checkPath(file.path("/mnt/scratch/MPB"))
