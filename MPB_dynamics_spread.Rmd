@@ -31,6 +31,7 @@ if (is.null(getOption("repos"))) {
 #install_github("PredictiveEcology/SpaDES.core@development")
 #install_github("achubaty@amc@development")
 
+library(magrittr)
 library(raster)
 library(reproducible)
 library(SpaDES.core)
