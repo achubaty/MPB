@@ -244,12 +244,12 @@ objectiveFunction <- function(params) {
                                        #useCache = "overwrite",
                                        loadOrder = unlist(modules))
 
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
-  SpaDES.core::params(sim2)[["mpbRedTopSpread"]][["meanDist"]] <- params[4]
+  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
+  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
+  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
+  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["meanDist"]] <- params[4]
   
-  simOut <- SpaDES.core::spades(sim2, .plotInitialTime = NA)
+  simOut <- SpaDES.core::spades(sim, .plotInitialTime = NA)
   
   ## simulated attack area
   atks <- simOut$massAttacksDT
