@@ -26,7 +26,7 @@ git clone --recurse-submodules -j8 https://github.com/achubaty/MPB
 - Wind maps have yet to be developed.
 
 Data used by modules are automatically downloaded during first-run of the model.
-However, note that proprietary/confidetial data used by modules requires authorization.
+However, note that proprietary/confidential data used by modules requires authorization.
 
 ## Model development
 
