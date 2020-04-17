@@ -2,12 +2,18 @@
 
 Development of a mountain pine beetle spread model for the Canadian western boreal forest
 
-Alex Chubaty <achubaty@for-cast.ca>
+Alex Chubaty (<achubaty@for-cast.ca>)
 
 **Collaborators:**
 
-- Eliot McIntire <eliot.mcintire@canada.ca>
-- Barry Cooke <barry.cooke@canada.ca>
+- Eliot McIntire (<eliot.mcintire@canada.ca>)
+- Barry Cooke (<barry.cooke@canada.ca>)
+
+## Getting the code
+
+```bash
+git clone --recurse-submodules -j8 https://github.com/achubaty/MPB
+```
 
 ## Data sources
 
@@ -18,6 +24,9 @@ Alex Chubaty <achubaty@for-cast.ca>
 - MPB outbreak maps and climate suitability projections are in [mpb-maps/](https://github.com/achubaty/MPB/tree/master/mpb-maps)
 - Pine maps are in [pine-maps/](https://github.com/achubaty/MPB/tree/master/pine-maps)
 - Wind maps have yet to be developed.
+
+Data used by modules are automatically downloaded during first-run of the model.
+However, note that proprietary/confidetial data used by modules requires authorization.
 
 ## Model development
 
