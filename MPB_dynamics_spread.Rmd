@@ -135,11 +135,11 @@ RenvironFile <- file.path(projDir, ".Renviron")
 if (file.exists(RenvironFile)) readRenviron(RenvironFile)
 
 cacheDBconn <- DBI::dbConnect(drv = RPostgres::Postgres(),
-               host = Sys.getenv("PGHOST"),
-               port = Sys.getenv("PGPORT"),
-               dbname = Sys.getenv("PGDATABASE"),
-               user = Sys.getenv("PGUSER"),
-               password = Sys.getenv("PGPASSWORD")) 
+                              host = Sys.getenv("PGHOST"),
+                              port = Sys.getenv("PGPORT"),
+                              dbname = Sys.getenv("PGDATABASE"),
+                              user = Sys.getenv("PGUSER"),
+                              password = Sys.getenv("PGPASSWORD")) 
 lowMemory <- ifelse(Sys.info()["nodename"] %in% c("forcast01"), FALSE, TRUE)
 maxMemory <- 5e+12
 
@@ -209,10 +209,16 @@ MPBfit <- Cache(simInit,
 objectiveFunction <- function(params) {
   data.table::setDTthreads(1L)
   
-  Sys.sleep(runif(1, 1, 100)) ## random delay to mitigate database locked errors
+  RenvironFile <- file.path(projDir, ".Renviron")
+  if (file.exists(RenvironFile)) readRenviron(RenvironFile)
   
-  projDir <- reproducible::checkPath("~/GitHub/MPB")
-  scratchDir <- reproducible::checkPath(file.path("/mnt/scratch/MPB"))
+  cacheDBconn <- DBI::dbConnect(drv = RPostgres::Postgres(),
+                                host = Sys.getenv("PGHOST"),
+                                port = Sys.getenv("PGPORT"),
+                                dbname = Sys.getenv("PGDATABASE"),
+                                user = Sys.getenv("PGUSER"),
+                                password = Sys.getenv("PGPASSWORD")) 
+
   SpaDES.core::setPaths(
     cachePath = file.path(projDir, "cache"),
     inputPath = file.path(projDir, "inputs"),
@@ -220,16 +226,6 @@ objectiveFunction <- function(params) {
     outputPath = file.path(projDir, "outputs"),
     rasterPath = file.path(scratchDir, "rasters")
   )
-  
-  RenvironFile <- file.path(projDir, ".Renviron")
-  if (file.exists(RenvironFile)) readRenviron(RenvironFile)
-  
-  cacheDBconn <- DBI::dbConnect(drv = RPostgres::Postgres(),
-                 host = Sys.getenv("PGHOST"),
-                 port = Sys.getenv("PGPORT"),
-                 dbname = Sys.getenv("PGDATABASE"),
-                 user = Sys.getenv("PGUSER"),
-                 password = Sys.getenv("PGPASSWORD")) 
   lowMemory <- TRUE
   maxMemory <- 5e+9
   
@@ -241,17 +237,25 @@ objectiveFunction <- function(params) {
     "reproducible.conn" = cacheDBconn
   )
 
-  sim <- SpaDES.core::simInitAndSpades(times = timesFit, params = paramsFit, modules = modules,
-                                       #objects = objects,
-                                       #useCache = "overwrite",
-                                       loadOrder = unlist(modules))
-
-  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
-  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
-  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
-  SpaDES.core::params(sim)[["mpbRedTopSpread"]][["meanDist"]] <- params[4]
+  Sys.sleep(runif(1, 1, 100)) ## random delay to mitigate database locked errors
   
-  simOut <- SpaDES.core::spades(sim, .plotInitialTime = NA)
+  sim <- reproducible::retry(quote({
+    simInit(times = timesFit, params = paramsFit, modules = modules,
+            #objects = objects,
+            #useCache = "overwrite",
+            loadOrder = unlist(modules)
+    )
+  }))
+
+  params(sim)[["mpbRedTopSpread"]][["advectionDir"]] <- params[1]
+  params(sim)[["mpbRedTopSpread"]][["advectionMag"]] <- params[2]
+  params(sim)[["mpbRedTopSpread"]][["bgSettlingProp"]] <- params[3]
+  params(sim)[["mpbRedTopSpread"]][["meanDist"]] <- params[4]
+  
+  simOut <- spades(sim, .plotInitialTime = NA, debug = FALSE)
+  
+  ## TODO: below currently does total attack area. more refined criteria needed
+  ## e.g., area and shape metrics from `landscapemetrics` package?
   
   ## simulated attack area
   atks <- simOut$massAttacksDT
@@ -264,7 +268,11 @@ objectiveFunction <- function(params) {
   nPix <- atks[ATKTREES > 0, .N] ## total number of pixels
   atkAreaData <- nPix * prod(res(simOut$rasterToMatch)) / (100^2) ## area in ha
   
-  metric <- (atkAreaData - atkAreaSim)^2 ## TODO: something other than simple sum of squares?
+  ## sum negative log likelihood for attacked pixels
+  
+  
+  ## TODO: something other than simple sum of squares?
+  metric <- (atkAreaData - atkAreaSim)^2 #+ (SNLL / 10^3)
   return(metric)
 }
 
@@ -279,27 +287,36 @@ packages4POM <- lapply(unlist(modules), function(m) reqdPkgs(MPBfit, m)) %>%
   unlist() %>%
   unique() %>% 
   grep("@", ., invert = TRUE, value = TRUE) %>% 
-  c("amc", "LandR", "pemisc")
+  c("amc", "LandR", "pemisc", "SpaDES.core")
 
 N <- 10 * nrow(params4POM) ## need 10 populations per parameter
-cl <- parallel::makeCluster(min(N / 2, 32), ## approx 15 GB each for 2010-2011, so max 32 threads
+cl <- parallel::makeCluster(min(N, 20),     ## up to 20 GB each for 2010-2011, so max 24 threads
                             type = "SOCK")  ## forking doesn't work with data.table
+
+parallel::clusterExport(cl, varlist = c("modules", "paramsFit", "packages4POM", "projDir", "scratchDir", "timesFit"))
+parallel::clusterEvalQ(
+    cl, {
+      for (i in packages4POM)
+        library(i, character.only = TRUE)
+    }
+)
 outPOM <- DEoptim(fn = objectiveFunction,
-                 control = DEoptim::DEoptim.control(
-                   cluster = cl, ## see ArdiaD/DEoptim#3
-                   #foreachArgs = c(.packages = packages4POM), ## only when parallelType = 2
-                   initialpop = NULL,
-                   itermax = 30,
-                   packages = as.list(packages4POM),
-                   parallelType = 1, ## 0 = single thread; 1 = parallel; 2 = foreach
-                   parVar = list("modules", "paramsFit", "timesFit", "Paths"),
-                   VTR = 0
-                 ),
-                 lower = params4POM$lower,
-                 upper = params4POM$upper
+                  control = DEoptim::DEoptim.control(
+                    cluster = cl, ## see ArdiaD/DEoptim#3
+                    #foreachArgs = c(.packages = packages4POM), ## only when parallelType = 2
+                    initialpop = NULL,
+                    itermax = 50,
+                    #packages = as.list(packages4POM),
+                    parallelType = 1, ## 0 = single thread; 1 = parallel; 2 = foreach
+                    #parVar = list("modules", "paramsFit", "timesFit", "Paths"),
+                    VTR = 0
+                  ),
+                  lower = params4POM$lower,
+                  upper = params4POM$upper
 )
 parallel::stopCluster(cl)
 
+qs::qsave(outPOM, file.path(Paths$outputPath, "outPOM.qs"))
 #saveSimList(MPBfit, file.path(Paths$outputPath, "test.qs"))
 #MPBfit <- loadSimList(file.path(Paths$outputPath, "test.qs"))
 ```
@@ -310,9 +327,13 @@ parallel::stopCluster(cl)
 timesPredict <- list(start = 2017, end = 2020)
 
 paramsPredict <- paramsFit
-paramsPredict[["mpbRedTopSpread"]][["advectionDir"]] <- 90    ## TODO: value from fit
-paramsPredict[["mpbRedTopSpread"]][["advectionMag"]] <- 1000  ## TODO: value from fit
-paramsPredict[["mpbRedTopSpread"]][["bgSettlingProp"]] <- 0.1 ## TODO: value from fit
+
+bestFitVals <- outPOM[["optim"]][["bestmem"]]
+
+paramsPredict[["mpbRedTopSpread"]][["advectionDir"]] <- bestFitVals[[1]]
+paramsPredict[["mpbRedTopSpread"]][["advectionMag"]] <- bestFitVals[[2]]
+paramsPredict[["mpbRedTopSpread"]][["bgSettlingProp"]] <- bestFitVals[[3]]
+paramsPredict[["mpbRedTopSpread"]][["meanDist"]] <- bestFitVals[[4]]
 
 MPBpred <- simInitAndSpades(times = timesPredict, params = paramsPredict, modules = modules,
                             #objects = objects,
