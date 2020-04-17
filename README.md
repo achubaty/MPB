@@ -1,6 +1,8 @@
 # MPB
 
-Development of a Mountain Pine Beetle spread model
+Development of a mountain pine beetle spread model for the Canadian western boreal forest
+
+Alex Chubaty <achubaty@for-cast.ca>
 
 **Collaborators:**
 
@@ -21,13 +23,13 @@ Development of a Mountain Pine Beetle spread model
 
 ### Modules
 
-- https://github.com/achubaty/mpbClimateData
-- https://github.com/achubaty/mpbManagement
-- https://github.com/achubaty/mpbMassAttacksData
-- https://github.com/achubaty/mpbPine
-- https://github.com/achubaty/mpbRandomLandscapes
-- https://github.com/achubaty/mpbRedTopGrowth
-- https://github.com/achubaty/mpbRedTopSpread
+- [mpbClimateData](https://github.com/achubaty/mpbClimateData)
+- [mpbManagement](https://github.com/achubaty/mpbManagement)
+- [mpbMassAttacksData](https://github.com/achubaty/mpbMassAttacksData)
+- [mpbPine](https://github.com/achubaty/mpbPine)
+- [mpbRandomLandscapes](https://github.com/achubaty/mpbRandomLandscapes)
+- [mpbRedTopGrowth](https://github.com/achubaty/mpbRedTopGrowth)
+- [mpbRedTopSpread](https://github.com/achubaty/mpbRedTopSpread)
 
 ### Other related components
 
