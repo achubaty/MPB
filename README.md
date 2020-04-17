@@ -9,6 +9,8 @@ Development of a Mountain Pine Beetle spread model
 
 ## Data sources
 
+<!-- TODO: update repo urls -->
+
 - Climate projections are in [climate-maps/](https://github.com/achubaty/MPB/tree/master/climate-maps)
 - Digital elevation models are in [dem-maps/](https://github.com/achubaty/MPB/tree/master/dem-maps)
 - MPB outbreak maps and climate suitability projections are in [mpb-maps/](https://github.com/achubaty/MPB/tree/master/mpb-maps)
@@ -37,9 +39,11 @@ Development of a Mountain Pine Beetle spread model
 
 Notes on various related topics and models are in [notes/](https://github.com/achubaty/MPB/tree/master/notes).
 
-## Presentations
+## Reports and Presentations
 
-All presentations related to this work are in [presentations/](https://github.com/achubaty/MPB/tree/master/presentations)
+<!-- TODO: add google drive links -->
+
+- <https://example.com>
 
 ## References
 

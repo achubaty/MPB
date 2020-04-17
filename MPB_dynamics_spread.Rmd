@@ -321,6 +321,12 @@ qs::qsave(outPOM, file.path(Paths$outputPath, "outPOM.qs"))
 #MPBfit <- loadSimList(file.path(Paths$outputPath, "test.qs"))
 ```
 
+## Spread fit summaries
+
+```{r, spread-fit-summary}
+bestValues <- outPOM[["member"]][["bestmemit"]]
+```
+
 ## Run the model: prediction
 
 ```{r simulation, fig.keep="last", eval=FALSE}
