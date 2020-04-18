@@ -324,22 +324,37 @@ qs::qsave(outPOM, file.path(Paths$outputPath, "outPOM.qs"))
 ## Spread fit summaries
 
 ```{r, spread-fit-summary}
-bestValues <- outPOM[["member"]][["bestmemit"]]
+paramNames <- c("advectionDir", "advectionMag", "bgSettlingProp", "meanDist")
+
+bestValues <- as.data.frame(outPOM[["member"]][["bestmemit"]])
+colnames(bestValues) <- paramNames
+
+bestFitVals <- as.data.frame(t(outPOM[["optim"]][["bestmem"]]))
+colnames(bestFitVals) <- paramNames
+
+plot(bestValues$advectionDir)
+points(bestFitVals$advectionDir, col = "red", pch = 19)
+
+plot(bestValues$advectionMag)
+points(bestFitVals$advectionMag, col = "red", pch = 19)
+
+plot(bestValues$bgSettlingProp)
+points(bestFitVals$bgSettlingProp, col = "red", pch = 19)
+
+plot(bestValues$meanDist)
+points(bestFitVals$meanDist, col = "red", pch = 19)
 ```
 
 ## Run the model: prediction
 
 ```{r simulation, fig.keep="last", eval=FALSE}
-timesPredict <- list(start = 2017, end = 2020)
+timesPredict <- list(start = 2016, end = 2016) ## 2017-2020
 
 paramsPredict <- paramsFit
-
-bestFitVals <- outPOM[["optim"]][["bestmem"]]
-
-paramsPredict[["mpbRedTopSpread"]][["advectionDir"]] <- bestFitVals[[1]]
-paramsPredict[["mpbRedTopSpread"]][["advectionMag"]] <- bestFitVals[[2]]
-paramsPredict[["mpbRedTopSpread"]][["bgSettlingProp"]] <- bestFitVals[[3]]
-paramsPredict[["mpbRedTopSpread"]][["meanDist"]] <- bestFitVals[[4]]
+paramsPredict[["mpbRedTopSpread"]][["advectionDir"]] <- bestFitVals$advectionDir
+paramsPredict[["mpbRedTopSpread"]][["advectionMag"]] <- bestFitVals$advectionMag
+paramsPredict[["mpbRedTopSpread"]][["bgSettlingProp"]] <- bestFitVals$bgSettlingProp
+paramsPredict[["mpbRedTopSpread"]][["meanDist"]] <- bestFitVals$meanDist
 
 MPBpred <- simInitAndSpades(times = timesPredict, params = paramsPredict, modules = modules,
                             #objects = objects,
