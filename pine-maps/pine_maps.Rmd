@@ -1,7 +1,7 @@
 ---
 title: "Pine maps"
 author: "Alex Chubaty"
-date: "November 24, 2017"
+date: "May 25, 2021"
 output: pdf_document
 bibliography: bibliography.bib
 editor_options: 
@@ -9,84 +9,45 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-## determine OS and whether we are on a CFS machine
-._CFS_. <- grepl("W-VIC", Sys.info()[["nodename"]])
-._OS_. <- Sys.info()[["sysname"]]
-._USER_. <- Sys.info()[["user"]]
-
-## set R and knitr options
-if (isTRUE(._CFS_.)) {
-  options(repos = c(CRAN = "https://cran.rstudio.com/",
-                    NRCRAN = "http://132.156.148.172"))
-} else {
-  options(repos = c(CRAN = "https://cran.rstudio.com/"))
-}
-
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, eval = TRUE)
+```
 
-## load and attach required packages
-library(httr)
-library(magrittr)
-library(raster)
-library(rasterVis)
-library(RCurl)
-
-if (!require(amc) || packageVersion("amc") < "0.1.2.9000") {
-  devtools::install_github("achubaty/amc@development")
-}
-
-# set work dirs based on computer used
-if (._USER_. == "achubaty") {
-  if (._OS_. == "Darwin") {
-    maps.dir <- "~/Documents/shared"
-  } else if (._OS_. == "Linux") {
-    if (isTRUE(._CFS_.)) {
-      maps.dir <- "/mnt/A105388/shared/data"
-    } else {
-      maps.dir <- "~/Documents/Data/shared"
-    }
-  } else if (._OS_. == "Windows") {
-    maps.dir <- "//W-VIC-A105388/shared/data"
-  } else {
-    stop("Which operating system are you using?")
-  }
-}
+```{r packages-setup}
+library(Require)
+Require(c("httr", "magrittr", "raster", "rasterVis", "RColorBrewer", "RCurl", "reproducible"))
+Require(c("achubaty/amc@development",
+          "PredictiveEcology/LandR@development"))
 
 download.data <- FALSE
-kNN.dir <- file.path(maps.dir, "kNN")
-pineMap.dir <- file.path(maps.dir, "Yemshanov_pine_map")
+cacheDir <- checkPath("cache", create = TRUE)
+inputsDir <- checkPath("inputs", create = TRUE)
+scratchDir <- checkPath(file.path(tempdir(), "scratch"), create = TRUE)
+
+rasterOptions(default = TRUE)
+options(
+  rasterTmpDir = scratchDir,
+  reproducible.cachePath = cacheDir
+)
 ```
 
 ## Yemshanov pine map
 
-From @Yemshanov:2012ea.
+The paper [@Yemshanov:2012ea] describing the data set is here (behind a paywall): <http://link.springer.com/article/10.1007/s10661-011-2293-2>, but I have made it available via Dropbox: <https://www.dropbox.com/s/uh7g570gns1dpn3/yemshanov.etal_2012.pdf>
 
 ```{r yemshanov-download}
 if (isTRUE(download.data)) {
-  if (!dir.exists(pineMap.dir)) {
-    dir.create(pineMap.dir)
-  }
-  
-  # the paper describing the data set is here (behind a paywall):
-  #  http://link.springer.com/article/10.1007/s10661-011-2293-2
-  #
-  # but I have made it available via Dropbox:
-  #  https://www.dropbox.com/s/uh7g570gns1dpn3/yemshanov.etal_2012.pdf
-  #
-  
-  ## download files
   eol <- ifelse(os == "windows", "\r\n", "\n")
   url <- "ftp://ftp.nofc.cfs.nrcan.gc.ca/downloads/Cooke/Yemshanov_pine_map/" ## temporary
   paper_url <- "https://www.dropbox.com/s/uh7g570gns1dpn3/yemshanov.etal_2012.pdf?dl=1"
   paper <- basename(paper_url)
   fileNames <- unlist(strsplit(getURL(url, dirlistonly = TRUE), split = eol))
   lapply(fileNames, function(f) {
-    if (!file.exists(file.path(pineMap.dir, f))) {
-      download.file(paste0(url, f), destfile = file.path(pineMap.dir, f))
+    if (!file.exists(file.path(inputsDir, f))) {
+      download.file(paste0(url, f), destfile = file.path(inputsDir, f))
     }
   })
-  if (!file.exists(file.path(pineMap.dir, paper))) {
-     download.file(paper_url, destfile = file.path(pineMap.dir, paper))
+  if (!file.exists(file.path(inputsDir, paper))) {
+     download.file(paper_url, destfile = file.path(inputsDir, paper))
   }
 }
 ```
@@ -95,17 +56,9 @@ Plotting using `raster` package looks OK but not great:
 
 ```{r yemshanov-plot}
 ## load the map
-pineMap_file <- dir(pineMap.dir, pattern = "[.]flt$", full.names = TRUE)
+pineMap_file <- dir(inputsDir, pattern = "[.]flt$", full.names = TRUE)
 pineMap_raster <- raster(pineMap_file)
 
-## plot the map
-# if the plot looks messed up it's likely due to corrupted download
-plot(pineMap_raster)
-```
-
-Using `rasterVis` package, it's much nicer:
-
-```{r yemshanov-plot-rasterVis}
 myTheme <- rasterTheme(region = brewer.pal('Greens', n = 9)[3:9])
 levelplot(pineMap_raster, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
 ```
@@ -114,14 +67,11 @@ levelplot(pineMap_raster, margin = list(median), maxpixels = 1e6, par.settings =
 
 From @Beaudoin:2014cf.
 
-### Download
+### Download kNN
 
 ```{r kNN-download, eval = FALSE}
 if (isTRUE(download.data)) {
-  if (!dir.exists(kNN.dir)) {
-    dir.create(kNN.dir)
-  }
-  
+  ## TODO: redo this using prepInputs()
   url <- "http://tree.nfis.org/"
   docFiles <- c("NFI_and_kNN_Mapping_20160628.docx",
                 "FR_NFI_and_kNN_Mapping_20160628.docx",
@@ -129,13 +79,13 @@ if (isTRUE(download.data)) {
   dataFiles <- c("kNN-Species.tar",              ## percent pine layers
                  "kNN-StructureStandVolume.tar") ## age & total volume layers
 
-  dl.data(paste0(url, c(docFiles, dataFiles)), kNN.dir)
+  dl.data(paste0(url, c(docFiles, dataFiles)), inputsDir)
 
   ## percent pine layers
-  destDir <- file.path(kNN.dir, "kNN-Species")
+  destDir <- file.path(inputsDir, "kNN-Species")
   if (!dir.exists(destDir)) dir.create(destDir)
   
-  untar(file.path(kNN.dir, dataFiles[1]),
+  untar(file.path(inputsDir, dataFiles[1]),
         files = c("NFI_MODIS250m_kNN_Species_Pinu_Ban_v0.zip",
                   "NFI_MODIS250m_kNN_Species_Pinu_Con_v0.zip"),
         exdir = path.expand(destDir))
@@ -149,10 +99,10 @@ if (isTRUE(download.data)) {
   unzip(zipFile, exdir = destDir2)
   
   ## age & total volume layers
-  destDir <- file.path(kNN.dir, "kNN-StructureStandVolume")
+  destDir <- file.path(inputsDir, "kNN-StructureStandVolume")
   if (!dir.exists(destDir)) dir.create(destDir)
   
-  untar(file.path(kNN.dir, dataFiles[2]),
+  untar(file.path(inputsDir, dataFiles[2]),
         files = c("NFI_MODIS250m_kNN_Structure_Stand_Age_v0.zip",
                   "NFI_MODIS250m_kNN_Structure_Volume_Total_v0.zip"),
         exdir = path.expand(destDir))
@@ -167,7 +117,7 @@ if (isTRUE(download.data)) {
 }
 ```
 
-### Percent pine (%)
+### kNN percent pine (%)
 
 ```{r knn-raster-percentPine}
 files <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"), "kNN-Species",
@@ -179,23 +129,20 @@ stopifnot(file.exists(files))
 
 kNN_percentPine <- stack(x = files) %>% setNames(c("Jack_Pine", "Lodgepole_Pine"))
 
-save(kNN_percentPine, file = file.path(kNN.dir, "kNN_percentPine.Rdata"))
-writeRaster(kNN_percentPine, filename = file.path(kNN.dir, "kNN_percentPine.tif"), overwrite = TRUE)
-file.copy(file.path(kNN.dir, "kNN_percentPine.Rdata"),
+save(kNN_percentPine, file = file.path(inputsDir, "kNN_percentPine.Rdata"))
+writeRaster(kNN_percentPine, filename = file.path(inputsDir, "kNN_percentPine.tif"), overwrite = TRUE)
+file.copy(file.path(inputsDir, "kNN_percentPine.Rdata"),
           "~/Documents/GitHub/MPB/SpaDES/modules/mpbPine/data/kNN_pine_map.tif",
           overwrite = TRUE)
 ```
 
 ```{r knn-plot-percentPine}
-## plot it
-plot(kNN_percentPine)
-
 ## even better with rasterVis
 myTheme <- rasterTheme(region = brewer.pal("Greens", n = 9))
 levelplot(kNN_percentPine, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
 ```
 
-### Pine volume (m^3/ha)
+### kNN pine volume (m^3/ha)
 
 ```{r knn-raster-volumePine}
 f <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
@@ -205,14 +152,14 @@ f <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
 stopifnot(file.exists(f))
 
 kNN_volumeTotal <- raster(f) %>% setNames("Volume_Total")
-save(kNN_volumeTotal, file = file.path(kNN.dir, "kNN_volumeTotal.Rdata"))
+save(kNN_volumeTotal, file = file.path(inputsDir, "kNN_volumeTotal.Rdata"))
 
 kNN_volumePine <- kNN_percentPine
 kNN_volumePine[[1]] <- kNN_percentPine[[1]] * kNN_volumeTotal / 100 # Jack_Pine
 kNN_volumePine[[2]] <- kNN_percentPine[[2]] * kNN_volumeTotal / 100 # Lodgepole_Pine
 names(kNN_volumePine) <- names(kNN_percentPine)
-save(kNN_volumePine, file = file.path(kNN.dir, "kNN_volumePine.Rdata"))
-writeRaster(kNN_volumePine, filename = file.path(kNN.dir, "kNN_volumePine.tif"))
+save(kNN_volumePine, file = file.path(inputsDir, "kNN_volumePine.Rdata"))
+writeRaster(kNN_volumePine, filename = file.path(inputsDir, "kNN_volumePine.tif"))
 ```
 
 ```{r knn-plot-volumePine}
@@ -229,6 +176,7 @@ levelplot(kNN_volumePine, margin = list(median), maxpixels = 1e6, par.settings =
 ### Stand age (a)
 
 ```{r knn-raster-standAge}
+## TODO: use prepIpunts
 f <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
                "kNN-StructureStandVolume",
                "NFI_MODIS250m_kNN_Structure_Stand_Age_v0",
@@ -236,7 +184,7 @@ f <- file.path(maps.dir, ifelse(._CFS_., "kNN/original", "kNN"),
 stopifnot(file.exists(f))
 
 kNN_standAge <- raster(f) %>% setNames("Stand_Age")
-save(kNN_standAge, file = file.path(kNN.dir, "kNN_standAge.Rdata"))
+save(kNN_standAge, file = file.path(inputsDir, "kNN_standAge.Rdata"))
 ```
 
 ```{r knn-plot-standAge}
@@ -248,7 +196,52 @@ myTheme2 <- rasterTheme(region = brewer.pal("Blues", n = 9))
 levelplot(kNN_standAge, margin = list(median), maxpixels = 1e6, par.settings = myTheme2)
 ```
 
-### Other data sources
+## AVI-derived pine maps for AB and SK
+
+These were used to produce the pine maps in the latest MPB risk assessment [@Bleiker:2019].
+
+```{r}
+rasterToMatch <- Cache(
+  LandR::prepInputsLCC,
+  year = 2005, ## TODO: use 2010
+  destinationPath = inputsDir,
+  studyArea = sf::as_Spatial(sim$studyArea)
+)
+
+url_AB <- "https://drive.google.com/file/d/15EzncjIR_dn5v6hruoVbsUQVF706nTEL/"
+AB <- Cache(prepInputs,
+            url = url_AB,
+            targetFile = "AB_PineVolumes_Lambert.gdb", ## TODO: not extracting correctly from zip. needs to be done manually :(
+            alsoExtract = NA,
+            archive = "AB_PineVolumes_Lambert.gdb.zip",
+            fun = "sf::st_read", layer = "OVERSTOREY_PINE", ## TODO: UNDERSTOREY_PINE?
+            overwrite = TRUE,
+            destinationPath = inputsDir,
+            cachePath = cacheDir) %>%
+  fasterize::fasterize(., raster = rasterToMatch, field = "PCT_P")
+AB <- AB * 10
+
+url_SK <- "https://drive.google.com/file/d/1gpA9M4nhrnfIIvGQ7jcM9A7Fo-3MYpU1/"
+SK <- Cache(prepInputs,
+            url = url_SK,
+            targetFile = "SK_INV_JPpct10_Lambert.tif",
+            alsoExtract = "similar",
+            fun = "raster::raster",
+            rasterToMatch = rasterToMatch,
+            destinationPath = inputsDir,
+            cachePath = cacheDir)
+SK <- SK * 10
+
+AVI_percentPine <- raster::mosaic(AB, SK, fun = mean, na.rm = TRUE)
+```
+
+```{r avi-plot-percentPine}
+## even better with rasterVis
+myTheme <- rasterTheme(region = brewer.pal("Greens", n = 9))
+levelplot(AVI_percentPine, margin = list(median), maxpixels = 1e6, par.settings = myTheme)
+```
+
+## Other data sources?
 
 ```
 Kyle Lochhead; Valerie LeMay; Gary Bull; Olaf Schwab; James Halperin, 2017-07-26, "Multivariate maps of forest attributes for management units in Canada's boreal forest", http://hdl.handle.net/11272/10515 V2 [Version]
