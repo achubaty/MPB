@@ -91,7 +91,7 @@ Init <- function(sim) {
   # LCC2005
   ##########################################################
   #  With full studyAreaLarge
-  LCC2005 <- prepInputsLCC(studyArea = studyArea(mlLarge), destinationPath = Paths$inputPath)
+  LCC2005 <- prepInputsLCC(year = 2005, studyArea = studyArea(mlLarge), destinationPath = Paths$inputPath)
   mlLarge <- mapAdd(LCC2005, layerName = "LCC2005", map = mlLarge, filename2 = NULL,
                     leaflet = FALSE, isRasterToMatch = TRUE, method = "ngb")
 
