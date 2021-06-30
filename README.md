@@ -1,3 +1,7 @@
+/!\ This repository has been superceded by <https://github.com/achubaty/LandR_MPB>. /!\
+
+-----
+
 # MPB
 
 Development of a mountain pine beetle spread model for the Canadian western boreal forest
